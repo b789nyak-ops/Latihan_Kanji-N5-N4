@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nihongo Master Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .jp-text { font-family: 'Noto Sans JP', sans-serif; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        #writingCanvas { touch-action: none; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px; }
+        .flashcard-inner { transition: transform 0.6s; transform-style: preserve-3d; }
+        .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+        .flashcard-front, .flashcard-back { backface-visibility: hidden; }
+        .flashcard-back { transform: rotateY(180deg); }
+    </style>
+</head>
+<body class="text-slate-800 pb-20">
+
+    <!-- Header & Progress -->
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-b-3xl shadow-lg sticky top-0 z-50">
+        <div class="flex justify-between items-center mb-2">
+            <div>
+                <h1 class="text-xl font-bold">Nihongo Master Pro</h1>
+                <p class="text-sm text-blue-200">Kosakata Minna no Nihongo 1</p>
+            </div>
+            <div class="bg-white/20 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
+                Progres: <span id="progressCount">0</span>/150
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="flex justify-around bg-white mx-4 mt-4 rounded-xl shadow-sm p-2 text-sm font-medium text-slate-500 mb-6">
+        <button onclick="switchTab('tab-flashcard')" id="btn-tab-flashcard" class="tab-btn active px-4 py-2 text-blue-600 border-b-2 border-blue-600">🎴 Flashcard</button>
+        <button onclick="switchTab('tab-kuis')" id="btn-tab-kuis" class="tab-btn px-4 py-2 hover:text-blue-600">🎮 Kuis</button>
+        <button onclick="switchTab('tab-menulis')" id="btn-tab-menulis" class="tab-btn px-4 py-2 hover:text-blue-600">✍️ Menulis</button>
+        <button onclick="switchTab('tab-daftar')" id="btn-tab-daftar" class="tab-btn px-4 py-2 hover:text-blue-600">📖 Daftar</button>
+    </nav>
+
+    <main class="px-4">
+        
+        <!-- TAB: FLASHCARD -->
+        <section id="tab-flashcard" class="tab-content active">
+            <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 flex justify-between gap-2">
+                <select id="flashcardCategory" class="w-full bg-slate-100 p-2 rounded-lg outline-none text-sm" onchange="initFlashcard()">
+                    <option value="semua">Semua Kategori</option>
+                    <option value="kb">Kata Benda</option>
+                    <option value="kk">Kata Kerja</option>
+                    <option value="ks">Kata Sifat</option>
+                    <option value="ll">Lain-lain</option>
+                </select>
+                <select id="flashcardFilter" class="w-full bg-slate-100 p-2 rounded-lg outline-none text-sm" onchange="initFlashcard()">
+                    <option value="semua">Semua Status</option>
+                    <option value="belum">Belum Hafal</option>
+                    <option value="hafal">Sudah Hafal</option>
+                </select>
+            </div>
+
+            <div class="flashcard w-full h-80 perspective-1000 cursor-pointer" onclick="toggleFlashcard()">
+                <div class="flashcard-inner relative w-full h-full text-center">
+                    <!-- Front -->
+                    <div class="flashcard-front absolute w-full h-full bg-white rounded-3xl shadow-md border-2 border-slate-100 flex flex-col justify-center items-center p-6">
+                        <p class="text-sm text-slate-400 mb-4" id="fcCounter">1 / 150</p>
+                        <h2 class="text-7xl font-bold jp-text text-slate-800" id="fcKanji">私</h2>
+                        <button onclick="event.stopPropagation(); playAudioFc()" class="mt-8 bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-blue-200 transition">🔊</button>
+                    </div>
+                    <!-- Back -->
+                    <div class="flashcard-back absolute w-full h-full bg-blue-50 rounded-3xl shadow-md border-2 border-blue-200 flex flex-col justify-center items-center p-6">
+                        <p class="text-2xl font-bold text-blue-800 mb-2" id="fcRomaji">watashi</p>
+                        <p class="text-lg text-slate-600 font-medium text-center" id="fcArti">Saya</p>
+                        
+                        <div class="mt-8 flex gap-4">
+                            <button onclick="event.stopPropagation(); markMemorized(false)" class="px-6 py-2 bg-red-100 text-red-600 rounded-full font-semibold hover:bg-red-200">❌ Belum</button>
+                            <button onclick="event.stopPropagation(); markMemorized(true)" class="px-6 py-2 bg-green-100 text-green-600 rounded-full font-semibold hover:bg-green-200">✅ Hafal</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between mt-6 gap-4">
+                <button onclick="prevCard()" class="flex-1 bg-white shadow-sm py-3 rounded-xl font-semibold text-slate-600 hover:bg-slate-50">⬅️ Seb</button>
+                <button onclick="nextCard()" class="flex-1 bg-blue-600 shadow-md py-3 rounded-xl font-semibold text-white hover:bg-blue-700">Sel ➡️</button>
+            </div>
+        </section>
+
+        <!-- TAB: KUIS -->
+        <section id="tab-kuis" class="tab-content">
+            <div id="quizSetup" class="bg-white p-6 rounded-2xl shadow-sm text-center">
+                <h2 class="text-xl font-bold mb-4">Pengaturan Kuis</h2>
+                
+                <label class="block text-left text-sm font-medium text-slate-600 mb-2">Kategori Kosakata:</label>
+                <select id="quizCategory" class="w-full bg-slate-100 p-3 rounded-xl outline-none mb-4">
+                    <option value="semua">Semua Kategori</option>
+                    <option value="kb">Kata Benda (Meishi)</option>
+                    <option value="kk">Kata Kerja (Doushi)</option>
+                    <option value="ks">Kata Sifat (Keiyoushi)</option>
+                    <option value="ll">Lain-lain</option>
+                </select>
+
+                <label class="block text-left text-sm font-medium text-slate-600 mb-2">Jumlah Soal:</label>
+                <select id="quizLength" class="w-full bg-slate-100 p-3 rounded-xl outline-none mb-6">
+                    <option value="10">10 Soal</option>
+                    <option value="20">20 Soal</option>
+                    <option value="50">50 Soal</option>
+                    <option value="100">100 Soal</option>
+                    <option value="semua">Semua Soal Tersedia</option>
+                </select>
+
+                <button onclick="startQuiz()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-blue-700 transition">🚀 Mulai Kuis</button>
+            </div>
+
+            <div id="quizPlay" class="hidden">
+                <div class="bg-white p-6 rounded-2xl shadow-sm text-center mb-6">
+                    <p class="text-sm font-bold text-slate-400 mb-2" id="quizProgressText">Soal 1 / 10</p>
+                    <h2 class="text-6xl font-bold jp-text text-slate-800 my-4" id="quizKanji">-</h2>
+                    <p id="quizFeedback" class="text-lg font-bold min-h-[28px] mt-2"></p>
+                </div>
+                <div class="grid grid-cols-1 gap-3" id="quizOptions"></div>
+            </div>
+            
+            <div id="quizResult" class="hidden bg-white p-6 rounded-2xl shadow-sm text-center">
+                <h2 class="text-2xl font-bold mb-2 text-slate-800">Kuis Selesai! 🎉</h2>
+                <p class="text-5xl font-extrabold text-blue-600 my-6" id="quizScore">100%</p>
+                <p class="text-slate-600 mb-6" id="quizDetailScore">Benar: 10 | Salah: 0</p>
+                <button onclick="document.getElementById('quizPlay').classList.add('hidden'); document.getElementById('quizResult').classList.add('hidden'); document.getElementById('quizSetup').classList.remove('hidden');" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md">Ulangi Kuis</button>
+            </div>
+        </section>
+
+        <!-- TAB: MENULIS -->
+        <section id="tab-menulis" class="tab-content">
+            <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 flex justify-between gap-2">
+                <select id="writeCategory" class="w-full bg-slate-100 p-2 rounded-lg outline-none text-sm" onchange="initWrite()">
+                    <option value="semua">Semua Kategori</option>
+                    <option value="kb">Kata Benda</option>
+                    <option value="kk">Kata Kerja</option>
+                    <option value="ks">Kata Sifat</option>
+                </select>
+                <button onclick="initWrite()" class="bg-slate-100 px-4 py-2 rounded-lg text-sm font-semibold">Acak 🎲</button>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm text-center relative">
+                <button onclick="playWriteAudio()" class="absolute top-4 right-4 bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-lg hover:bg-blue-200 transition">🔊</button>
+                
+                <h2 class="text-5xl font-bold jp-text text-slate-800 mb-2" id="writeKanji">私</h2>
+                <p class="text-lg font-bold text-blue-600" id="writeRomaji">watashi</p>
+                <p class="text-sm text-slate-500" id="writeArti">Saya</p>
+                
+                <div class="border-2 border-dashed border-slate-300 rounded-xl overflow-hidden mt-6 bg-white relative">
+                    <canvas id="writingCanvas" class="w-full aspect-square touch-none"></canvas>
+                </div>
+
+                <div class="flex gap-4 mt-6">
+                    <button onclick="clearCanvas()" class="flex-1 bg-red-50 text-red-600 font-bold py-3 rounded-xl border border-red-100">🗑️ Hapus</button>
+                    <button onclick="nextWrite()" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md">Selanjutnya ➡️</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: DAFTAR KOSAKATA -->
+        <section id="tab-daftar" class="tab-content">
+            <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 flex gap-2">
+                <select id="listCategoryFilter" class="w-full bg-slate-100 p-2 rounded-lg outline-none text-sm" onchange="renderList()">
+                    <option value="semua">Semua Kategori</option>
+                    <option value="kb">Kata Benda</option>
+                    <option value="kk">Kata Kerja</option>
+                    <option value="ks">Kata Sifat</option>
+                    <option value="ll">Lain-lain</option>
+                </select>
+                <select id="listStatusFilter" class="w-full bg-slate-100 p-2 rounded-lg outline-none text-sm" onchange="renderList()">
+                    <option value="semua">Semua Status</option>
+                    <option value="belum">Belum Hafal</option>
+                    <option value="hafal">Sudah Hafal</option>
+                </select>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <ul id="vocabList" class="divide-y divide-slate-100 max-h-[60vh] overflow-y-auto">
+                    <!-- List dirender via JS -->
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+<script>
+// --- DATASET 150 KOSAKATA (MINNA NO NIHONGO 1 BAB 1-25) ---
+// Ditambahkan properti "romaji" untuk tampilan, "kana" disimpan untuk Audio TTS.
+const masterData = [
+    { kanji: "私", romaji: "watashi", kana: "わたし", arti: "Saya", kategori: "kb" },
+    { kanji: "貴方", romaji: "anata", kana: "あなた", arti: "Anda / Kamu", kategori: "kb" },
+    { kanji: "先生", romaji: "sensei", kana: "せんせい", arti: "Guru / Dosen", kategori: "kb" },
+    { kanji: "学生", romaji: "gakusei", kana: "がくせい", arti: "Mahasiswa / Siswa", kategori: "kb" },
+    { kanji: "会社員", romaji: "kaishain", kana: "かいしゃいん", arti: "Pegawai Perusahaan", kategori: "kb" },
+    { kanji: "銀行員", romaji: "ginkouin", kana: "ぎんこういん", arti: "Pegawai Bank", kategori: "kb" },
+    { kanji: "医者", romaji: "isha", kana: "いしゃ", arti: "Dokter", kategori: "kb" },
+    { kanji: "本", romaji: "hon", kana: "ほん", arti: "Buku", kategori: "kb" },
+    { kanji: "辞書", romaji: "jisho", kana: "じしょ", arti: "Kamus", kategori: "kb" },
+    { kanji: "雑誌", romaji: "zasshi", kana: "ざっし", arti: "Majalah", kategori: "kb" },
+    { kanji: "新聞", romaji: "shinbun", kana: "しんぶん", arti: "Koran", kategori: "kb" },
+    { kanji: "手帳", romaji: "techou", kana: "てちょう", arti: "Buku Catatan Kecil", kategori: "kb" },
+    { kanji: "名刺", romaji: "meishi", kana: "めいし", arti: "Kartu Nama", kategori: "kb" },
+    { kanji: "鉛筆", romaji: "enpitsu", kana: "えんぴつ", arti: "Pensil", kategori: "kb" },
+    { kanji: "時計", romaji: "tokei", kana: "とけい", arti: "Jam", kategori: "kb" },
+    { kanji: "傘", romaji: "kasa", kana: "かさ", arti: "Payung", kategori: "kb" },
+    { kanji: "鞄", romaji: "kaban", kana: "かばん", arti: "Tas", kategori: "kb" },
+    { kanji: "机", romaji: "tsukue", kana: "つくえ", arti: "Meja", kategori: "kb" },
+    { kanji: "椅子", romaji: "isu", kana: "いす", arti: "Kursi", kategori: "kb" },
+    { kanji: "車", romaji: "kuruma", kana: "くるま", arti: "Mobil", kategori: "kb" },
+    { kanji: "自転車", romaji: "jitensha", kana: "じてんしゃ", arti: "Sepeda", kategori: "kb" },
+    { kanji: "お茶", romaji: "ocha", kana: "おちゃ", arti: "Teh (Jepang)", kategori: "kb" },
+    { kanji: "水", romaji: "mizu", kana: "みず", arti: "Air", kategori: "kb" },
+    { kanji: "牛乳", romaji: "gyuunyuu", kana: "ぎゅうにゅう", arti: "Susu Sapi", kategori: "kb" },
+    { kanji: "お酒", romaji: "osake", kana: "おさけ", arti: "Alkohol / Sake", kategori: "kb" },
+    { kanji: "肉", romaji: "niku", kana: "にく", arti: "Daging", kategori: "kb" },
+    { kanji: "魚", romaji: "sakana", kana: "さかな", arti: "Ikan", kategori: "kb" },
+    { kanji: "野菜", romaji: "yasai", kana: "やさい", arti: "Sayur", kategori: "kb" },
+    { kanji: "果物", romaji: "kudamono", kana: "くだもの", arti: "Buah-buahan", kategori: "kb" },
+    { kanji: "朝ご飯", romaji: "asagohan", kana: "あさごはん", arti: "Sarapan", kategori: "kb" },
+    { kanji: "昼ご飯", romaji: "hirugohan", kana: "ひるごはん", arti: "Makan Siang", kategori: "kb" },
+    { kanji: "晩ご飯", romaji: "bangohan", kana: "ばんごはん", arti: "Makan Malam", kategori: "kb" },
+    { kanji: "卵", romaji: "tamago", kana: "たまご", arti: "Telur", kategori: "kb" },
+    { kanji: "手紙", romaji: "tegami", kana: "てがみ", arti: "Surat", kategori: "kb" },
+    { kanji: "写真", romaji: "shashin", kana: "しゃしん", arti: "Foto", kategori: "kb" },
+    { kanji: "店", romaji: "mise", kana: "みせ", arti: "Toko", kategori: "kb" },
+    { kanji: "庭", romaji: "niwa", kana: "にわ", arti: "Halaman / Taman", kategori: "kb" },
+    { kanji: "宿題", romaji: "shukudai", kana: "しゅくだい", arti: "PR / Tugas", kategori: "kb" },
+    { kanji: "友達", romaji: "tomodachi", kana: "ともだち", arti: "Teman", kategori: "kb" },
+    { kanji: "家族", romaji: "kazoku", kana: "かぞく", arti: "Keluarga", kategori: "kb" },
+    { kanji: "父", romaji: "chichi", kana: "ちち", arti: "Ayah (Sendiri)", kategori: "kb" },
+    { kanji: "母", romaji: "haha", kana: "はは", arti: "Ibu (Sendiri)", kategori: "kb" },
+    { kanji: "兄", romaji: "ani", kana: "あに", arti: "Kakak Laki-laki (Sendiri)", kategori: "kb" },
+    { kanji: "姉", romaji: "ane", kana: "あね", arti: "Kakak Perempuan (Sendiri)", kategori: "kb" },
+    { kanji: "弟", romaji: "otouto", kana: "おとうと", arti: "Adik Laki-laki (Sendiri)", kategori: "kb" },
+    { kanji: "妹", romaji: "imouto", kana: "いもうと", arti: "Adik Perempuan (Sendiri)", kategori: "kb" },
+    { kanji: "国", romaji: "kuni", kana: "くに", arti: "Negara", kategori: "kb" },
+    { kanji: "町", romaji: "machi", kana: "まち", arti: "Kota", kategori: "kb" },
+    { kanji: "山", romaji: "yama", kana: "やま", arti: "Gunung", kategori: "kb" },
+    { kanji: "川", romaji: "kawa", kana: "かわ", arti: "Sungai", kategori: "kb" },
+    { kanji: "海", romaji: "umi", kana: "うみ", arti: "Laut", kategori: "kb" },
+    { kanji: "天気", romaji: "tenki", kana: "てんき", arti: "Cuaca", kategori: "kb" },
+    { kanji: "雨", romaji: "ame", kana: "あめ", arti: "Hujan", kategori: "kb" },
+    { kanji: "雪", romaji: "yuki", kana: "ゆき", arti: "Salju", kategori: "kb" },
+    { kanji: "休み", romaji: "yasumi", kana: "やすみ", arti: "Libur / Istirahat", kategori: "kb" },
+    { kanji: "旅行", romaji: "ryokou", kana: "りょこう", arti: "Tamasya / Perjalanan", kategori: "kb" },
+    { kanji: "お金", romaji: "okane", kana: "おかね", arti: "Uang", kategori: "kb" },
+    { kanji: "名前", romaji: "namae", kana: "なまえ", arti: "Nama", kategori: "kb" },
+    { kanji: "言葉", romaji: "kotoba", kana: "ことば", arti: "Kata / Bahasa", kategori: "kb" },
+    { kanji: "意味", romaji: "imi", kana: "いみ", arti: "Arti / Makna", kategori: "kb" },
+    
+    // Kata Kerja (Verb)
+    { kanji: "起きます", romaji: "okimasu", kana: "おきます", arti: "Bangun (tidur)", kategori: "kk" },
+    { kanji: "寝ます", romaji: "nemasu", kana: "ねます", arti: "Tidur", kategori: "kk" },
+    { kanji: "働きます", romaji: "hatarakimasu", kana: "はたらきます", arti: "Bekerja", kategori: "kk" },
+    { kanji: "休みます", romaji: "yasumimasu", kana: "やすみます", arti: "Beristirahat / Absen", kategori: "kk" },
+    { kanji: "勉強します", romaji: "benkyoushimasu", kana: "べんきょうします", arti: "Belajar", kategori: "kk" },
+    { kanji: "終わります", romaji: "owarimasu", kana: "おわります", arti: "Selesai", kategori: "kk" },
+    { kanji: "行きます", romaji: "ikimasu", kana: "いきます", arti: "Pergi", kategori: "kk" },
+    { kanji: "来ます", romaji: "kimasu", kana: "きます", arti: "Datang", kategori: "kk" },
+    { kanji: "帰ります", romaji: "kaerimasu", kana: "かえります", arti: "Pulang", kategori: "kk" },
+    { kanji: "食べます", romaji: "tabemasu", kana: "たべます", arti: "Makan", kategori: "kk" },
+    { kanji: "飲みます", romaji: "nomimasu", kana: "のみます", arti: "Minum", kategori: "kk" },
+    { kanji: "吸います", romaji: "suimasu", kana: "すいます", arti: "Mengisap (rokok)", kategori: "kk" },
+    { kanji: "見ます", romaji: "mimasu", kana: "みます", arti: "Melihat / Menonton", kategori: "kk" },
+    { kanji: "聞きます", romaji: "kikimasu", kana: "ききます", arti: "Mendengar / Bertanya", kategori: "kk" },
+    { kanji: "読みます", romaji: "yomimasu", kana: "よみます", arti: "Membaca", kategori: "kk" },
+    { kanji: "書きます", romaji: "kakimasu", kana: "かきます", arti: "Menulis", kategori: "kk" },
+    { kanji: "買います", romaji: "kaimasu", kana: "かいます", arti: "Membeli", kategori: "kk" },
+    { kanji: "撮ります", romaji: "torimasu", kana: "とります", arti: "Mengambil (foto)", kategori: "kk" },
+    { kanji: "会います", romaji: "aimasu", kana: "あいます", arti: "Bertemu", kategori: "kk" },
+    { kanji: "切ります", romaji: "kirimasu", kana: "きります", arti: "Memotong", kategori: "kk" },
+    { kanji: "送ります", romaji: "okurimasu", kana: "おくります", arti: "Mengirim", kategori: "kk" },
+    { kanji: "あげます", romaji: "agemasu", kana: "あげます", arti: "Memberikan", kategori: "kk" },
+    { kanji: "もらいます", romaji: "moraimasu", kana: "もらいます", arti: "Menerima", kategori: "kk" },
+    { kanji: "貸します", romaji: "kashimasu", kana: "かします", arti: "Meminjamkan", kategori: "kk" },
+    { kanji: "借ります", romaji: "karimasu", kana: "かります", arti: "Meminjam", kategori: "kk" },
+    { kanji: "教えます", romaji: "oshiemasu", kana: "おしえます", arti: "Mengajar / Memberitahu", kategori: "kk" },
+    { kanji: "習います", romaji: "naraimasu", kana: "ならいます", arti: "Belajar (dari guru)", kategori: "kk" },
+    { kanji: "わかります", romaji: "wakarimasu", kana: "わかります", arti: "Mengerti", kategori: "kk" },
+    { kanji: "あります", romaji: "arimasu", kana: "あります", arti: "Ada (Benda Mati)", kategori: "kk" },
+    { kanji: "います", romaji: "imasu", kana: "います", arti: "Ada (Makhluk Hidup)", kategori: "kk" },
+    { kanji: "かかります", romaji: "kakarimasu", kana: "かかります", arti: "Membutuhkan (waktu/uang)", kategori: "kk" },
+    { kanji: "遊びます", romaji: "asobimasu", kana: "あそびます", arti: "Bermain", kategori: "kk" },
+    { kanji: "泳ぎます", romaji: "oyogimasu", kana: "およぎます", arti: "Berenang", kategori: "kk" },
+    { kanji: "迎えます", romaji: "mukaemasu", kana: "むかえます", arti: "Menjemput", kategori: "kk" },
+    { kanji: "疲れます", romaji: "tsukaremasu", kana: "つかれます", arti: "Lelah", kategori: "kk" },
+    { kanji: "結婚します", romaji: "kekkonshimasu", kana: "けっこんします", arti: "Menikah", kategori: "kk" },
+    { kanji: "買い物します", romaji: "kaimonoshimasu", kana: "かいものします", arti: "Berbelanja", kategori: "kk" },
+    { kanji: "食事します", romaji: "shokujishimasu", kana: "しょくじします", arti: "Makan (bersama)", kategori: "kk" },
+    { kanji: "散歩します", romaji: "sanposhimasu", kana: "さんぽします", arti: "Jalan-jalan", kategori: "kk" },
+    { kanji: "点けます", romaji: "tsukemasu", kana: "つけます", arti: "Menyalakan", kategori: "kk" },
+    { kanji: "消します", romaji: "keshimasu", kana: "けします", arti: "Mematikan / Menghapus", kategori: "kk" },
+    { kanji: "開けます", romaji: "akemasu", kana: "あけます", arti: "Membuka", kategori: "kk" },
+    { kanji: "閉めます", romaji: "shimemasu", kana: "しめます", arti: "Menutup", kategori: "kk" },
+    { kanji: "急ぎます", romaji: "isogimasu", kana: "いそぎます", arti: "Buru-buru", kategori: "kk" },
+    { kanji: "待ちます", romaji: "machimasu", kana: "まちます", arti: "Menunggu", kategori: "kk" },
+    { kanji: "持ちます", romaji: "mochimasu", kana: "もちます", arti: "Membawa / Memegang", kategori: "kk" },
+    { kanji: "取ります", romaji: "torimasu", kana: "とります", arti: "Mengambil", kategori: "kk" },
+    { kanji: "手伝います", romaji: "tetsudaimasu", kana: "てつだいます", arti: "Membantu", kategori: "kk" },
+    { kanji: "呼びます", romaji: "yobimasu", kana: "よびます", arti: "Memanggil", kategori: "kk" },
+    { kanji: "話します", romaji: "hanashimasu", kana: "はなします", arti: "Berbicara", kategori: "kk" },
+    { kanji: "使います", romaji: "tsukaimasu", kana: "つかいます", arti: "Menggunakan", kategori: "kk" },
+    { kanji: "止めます", romaji: "tomemasu", kana: "とめます", arti: "Menghentikan", kategori: "kk" },
+    { kanji: "見せます", romaji: "misemasu", kana: "みせます", arti: "Memperlihatkan", kategori: "kk" },
+    { kanji: "座ります", romaji: "suwarimasu", kana: "すわります", arti: "Duduk", kategori: "kk" },
+    { kanji: "立ちます", romaji: "tachimasu", kana: "たちます", arti: "Berdiri", kategori: "kk" },
+    { kanji: "入ります", romaji: "hairimasu", kana: "はいります", arti: "Masuk", kategori: "kk" },
+    { kanji: "出ます", romaji: "demasu", kana: "でます", arti: "Keluar", kategori: "kk" },
+    { kanji: "降ります", romaji: "furimasu", kana: "ふります", arti: "Turun (Hujan)", kategori: "kk" },
+
+    // Kata Sifat (I & Na Adjectives)
+    { kanji: "大きい", romaji: "ookii", kana: "おおきい", arti: "Besar", kategori: "ks" },
+    { kanji: "小さい", romaji: "chiisai", kana: "ちいさい", arti: "Kecil", kategori: "ks" },
+    { kanji: "新しい", romaji: "atarashii", kana: "あたらしい", arti: "Baru", kategori: "ks" },
+    { kanji: "古い", romaji: "furui", kana: "ふるい", arti: "Lama / Kuno", kategori: "ks" },
+    { kanji: "良い", romaji: "ii / yoi", kana: "いい / よい", arti: "Bagus / Baik", kategori: "ks" },
+    { kanji: "悪い", romaji: "warui", kana: "わるい", arti: "Buruk / Jelek", kategori: "ks" },
+    { kanji: "暑い", romaji: "atsui", kana: "あつい", arti: "Panas (Cuaca)", kategori: "ks" },
+    { kanji: "熱い", romaji: "atsui", kana: "あつい", arti: "Panas (Benda)", kategori: "ks" },
+    { kanji: "寒い", romaji: "samui", kana: "さむい", arti: "Dingin (Cuaca)", kategori: "ks" },
+    { kanji: "冷たい", romaji: "tsumetai", kana: "つめたい", arti: "Dingin (Benda)", kategori: "ks" },
+    { kanji: "難しい", romaji: "muzukashii", kana: "むずかしい", arti: "Sulit", kategori: "ks" },
+    { kanji: "易しい", romaji: "yasashii", kana: "やさしい", arti: "Mudah", kategori: "ks" },
+    { kanji: "高い", romaji: "takai", kana: "たかい", arti: "Tinggi / Mahal", kategori: "ks" },
+    { kanji: "安い", romaji: "yasui", kana: "やすい", arti: "Murah", kategori: "ks" },
+    { kanji: "低い", romaji: "hikui", kana: "ひくい", arti: "Rendah", kategori: "ks" },
+    { kanji: "面白い", romaji: "omoshiroi", kana: "おもしろい", arti: "Menarik / Lucu", kategori: "ks" },
+    { kanji: "美味しい", romaji: "oishii", kana: "おいしい", arti: "Enak", kategori: "ks" },
+    { kanji: "忙しい", romaji: "isogashii", kana: "いそがしい", arti: "Sibuk", kategori: "ks" },
+    { kanji: "楽しい", romaji: "tanoshii", kana: "たのしい", arti: "Menyenangkan", kategori: "ks" },
+    { kanji: "白い", romaji: "shiroi", kana: "しろい", arti: "Putih", kategori: "ks" },
+    { kanji: "黒い", romaji: "kuroi", kana: "くろい", arti: "Hitam", kategori: "ks" },
+    { kanji: "赤い", romaji: "akai", kana: "あかい", arti: "Merah", kategori: "ks" },
+    { kanji: "青い", romaji: "aoi", kana: "あおい", arti: "Biru", kategori: "ks" },
+    { kanji: "静か", romaji: "shizuka (na)", kana: "しずか（な）", arti: "Tenang / Sepi", kategori: "ks" },
+    { kanji: "賑やか", romaji: "nigiyaka (na)", kana: "にぎやか（な）", arti: "Ramai", kategori: "ks" },
+    { kanji: "有名", romaji: "yuumei (na)", kana: "ゆうめい（な）", arti: "Terkenal", kategori: "ks" },
+    { kanji: "親切", romaji: "shinsetsu (na)", kana: "しんせつ（な）", arti: "Ramah / Baik Hati", kategori: "ks" },
+    { kanji: "元気", romaji: "genki (na)", kana: "げんき（な）", arti: "Sehat / Bersemangat", kategori: "ks" },
+    { kanji: "暇", romaji: "hima (na)", kana: "ひま（な）", arti: "Senggang", kategori: "ks" },
+    { kanji: "便利", romaji: "benri (na)", kana: "べんり（な）", arti: "Praktis", kategori: "ks" },
+    { kanji: "素敵", romaji: "suteki (na)", kana: "すてき（な）", arti: "Bagus Sekali / Keren", kategori: "ks" },
+    { kanji: "好き", romaji: "suki (na)", kana: "すき（な）", arti: "Suka", kategori: "ks" },
+    { kanji: "嫌い", romaji: "kirai (na)", kana: "きらい（な）", arti: "Benci / Tidak Suka", kategori: "ks" },
+    { kanji: "上手", romaji: "jouzu (na)", kana: "じょうず（な）", arti: "Pintar / Mahir", kategori: "ks" },
+    { kanji: "下手", romaji: "heta (na)", kana: "へた（な）", arti: "Kurang Mahir / Bodoh", kategori: "ks" },
+    { kanji: "色々な", romaji: "iroiro (na)", kana: "いろいろ（な）", arti: "Bermacam-macam", kategori: "ks" },
+
+    // Lain-lain
+    { kanji: "今", romaji: "ima", kana: "いま", arti: "Sekarang", kategori: "ll" },
+    { kanji: "今日", romaji: "kyou", kana: "きょう", arti: "Hari Ini", kategori: "ll" },
+    { kanji: "明日", romaji: "ashita", kana: "あした", arti: "Besok", kategori: "ll" },
+    { kanji: "昨日", romaji: "kinou", kana: "きのう", arti: "Kemarin", kategori: "ll" },
+    { kanji: "今週", romaji: "konshuu", kana: "こんしゅう", arti: "Minggu Ini", kategori: "ll" },
+    { kanji: "来週", romaji: "raishuu", kana: "らいしゅう", arti: "Minggu Depan", kategori: "ll" },
+    { kanji: "先週", romaji: "senshuu", kana: "せんしゅう", arti: "Minggu Lalu", kategori: "ll" },
+    { kanji: "今年", romaji: "kotoshi", kana: "ことし", arti: "Tahun Ini", kategori: "ll" },
+    { kanji: "来年", romaji: "rainen", kana: "らいねん", arti: "Tahun Depan", kategori: "ll" },
+    { kanji: "去年", romaji: "kyonen", kana: "きょねん", arti: "Tahun Lalu", kategori: "ll" },
+    { kanji: "毎日", romaji: "mainichi", kana: "まいにち", arti: "Setiap Hari", kategori: "ll" },
+    { kanji: "前", romaji: "mae", kana: "まえ", arti: "Depan / Sebelum", kategori: "ll" },
+    { kanji: "後ろ", romaji: "ushiro", kana: "うしろ", arti: "Belakang", kategori: "ll" },
+    { kanji: "右", romaji: "migi", kana: "みぎ", arti: "Kanan", kategori: "ll" },
+    { kanji: "左", romaji: "hidari", kana: "ひだり", arti: "Kiri", kategori: "ll" },
+    { kanji: "中", romaji: "naka", kana: "なか", arti: "Dalam", kategori: "ll" },
+    { kanji: "外", romaji: "soto", kana: "そと", arti: "Luar", kategori: "ll" },
+    { kanji: "隣", romaji: "tonari", kana: "となり", arti: "Sebelah", kategori: "ll" },
+    { kanji: "近く", romaji: "chikaku", kana: "ちかく", arti: "Dekat", kategori: "ll" }
+];
+
+// --- LOCAL STORAGE MANAGER ---
+let memorizedKanji = JSON.parse(localStorage.getItem('nihongoProgres')) || [];
+function saveProgress() {
+    localStorage.setItem('nihongoProgres', JSON.stringify(memorizedKanji));
+    updateProgressUI();
+}
+function updateProgressUI() {
+    document.getElementById('progressCount').innerText = memorizedKanji.length;
+}
+updateProgressUI();
+
+// --- TEXT TO SPEECH ---
+function speakText(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ja-JP';
+        utterance.rate = 0.8; 
+        window.speechSynthesis.speak(utterance);
+    }
+}
+
+// --- UTILITIES ---
+function shuffle(array) {
+    let arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+    });
+    document.getElementById(tabId).classList.add('active');
+    document.getElementById('btn-' + tabId).classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+
+    if(tabId === 'tab-flashcard') initFlashcard();
+    if(tabId === 'tab-menulis') setTimeout(initCanvas, 100);
+    if(tabId === 'tab-daftar') renderList();
+}
+
+// --- FLASHCARD LOGIC ---
+let fcData = [];
+let fcIndex = 0;
+
+function initFlashcard() {
+    let cat = document.getElementById('flashcardCategory').value;
+    let stat = document.getElementById('flashcardFilter').value;
+    
+    fcData = masterData.filter(item => {
+        let matchCat = (cat === 'semua' || item.kategori === cat);
+        let isMem = memorizedKanji.includes(item.kanji);
+        let matchStat = (stat === 'semua') || (stat === 'hafal' && isMem) || (stat === 'belum' && !isMem);
+        return matchCat && matchStat;
+    });
+
+    if(fcData.length === 0) {
+        document.getElementById('fcKanji').innerText = "Kosong";
+        document.getElementById('fcRomaji').innerText = "-";
+        document.getElementById('fcArti').innerText = "Ganti filter";
+        return;
+    }
+    fcData = shuffle(fcData);
+    fcIndex = 0;
+    renderFlashcard();
+}
+
+function renderFlashcard() {
+    if(fcData.length === 0) return;
+    document.querySelector('.flashcard').classList.remove('flipped');
+    let item = fcData[fcIndex];
+    document.getElementById('fcCounter').innerText = `${fcIndex + 1} / ${fcData.length}`;
+    document.getElementById('fcKanji').innerText = item.kanji;
+    document.getElementById('fcRomaji').innerText = item.romaji;
+    document.getElementById('fcArti').innerText = item.arti;
+}
+function toggleFlashcard() { document.querySelector('.flashcard').classList.toggle('flipped'); }
+function nextCard() { if(fcData.length > 0) { fcIndex = (fcIndex + 1) % fcData.length; renderFlashcard(); } }
+function prevCard() { if(fcData.length > 0) { fcIndex = (fcIndex - 1 + fcData.length) % fcData.length; renderFlashcard(); } }
+// Gunakan kana untuk TTS agar pelafalan Jepang sempurna
+function playAudioFc() { speakText(fcData[fcIndex].kana); }
+
+function markMemorized(isHafal) {
+    let currentKanji = fcData[fcIndex].kanji;
+    if(isHafal && !memorizedKanji.includes(currentKanji)) {
+        memorizedKanji.push(currentKanji);
+    } else if(!isHafal && memorizedKanji.includes(currentKanji)) {
+        memorizedKanji = memorizedKanji.filter(k => k !== currentKanji);
+    }
+    saveProgress();
+    setTimeout(nextCard, 300);
+}
+
+// --- QUIZ LOGIC ---
+let quizData = [];
+let quizIndex = 0;
+let quizScore = 0;
+let isAnswered = false;
+
+function startQuiz() {
+    let cat = document.getElementById('quizCategory').value;
+    let len = document.getElementById('quizLength').value;
+
+    let filtered = masterData.filter(item => cat === 'semua' || item.kategori === cat);
+    filtered = shuffle(filtered);
+    
+    if (len !== 'semua') {
+        quizData = filtered.slice(0, parseInt(len));
+    } else {
+        quizData = filtered;
+    }
+
+    if(quizData.length < 4) {
+        alert('Kosakata pada kategori ini kurang untuk dijadikan kuis. Ganti kategori atau jumlah soal.');
+        return;
+    }
+
+    quizIndex = 0;
+    quizScore = 0;
+    document.getElementById('quizSetup').classList.add('hidden');
+    document.getElementById('quizResult').classList.add('hidden');
+    document.getElementById('quizPlay').classList.remove('hidden');
+    loadQuizQuestion();
+}
+
+function loadQuizQuestion() {
+    isAnswered = false;
+    document.getElementById('quizFeedback').innerText = "";
+    document.getElementById('quizProgressText').innerText = `Soal ${quizIndex + 1} / ${quizData.length}`;
+    
+    let currentQ = quizData[quizIndex];
+    document.getElementById('quizKanji').innerText = currentQ.kanji;
+    
+    let options = [currentQ];
+    let pool = masterData.filter(x => x.kanji !== currentQ.kanji);
+    pool = shuffle(pool).slice(0, 3);
+    options = shuffle([...options, ...pool]);
+
+    let optsContainer = document.getElementById('quizOptions');
+    optsContainer.innerHTML = "";
+    
+    options.forEach(opt => {
+        let btn = document.createElement('button');
+        btn.className = "w-full bg-slate-50 border-2 border-slate-200 text-slate-700 font-semibold py-4 rounded-xl text-left px-6 hover:bg-slate-100 transition";
+        btn.innerText = opt.arti;
+        btn.onclick = () => checkAnswer(opt, currentQ, btn);
+        optsContainer.appendChild(btn);
+    });
+}
+
+function checkAnswer(selected, correct, btnNode) {
+    if(isAnswered) return;
+    isAnswered = true;
+    speakText(correct.kana); // TTS pakai kana
+
+    let feedback = document.getElementById('quizFeedback');
+    
+    if(selected.kanji === correct.kanji) {
+        btnNode.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-700');
+        btnNode.classList.add('bg-green-100', 'border-green-500', 'text-green-700');
+        feedback.innerText = `✅ Benar! (${correct.romaji})`;
+        feedback.className = "text-lg font-bold min-h-[28px] mt-2 text-green-600";
+        quizScore++;
+    } else {
+        btnNode.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-700');
+        btnNode.classList.add('bg-red-100', 'border-red-500', 'text-red-700');
+        feedback.innerText = `❌ Salah! Jawaban: ${correct.arti} (${correct.romaji})`;
+        feedback.className = "text-lg font-bold min-h-[28px] mt-2 text-red-600";
+    }
+
+    setTimeout(() => {
+        quizIndex++;
+        if(quizIndex < quizData.length) {
+            loadQuizQuestion();
+        } else {
+            showQuizResult();
+        }
+    }, 1500);
+}
+
+function showQuizResult() {
+    document.getElementById('quizPlay').classList.add('hidden');
+    document.getElementById('quizResult').classList.remove('hidden');
+    let percentage = Math.round((quizScore / quizData.length) * 100);
+    document.getElementById('quizScore').innerText = `${percentage}%`;
+    document.getElementById('quizDetailScore').innerText = `Benar: ${quizScore} | Salah: ${quizData.length - quizScore}`;
+}
+
+// --- MENULIS CANVAS LOGIC ---
+const canvas = document.getElementById('writingCanvas');
+const ctx = canvas.getContext('2d');
+let drawing = false;
+let writeData = [];
+let writeIndex = 0;
+
+function initWrite() {
+    let cat = document.getElementById('writeCategory').value;
+    writeData = masterData.filter(item => cat === 'semua' || item.kategori === cat);
+    writeData = shuffle(writeData);
+    writeIndex = 0;
+    loadWriteData();
+    initCanvas();
+}
+
+function loadWriteData() {
+    if(writeData.length === 0) return;
+    let item = writeData[writeIndex];
+    document.getElementById('writeKanji').innerText = item.kanji;
+    document.getElementById('writeRomaji').innerText = item.romaji;
+    document.getElementById('writeArti').innerText = item.arti;
+    clearCanvas();
+}
+
+function playWriteAudio() {
+    if(writeData.length > 0) speakText(writeData[writeIndex].kana);
+}
+
+function nextWrite() {
+    if(writeData.length > 0) {
+        writeIndex = (writeIndex + 1) % writeData.length;
+        loadWriteData();
+    }
+}
+
+function initCanvas() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#1e293b";
+}
+
+function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function getPos(e) {
+    let rect = canvas.getBoundingClientRect();
+    let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+canvas.addEventListener('mousedown', (e) => { drawing = true; let pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); });
+canvas.addEventListener('mousemove', (e) => { if (drawing) { let pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); } });
+canvas.addEventListener('mouseup', () => { drawing = false; });
+canvas.addEventListener('mouseleave', () => { drawing = false; });
+
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; let pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }, { passive: false });
+canvas.addEventListener('touchmove', (e) => { e.preventDefault(); if (drawing) { let pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); } }, { passive: false });
+canvas.addEventListener('touchend', () => { drawing = false; });
+
+// --- DAFTAR KOSAKATA LOGIC ---
+const catLabel = { 'kb': 'Kata Benda', 'kk': 'Kata Kerja', 'ks': 'Kata Sifat', 'll': 'Lain-lain' };
+
+function renderList() {
+    let cat = document.getElementById('listCategoryFilter').value;
+    let stat = document.getElementById('listStatusFilter').value;
+    
+    const listEl = document.getElementById('vocabList');
+    listEl.innerHTML = "";
+
+    let filtered = masterData.filter(item => {
+        let matchCat = (cat === 'semua' || item.kategori === cat);
+        let isMem = memorizedKanji.includes(item.kanji);
+        let matchStat = (stat === 'semua') || (stat === 'hafal' && isMem) || (stat === 'belum' && !isMem);
+        return matchCat && matchStat;
+    });
+
+    filtered.forEach(item => {
+        let isMem = memorizedKanji.includes(item.kanji);
+        let li = document.createElement('li');
+        li.className = "flex justify-between items-center p-4 hover:bg-slate-50";
+        li.innerHTML = `
+            <div class="flex items-center gap-4">
+                <button onclick="speakText('${item.kana}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded-full w-10 h-10 flex items-center justify-center">🔊</button>
+                <div>
+                    <h3 class="text-xl font-bold jp-text">${item.kanji} <span class="text-sm text-slate-400 ml-2 font-normal font-sans">${item.romaji}</span></h3>
+                    <p class="text-sm text-slate-600">${item.arti} <span class="text-xs bg-slate-200 px-2 py-0.5 rounded text-slate-500 ml-1">${catLabel[item.kategori]}</span></p>
+                </div>
+            </div>
+            <div>
+                ${isMem ? '<span class="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">✅ Hafal</span>' : '<span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Belum</span>'}
+            </div>
+        `;
+        listEl.appendChild(li);
+    });
+}
+
+// Inisialisasi awal
+initFlashcard();
+</script>
+</body>
+</html>
