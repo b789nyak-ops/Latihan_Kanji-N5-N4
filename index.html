@@ -29,7 +29,7 @@
                 <p class="text-sm text-blue-200">Latihan Kanji Menghafal & Menulis</p>
             </div>
             <div class="bg-white/20 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
-                Progres: <span id="progressCount">0</span>/150
+                Progres: <span id="progressCount">0</span>/<span id="totalVocabCount">0</span>
             </div>
         </div>
     </header>
@@ -48,15 +48,7 @@
         <section id="tab-flashcard" class="tab-content active">
             <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 flex justify-between gap-2">
                 <select id="flashcardCategory" class="w-full bg-slate-100 p-2 rounded-lg outline-none text-sm" onchange="initFlashcard()">
-                    <option value="ALL">Semua Kategori</option>
-                    <option value="Tempat & Benda">Tempat & Benda</option>
-                    <option value="Kata Kerja">Kata Kerja</option>
-                    <option value="Sifat & Kondisi">Sifat & Kondisi</option>
-                    <option value="Waktu">Waktu</option>
-                    <option value="Peraturan">Peraturan</option>
-                    <option value="Acara & Upacara">Acara & Upacara</option>
-                    <option value="Bencana & Darurat">Bencana & Darurat</option>
-                    <option value="Partikel & Keterangan">Partikel & Keterangan</option>
+                    <!-- Diisi otomatis oleh JavaScript -->
                 </select>
                 <select id="flashcardFilter" class="w-full bg-slate-100 p-2 rounded-lg outline-none text-sm" onchange="initFlashcard()">
                     <option value="ALL">Semua Status</option>
@@ -99,15 +91,7 @@
                 
                 <label class="block text-left text-sm font-medium text-slate-600 mb-2">Kategori Kosakata:</label>
                 <select id="quizCategory" class="w-full bg-slate-100 p-3 rounded-xl outline-none mb-4">
-                    <option value="ALL">Semua Kategori</option>
-                    <option value="Tempat & Benda">Tempat & Benda</option>
-                    <option value="Kata Kerja">Kata Kerja</option>
-                    <option value="Sifat & Kondisi">Sifat & Kondisi</option>
-                    <option value="Waktu">Waktu</option>
-                    <option value="Peraturan">Peraturan</option>
-                    <option value="Acara & Upacara">Acara & Upacara</option>
-                    <option value="Bencana & Darurat">Bencana & Darurat</option>
-                    <option value="Partikel & Keterangan">Partikel & Keterangan</option>
+                    <!-- Diisi otomatis oleh JavaScript -->
                 </select>
 
                 <label class="block text-left text-sm font-medium text-slate-600 mb-2">Jumlah Soal:</label>
@@ -116,6 +100,7 @@
                     <option value="20">20 Soal</option>
                     <option value="50">50 Soal</option>
                     <option value="100">100 Soal</option>
+                    <option value="ALL">Semua Soal</option>
                 </select>
 
                 <button onclick="startQuiz()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-blue-700 transition">🚀 Mulai Kuis</button>
@@ -142,21 +127,13 @@
         <section id="tab-menulis" class="tab-content">
             <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 flex justify-between gap-2">
                 <select id="writeCategory" class="w-full bg-slate-100 p-2 rounded-lg outline-none text-sm" onchange="initWrite()">
-                    <option value="ALL">Semua Kategori</option>
-                    <option value="Tempat & Benda">Tempat & Benda</option>
-                    <option value="Kata Kerja">Kata Kerja</option>
-                    <option value="Sifat & Kondisi">Sifat & Kondisi</option>
-                    <option value="Waktu">Waktu</option>
-                    <option value="Peraturan">Peraturan</option>
-                    <option value="Acara & Upacara">Acara & Upacara</option>
-                    <option value="Bencana & Darurat">Bencana & Darurat</option>
-                    <option value="Partikel & Keterangan">Partikel & Keterangan</option>
+                    <!-- Diisi otomatis oleh JavaScript -->
                 </select>
                 <button onclick="initWrite()" class="bg-slate-100 px-4 py-2 rounded-lg text-sm font-semibold">Acak 🎲</button>
             </div>
 
             <div class="bg-white p-6 rounded-2xl shadow-sm text-center relative">
-                <button onclick="playWriteAudio()" class="absolute top-4 right-4 bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-lg hover:bg-blue-200 transition">🔊</button>
+                <button onclick="playWriteAudio()" class="absolute top-4 right-4 z-10 bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center text-lg hover:bg-blue-200 transition">🔊</button>
                 
                 <h2 class="text-5xl font-bold jp-text text-slate-800 mb-2" id="writeKanji">私</h2>
                 <p class="text-lg font-bold text-blue-600" id="writeRomaji">watashi</p>
@@ -177,15 +154,7 @@
         <section id="tab-daftar" class="tab-content">
             <div class="bg-white p-4 rounded-2xl shadow-sm mb-4 flex gap-2">
                 <select id="listCategoryFilter" class="w-full bg-slate-100 p-2 rounded-lg outline-none text-sm" onchange="renderList()">
-                    <option value="ALL">Semua Kategori</option>
-                    <option value="Tempat & Benda">Tempat & Benda</option>
-                    <option value="Kata Kerja">Kata Kerja</option>
-                    <option value="Sifat & Kondisi">Sifat & Kondisi</option>
-                    <option value="Waktu">Waktu</option>
-                    <option value="Peraturan">Peraturan</option>
-                    <option value="Acara & Upacara">Acara & Upacara</option>
-                    <option value="Bencana & Darurat">Bencana & Darurat</option>
-                    <option value="Partikel & Keterangan">Partikel & Keterangan</option>
+                    <!-- Diisi otomatis oleh JavaScript -->
                 </select>
                 <select id="listStatusFilter" class="w-full bg-slate-100 p-2 rounded-lg outline-none text-sm" onchange="renderList()">
                     <option value="ALL">Semua Status</option>
@@ -203,7 +172,7 @@
     </main>
 
 <script>
-// --- DATASET 150 KOSAKATA (MINNA NO NIHONGO 1 BAB 1-25) ---
+// --- DATASET KOSAKATA ---
 const masterData = [
   // Waktu (毎~)
   { id: '1', kanji: '毎日', romaji: 'mainichi', meaning: 'Setiap hari', category: 'Waktu', mastered: false },
@@ -351,7 +320,7 @@ const masterData = [
   { id: '82_benda', kanji: '銀行員', romaji: 'ginkouin', meaning: 'Pegawai bank', category: 'Tempat & Benda', mastered: false },
   { id: '83_benda', kanji: '医者', romaji: 'isha', meaning: 'Dokter', category: 'Tempat & Benda', mastered: false },
   { id: '84_benda', kanji: '研究者', romaji: 'kenkyuusha', meaning: 'Peneliti', category: 'Tempat & Benda', mastered: false },
-  { id: '85_benda', kanji: 'エンジニア', romaji: 'enjinia', meaning: 'Insinyur / Engineer', category: 'Tempat & Benda', mastered: false },
+  { id: '85_benda', kanji: 'エンジニア', romaji: 'enjinior', meaning: 'Insinyur / Engineer', category: 'Tempat & Benda', mastered: false },
   { id: '86_benda', kanji: '大学', romaji: 'daigaku', meaning: 'Universitas', category: 'Tempat & Benda', mastered: false },
   { id: '87_benda', kanji: '病院', romaji: 'byouin', meaning: 'Rumah sakit', category: 'Tempat & Benda', mastered: false },
   { id: '88_benda', kanji: '電気', romaji: 'denki', meaning: 'Listrik / Lampu', category: 'Tempat & Benda', mastered: false },
@@ -801,13 +770,42 @@ const masterData = [
    
 // --- LOCAL STORAGE MANAGER ---
 let memorizedKanji = JSON.parse(localStorage.getItem('nihongoProgres')) || [];
+
 function saveProgress() {
     localStorage.setItem('nihongoProgres', JSON.stringify(memorizedKanji));
     updateProgressUI();
 }
+
 function updateProgressUI() {
     document.getElementById('progressCount').innerText = memorizedKanji.length;
+    document.getElementById('totalVocabCount').innerText = masterData.length;
 }
+
+// --- GENERATE KATEGORI OPTIONS DENGAN JUMLAH ---
+function populateCategoryDropdowns() {
+    // Ambil daftar kategori unik
+    let categories = [...new Set(masterData.map(item => item.category))];
+    
+    // Siapkan HTML opsi "Semua Kategori" dengan total keseluruhan
+    let optionsHtml = `<option value="ALL">Semua Kategori (${masterData.length} Kosakata)</option>`;
+    
+    // Hitung dan masukkan masing-masing kategori beserta jumlahnya
+    categories.forEach(cat => {
+        let count = masterData.filter(item => item.category === cat).length;
+        optionsHtml += `<option value="${cat}">${cat} (${count} Kosakata)</option>`;
+    });
+
+    // Terapkan ke semua elemen select kategori
+    ['flashcardCategory', 'quizCategory', 'writeCategory', 'listCategoryFilter'].forEach(id => {
+        let el = document.getElementById(id);
+        if (el) {
+            el.innerHTML = optionsHtml;
+        }
+    });
+}
+
+// Inisialisasi awal saat halaman dimuat
+populateCategoryDropdowns();
 updateProgressUI();
 
 // --- TEXT TO SPEECH ---
@@ -830,6 +828,7 @@ function shuffle(array) {
     }
     return arr;
 }
+
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => {
@@ -839,7 +838,7 @@ function switchTab(tabId) {
     document.getElementById('btn-' + tabId).classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
 
     if(tabId === 'tab-flashcard') initFlashcard();
-    if(tabId === 'tab-menulis') setTimeout(initCanvas, 100);
+    if(tabId === 'tab-menulis') setTimeout(initWrite, 100); 
     if(tabId === 'tab-daftar') renderList();
 }
 
@@ -878,6 +877,7 @@ function renderFlashcard() {
     document.getElementById('fcRomaji').innerText = item.romaji;
     document.getElementById('fcArti').innerText = item.meaning;
 }
+
 function toggleFlashcard() { document.querySelector('.flashcard').classList.toggle('flipped'); }
 function nextCard() { if(fcData.length > 0) { fcIndex = (fcIndex + 1) % fcData.length; renderFlashcard(); } }
 function prevCard() { if(fcData.length > 0) { fcIndex = (fcIndex - 1 + fcData.length) % fcData.length; renderFlashcard(); } }
@@ -914,7 +914,7 @@ function startQuiz() {
     }
 
     if(quizData.length < 4) {
-        alert('Kosakata pada kategori ini kurang untuk dijadikan kuis. Ganti kategori atau jumlah soal.');
+        alert('Kosakata pada kategori ini kurang untuk dijadikan kuis (minimal 4 soal). Ganti kategori atau jumlah soal.');
         return;
     }
 
@@ -979,14 +979,6 @@ function checkAnswer(selected, correct, btnNode) {
             showQuizResult();
         }
     }, 1500);
-}
-
-function showQuizResult() {
-    document.getElementById('quizPlay').classList.add('hidden');
-    document.getElementById('quizResult').classList.remove('hidden');
-    let percentage = Math.round((quizScore / quizData.length) * 100);
-    document.getElementById('quizScore').innerText = `${percentage}%`;
-    document.getElementById('quizDetailScore').innerText = `Benar: ${quizScore} | Salah: ${quizData.length - quizScore}`;
 }
 
 // --- MENULIS CANVAS LOGIC ---
@@ -1089,7 +1081,7 @@ function renderList() {
     });
 }
 
-// Inisialisasi awal
+// Inisialisasi awal flashcard
 initFlashcard();
 </script>
 </body>
