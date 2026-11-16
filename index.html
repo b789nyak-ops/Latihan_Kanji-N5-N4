@@ -1331,7 +1331,9 @@ function autoCorrectStroke(points) {
 }
 
 // 5. Render ulang seluruh isi kanvas
-function redrawAll() {
+  const canvas = document.getElementByld('kanvas-tulis');
+  const ctx = canvas.getContext('2d');
+  function redrawAll() {
   const dpr = window.devicePixelRatio || 1;
   ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
 
