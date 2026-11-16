@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MJ Nihongo JLPT N5-N4</title>
+    <title>Master Japan</title> JLPT/JFT N5-N4
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
@@ -390,7 +390,7 @@
 
                 <label class="block text-left text-sm font-medium theme-text-muted mb-2">Bantuan Romaji / Cara Baca:</label>
                 <select id="readShowRomaji" class="w-full theme-input p-3 rounded-xl outline-none mb-4 text-sm font-medium">
-                    <option value="HIDE">🙈 Sembunyikan (Uji Baca Kanji Murni)</option>
+                    <option value="HIDE">🙈 Sembunyikan (Cara Baca Kanji)</option>
                     <option value="SHOW">👁️ Tampilkan Romaji di Bawah Kalimat</option>
                 </select>
 
@@ -399,6 +399,8 @@
                     <option value="5">5 Soal</option>
                     <option value="10" selected>10 Soal</option>
                     <option value="20">20 Soal</option>
+                    <option value="30">30 Soal</option>
+                    <option value="50">50 Soal</option>
                 </select>
 
                 <button onclick="startReadingSession()" class="w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md transition">🚀 Buat & Mulai Bacaan</button>
@@ -578,6 +580,7 @@
                 <select id="quizLength" class="w-full theme-input p-3 rounded-xl outline-none mb-6">
                     <option value="10">10 Soal</option>
                     <option value="20">20 Soal</option>
+                    <option value="30">30 Soal</option>
                     <option value="50">50 Soal</option>
                     <option value="100">100 Soal</option>
                     <option value="ALL">Semua Soal</option>
