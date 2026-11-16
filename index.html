@@ -1227,105 +1227,213 @@ function checkAnswer(selected, correct, btnNode) {
         }
     }, 1500);
 }
-
-// --- MENULIS CANVAS LOGIC ---
-const canvas = document.getElementById('writingCanvas');
+const canvas = document.getElementById('kanvas-tulis');
 const ctx = canvas.getContext('2d');
-let drawing = false;
-let writeData = [];
-let writeIndex = 0;
 
-function initWrite() {
-    let cat = document.getElementById('writeCategory').value;
-    writeData = masterData.filter(item => cat === 'ALL' || item.category === cat);
-    writeData = shuffle(writeData);
-    writeIndex = 0;
-    loadWriteData();
-    initCanvas();
+let strokes = [];          // Riwayat coretan yang sudah selesai
+let currentStroke = [];    // Coretan yang sedang ditarik jari
+let animatingStroke = null; // Coretan yang sedang beranimasi menjadi rapi
+let isDrawing = false;
+
+// 1. Setup resolusi tajam (Retina / Layar HP HD)
+function setupCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+
+  // Atur gaya kuas
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#1e293b';
+
+  redrawAll();
 }
 
-function loadWriteData() {
-    if(writeData.length === 0) return;
-    let item = writeData[writeIndex];
-    document.getElementById('writeKanji').innerText = item.kanji;
-    document.getElementById('writeRomaji').innerText = item.romaji;
-    document.getElementById('writeArti').innerText = item.meaning;
-    clearCanvas();
+// 2. Menggambar satu goresan dengan kurva halus
+function drawSmoothStroke(points) {
+  if (!points || points.length === 0) return;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+
+  // Jika hanya titik pendek (seperti tanda dakuten ゛)
+  if (points.length < 3) {
+    const last = points[points.length - 1];
+    ctx.lineTo(last.x, last.y);
+    ctx.stroke();
+    return;
+  }
+
+  for (let i = 1; i < points.length - 1; i++) {
+    const midX = (points[i].x + points[i + 1].x) / 2;
+    const midY = (points[i].y + points[i + 1].y) / 2;
+    ctx.quadraticCurveTo(points[i].x, points[i].y, midX, midY);
+  }
+
+  const last = points[points.length - 1];
+  ctx.lineTo(last.x, last.y);
+  ctx.stroke();
 }
 
-function playWriteAudio() {
-    if(writeData.length > 0) speakText(writeData[writeIndex].kanji);
+// 3. Memecah garis lurus menjadi N titik agar bisa dianimasikan mulus
+function resampleLine(start, end, count) {
+  const result = [];
+  for (let i = 0; i < count; i++) {
+    const t = count === 1 ? 0 : i / (count - 1);
+    result.push({
+      x: start.x + (end.x - start.x) * t,
+      y: start.y + (end.y - start.y) * t
+    });
+  }
+  return result;
 }
 
-function nextWrite() {
-    if(writeData.length > 0) {
-        writeIndex = (writeIndex + 1) % writeData.length;
-        loadWriteData();
+// 4. Deteksi dan koreksi garis lurus
+function autoCorrectStroke(points) {
+  if (points.length < 5) return { points, isCorrected: false };
+
+  const start = points[0];
+  const end = points[points.length - 1];
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const directDist = Math.hypot(dx, dy);
+
+  let pathLength = 0;
+  for (let i = 1; i < points.length; i++) {
+    pathLength += Math.hypot(
+      points[i].x - points[i - 1].x,
+      points[i].y - points[i - 1].y
+    );
+  }
+
+  // Jika coretan cukup lurus (tidak berbelok tajam)
+  if (directDist > 25 && pathLength / directDist < 1.07) {
+    const angle = Math.abs(Math.atan2(dy, dx) * (180 / Math.PI));
+    let targetStart = { ...start };
+    let targetEnd = { ...end };
+
+    if (angle < 8 || angle > 172) {
+      targetEnd = { x: end.x, y: start.y }; // Horizontal sempurna
+    } else if (Math.abs(angle - 90) < 8) {
+      targetEnd = { x: start.x, y: end.y }; // Vertikal sempurna
     }
+
+    return {
+      points: resampleLine(targetStart, targetEnd, points.length),
+      isCorrected: true
+    };
+  }
+
+  return { points, isCorrected: false };
 }
 
-function initCanvas() {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = "#1e293b";
+// 5. Render ulang seluruh isi kanvas
+function redrawAll() {
+  const dpr = window.devicePixelRatio || 1;
+  ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+
+  strokes.forEach(stroke => drawSmoothStroke(stroke));
+
+  if (animatingStroke) {
+    drawSmoothStroke(animatingStroke.current);
+  }
+  if (currentStroke.length > 0) {
+    drawSmoothStroke(currentStroke);
+  }
 }
 
-function clearCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+// 6. Animasi transisi 120ms dari garis berantakan ke garis rapi
+function animateCorrection(fromPoints, toPoints, duration = 120) {
+  const startTime = performance.now();
+  animatingStroke = { from: fromPoints, to: toPoints, current: fromPoints };
+
+  function step(now) {
+    if (!animatingStroke) return; // Berhenti jika user keburu menyentuh layar lagi
+
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // Efek ease-out agar gerakan melambat lembut di akhir
+    const ease = 1 - Math.pow(1 - progress, 3);
+
+    animatingStroke.current = fromPoints.map((pt, i) => ({
+      x: pt.x + (toPoints[i].x - pt.x) * ease,
+      y: pt.y + (toPoints[i].y - pt.y) * ease
+    }));
+
+    redrawAll();
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else {
+      strokes.push(toPoints);
+      animatingStroke = null;
+      redrawAll();
+    }
+  }
+
+  requestAnimationFrame(step);
 }
 
+// Helper posisi sentuhan
 function getPos(e) {
-    let rect = canvas.getBoundingClientRect();
-    let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return { x: clientX - rect.left, y: clientY - rect.top };
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top
+  };
 }
 
-canvas.addEventListener('mousedown', (e) => { drawing = true; let pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); });
-canvas.addEventListener('mousemove', (e) => { if (drawing) { let pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); } });
-canvas.addEventListener('mouseup', () => { drawing = false; });
-canvas.addEventListener('mouseleave', () => { drawing = false; });
+// Event Listeners
+canvas.addEventListener('pointerdown', (e) => {
+  // Jika animasi sebelumnya belum selesai saat user mulai menulis lagi, langsung selesaikan
+  if (animatingStroke) {
+    strokes.push(animatingStroke.to);
+    animatingStroke = null;
+  }
 
-canvas.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; let pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }, { passive: false });
-canvas.addEventListener('touchmove', (e) => { e.preventDefault(); if (drawing) { let pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); } }, { passive: false });
-canvas.addEventListener('touchend', () => { drawing = false; });
+  isDrawing = true;
+  currentStroke = [getPos(e)];
+  redrawAll();
+});
 
-// --- DAFTAR KOSAKATA LOGIC ---
-function renderList() {
-    let cat = document.getElementById('listCategoryFilter').value;
-    let stat = document.getElementById('listStatusFilter').value;
-    
-    const listEl = document.getElementById('vocabList');
-    listEl.innerHTML = "";
+canvas.addEventListener('pointermove', (e) => {
+  if (!isDrawing) return;
+  currentStroke.push(getPos(e));
+  redrawAll();
+});
 
-    let filtered = masterData.filter(item => {
-        let matchCat = (cat === 'ALL' || item.category === cat);
-        let isMem = memorizedKanji.includes(item.kanji);
-        let matchStat = (stat === 'ALL') || (stat === 'hafal' && isMem) || (stat === 'belum' && !isMem);
-        return matchCat && matchStat;
-    });
+canvas.addEventListener('pointerup', () => {
+  if (!isDrawing) return;
+  isDrawing = false;
 
-    filtered.forEach(item => {
-        let isMem = memorizedKanji.includes(item.kanji);
-        let li = document.createElement('li');
-        li.className = "flex justify-between items-center p-4 hover:bg-slate-50";
-        li.innerHTML = `
-            <div class="flex items-center gap-4">
-                <button onclick="speakText('${item.kanji}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded-full w-10 h-10 flex items-center justify-center">🔊</button>
-                <div>
-                    <h3 class="text-xl font-bold jp-text">${item.kanji} <span class="text-sm text-slate-400 ml-2 font-normal font-sans">${item.romaji}</span></h3>
-                    <p class="text-sm text-slate-600">${item.meaning} <span class="text-xs bg-slate-200 px-2 py-0.5 rounded text-slate-500 ml-1">${item.category}</span></p>
-                </div>
-            </div>
-            <div>
-                ${isMem ? '<span class="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">✅ Hafal</span>' : '<span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Belum</span>'}
-            </div>
-        `;
-        listEl.appendChild(li);
-    });
+  const rawPoints = [...currentStroke];
+  currentStroke = [];
+
+  const { points: neatPoints, isCorrected } = autoCorrectStroke(rawPoints);
+
+  if (isCorrected) {
+    animateCorrection(rawPoints, neatPoints, 120);
+  } else {
+    strokes.push(neatPoints);
+    redrawAll();
+  }
+});
+
+// Fungsi untuk tombol "Hapus"
+function clearCanvas() {
+  strokes = [];
+  currentStroke = [];
+  animatingStroke = null;
+  redrawAll();
+}
+
+// Jalankan setup saat halaman siap & saat ukuran layar berubah
+window.addEventListener('resize', setupCanvas);
+setupCanvas();
+
 }
 
 // Inisialisasi awal flashcard
