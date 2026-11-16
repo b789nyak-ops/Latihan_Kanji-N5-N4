@@ -8,7 +8,9 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
 
-        /* --- SISTEM VARIABEL 4 TEMA JEPANG & TOKYO --- */
+        /* =========================================================
+           SISTEM 4 TEMA JEPANG & TOKYO + CORAK TRADISIONAL (WAGARA)
+           ========================================================= */
         :root, [data-theme="tokyo"] {
             --bg-body: #0b0e17;
             --bg-card: #151a2b;
@@ -23,6 +25,9 @@
             --header-grad: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #311042 100%);
             --header-border: rgba(56, 189, 248, 0.35);
             --canvas-bg: #ffffff;
+            /* Motif Cyber Grid Tokyo */
+            --body-pattern: radial-gradient(rgba(56, 189, 248, 0.08) 1px, transparent 1px);
+            --body-pattern-size: 22px 22px;
         }
 
         [data-theme="kyoto"] {
@@ -39,6 +44,11 @@
             --header-grad: linear-gradient(135deg, #991b1b 0%, #c83e2b 60%, #b45309 100%);
             --header-border: rgba(251, 191, 36, 0.4);
             --canvas-bg: #fffdf9;
+            /* Motif Ombak Seigaiha Kyoto */
+            --body-pattern: radial-gradient(circle at 100% 150%, transparent 24%, rgba(200, 62, 43, 0.045) 25%, rgba(200, 62, 43, 0.045) 28%, transparent 29%, transparent 36%, rgba(200, 62, 43, 0.045) 36%, rgba(200, 62, 43, 0.045) 40%, transparent 40%, transparent),
+                            radial-gradient(circle at 0 150%, transparent 24%, rgba(200, 62, 43, 0.045) 25%, rgba(200, 62, 43, 0.045) 28%, transparent 29%, transparent 36%, rgba(200, 62, 43, 0.045) 36%, rgba(200, 62, 43, 0.045) 40%, transparent 40%, transparent),
+                            radial-gradient(circle at 50% 100%, rgba(200, 62, 43, 0.045) 10%, transparent 11%, transparent 23%, rgba(200, 62, 43, 0.045) 24%, rgba(200, 62, 43, 0.045) 30%, transparent 31%);
+            --body-pattern-size: 48px 24px;
         }
 
         [data-theme="sakura"] {
@@ -55,27 +65,38 @@
             --header-grad: linear-gradient(135deg, #be185d 0%, #ec4899 60%, #f472b6 100%);
             --header-border: rgba(255, 255, 255, 0.4);
             --canvas-bg: #ffffff;
+            /* Motif Bintang Asanoha Sakura */
+            --body-pattern: linear-gradient(30deg, rgba(219, 39, 119, 0.045) 12%, transparent 12.5%, transparent 87%, rgba(219, 39, 119, 0.045) 87.5%, rgba(219, 39, 119, 0.045)),
+                            linear-gradient(150deg, rgba(219, 39, 119, 0.045) 12%, transparent 12.5%, transparent 87%, rgba(219, 39, 119, 0.045) 87.5%, rgba(219, 39, 119, 0.045)),
+                            linear-gradient(60deg, rgba(244, 114, 182, 0.05) 25%, transparent 25.5%, transparent 75%, rgba(244, 114, 182, 0.05) 75%, rgba(244, 114, 182, 0.05));
+            --body-pattern-size: 36px 62px;
         }
 
         [data-theme="fuji"] {
-            --bg-body: #f8fafc;
+            --bg-body: #f4f7fb;
             --bg-card: #ffffff;
-            --bg-subcard: #f1f5f9;
-            --bg-input: #f1f5f9;
+            --bg-subcard: #eef2f9;
+            --bg-input: #eef2f9;
             --text-main: #1e293b;
             --text-muted: #64748b;
-            --border-color: #e2e8f0;
+            --border-color: #dbe4f0;
             --accent: #2563eb;
             --accent-hover: #1d4ed8;
             --accent-soft: rgba(37, 99, 235, 0.12);
-            --header-grad: linear-gradient(135deg, #2563eb 0%, #4338ca 100%);
+            --header-grad: linear-gradient(135deg, #1d4ed8 0%, #3730a3 100%);
             --header-border: rgba(255, 255, 255, 0.25);
             --canvas-bg: #ffffff;
+            /* Motif Sisik Gunung Uroko Fuji */
+            --body-pattern: linear-gradient(135deg, rgba(37, 99, 235, 0.04) 25%, transparent 25%),
+                            linear-gradient(225deg, rgba(37, 99, 235, 0.04) 25%, transparent 25%);
+            --body-pattern-size: 28px 28px;
         }
 
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-body);
+            background-image: var(--body-pattern);
+            background-size: var(--body-pattern-size);
             color: var(--text-main);
             transition: background-color 0.25s ease, color 0.25s ease;
         }
@@ -123,57 +144,106 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Bingkai Logo Neon MJ */
         .logo-glow {
-            box-shadow: 0 0 14px rgba(56, 189, 248, 0.45), 0 0 24px rgba(249, 115, 22, 0.25);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.45), 0 0 16px rgba(249, 115, 22, 0.25);
         }
+
+        /* Tampilkan siluet ikon khas sesuai tema aktif */
+        .theme-motif-icon { display: none; }
+        [data-theme="tokyo"] .motif-tokyo { display: block; }
+        [data-theme="kyoto"] .motif-kyoto { display: block; }
+        [data-theme="sakura"] .motif-sakura { display: block; }
+        [data-theme="fuji"] .motif-fuji { display: block; }
     </style>
 </head>
 <body class="pb-24">
 
-    <!-- HEADER DENGAN LOGO MJ & PENGUBAH TEMA JEPANG/TOKYO -->
-    <header class="theme-header text-white p-4 sm:p-5 rounded-b-3xl shadow-xl sticky top-0 z-50">
-        <div class="max-w-3xl mx-auto flex justify-between items-center gap-3">
-            <!-- Slot Logo MJ + Upload Cepat -->
-            <div class="flex items-center gap-3">
-                <div class="relative group shrink-0">
-                    <div onclick="document.getElementById('logoUploadInput').click()" title="Klik untuk ganti logo MJ" class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-slate-900 border-2 border-cyan-400/60 logo-glow flex items-center justify-center cursor-pointer relative">
-                        <img id="appLogoImg" src="logo.jpg" alt="MJ Logo" class="w-full h-full object-cover" onerror="handleLogoFallback(this)">
-                        <!-- Cadangan SVG Neon MJ jika file gambar belum di-upload -->
-                        <svg id="appLogoFallbackSvg" class="hidden w-full h-full p-1.5" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <linearGradient id="mjGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="#38bdf8"/>
-                                    <stop offset="50%" stop-color="#a855f7"/>
-                                    <stop offset="100%" stop-color="#f97316"/>
-                                </linearGradient>
-                            </defs>
-                            <rect width="100" height="100" rx="20" fill="#0f172a"/>
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="url(#mjGrad)" stroke-width="3" stroke-dasharray="180 40"/>
-                            <text x="50" y="62" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="38" fill="url(#mjGrad)">MJ</text>
-                        </svg>
-                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] font-bold transition">
-                            📷 Ganti
-                        </div>
-                    </div>
-                    <input type="file" id="logoUploadInput" accept="image/*" class="hidden" onchange="handleLogoUpload(event)">
+    <!-- MODAL POP-UP NAMA & TEMPAT ASAL (UNTUK LOG GOOGLE SHEETS) -->
+    <div id="visitorModal" class="hidden fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="theme-card w-full max-w-md rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl overflow-hidden bg-slate-900 border border-cyan-400/50 logo-glow flex items-center justify-center shrink-0">
+                    <img src="logo.jpg" alt="MJ" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="hidden font-black text-sm text-cyan-400">MJ</span>
+                </div>
+                <div>
+                    <h2 class="text-lg font-extrabold leading-tight">ようこそ！Selamat Datang</h2>
+                    <p class="text-xs theme-text-muted">Isi data singkat sebelum mulai belajar</p>
+                </div>
+            </div>
+
+            <form onsubmit="submitVisitorForm(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-semibold theme-text-muted mb-1">Nama / Panggilan *</label>
+                    <input type="text" id="visitorNameInput" required placeholder="Contoh: Raka" class="w-full theme-input p-3 rounded-xl outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold theme-text-muted mb-1">Kota / Daerah Asal *</label>
+                    <input type="text" id="visitorOriginInput" required placeholder="Contoh: Tangerang / Bandung" class="w-full theme-input p-3 rounded-xl outline-none text-sm">
+                </div>
+                <button type="submit" id="visitorSubmitBtn" class="w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md transition mt-2">
+                    🚀 Mulai Belajar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- HEADER DENGAN LOGO MJ KECIL & SILUET IKON TEMA -->
+    <header class="theme-header text-white p-3.5 sm:p-4 rounded-b-3xl shadow-xl sticky top-0 z-50 overflow-hidden">
+        
+        <!-- Siluet Ikon Latar Belakang Sesuai Tema -->
+        <!-- 1. Tokyo Tower (Tokyo Night) -->
+        <svg class="theme-motif-icon motif-tokyo absolute right-24 -bottom-2 w-20 h-24 text-cyan-300/15 pointer-events-none" viewBox="0 0 100 120" fill="currentColor">
+            <path d="M47 5h6v15h-6zM43 20h14l3 25H40l3-25zm-6 25h26l6 30H31l6-30zm-11 30h48l12 45H68l-6-20H38l-6 20H14l12-45z"/>
+        </svg>
+        <!-- 2. Gerbang Torii (Kyoto Torii) -->
+        <svg class="theme-motif-icon motif-kyoto absolute right-24 -bottom-1 w-24 h-20 text-amber-200/20 pointer-events-none" viewBox="0 0 120 100" fill="currentColor">
+            <path d="M10 15 Q60 25 110 15 L114 23 Q60 32 6 23 Z M20 35 H100 V43 H20 Z M32 25 H42 V95 H32 Z M78 25 H88 V95 H78 Z M56 25 H64 V38 H56 Z"/>
+        </svg>
+        <!-- 3. Bunga Sakura (Tokyo Sakura) -->
+        <svg class="theme-motif-icon motif-sakura absolute right-24 -bottom-2 w-24 h-24 text-white/20 pointer-events-none" viewBox="0 0 100 100" fill="currentColor">
+            <path d="M50 10 C58 25 70 25 65 40 C80 35 88 48 75 58 C88 68 78 82 62 75 C65 90 48 94 42 80 C30 90 16 78 26 64 C12 58 18 40 34 44 C26 28 40 18 50 10 Z"/>
+            <circle cx="50" cy="52" r="7" fill="rgba(255,255,255,0.45)"/>
+        </svg>
+        <!-- 4. Gunung Fuji (Mount Fuji) -->
+        <svg class="theme-motif-icon motif-fuji absolute right-20 -bottom-1 w-28 h-20 text-white/20 pointer-events-none" viewBox="0 0 140 90" fill="currentColor">
+            <path d="M5 85 Q45 55 58 22 L82 22 Q95 55 135 85 Z"/>
+            <path d="M58 22 L82 22 L88 37 L77 32 L70 39 L63 32 L52 37 Z" fill="rgba(255,255,255,0.5)"/>
+        </svg>
+
+        <div class="max-w-3xl mx-auto flex justify-between items-center gap-3 relative z-10">
+            <!-- Logo MJ Ukuran Kecil & Ringkas -->
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl overflow-hidden bg-slate-900 border border-cyan-400/60 logo-glow flex items-center justify-center shrink-0">
+                    <img id="appLogoImg" src="logo.jpg" alt="MJ Logo" class="w-full h-full object-cover" onerror="handleLogoFallback(this)">
+                    <svg id="appLogoFallbackSvg" class="hidden w-full h-full p-1" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="mjGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#38bdf8"/>
+                                <stop offset="50%" stop-color="#a855f7"/>
+                                <stop offset="100%" stop-color="#f97316"/>
+                            </linearGradient>
+                        </defs>
+                        <rect width="100" height="100" rx="20" fill="#0f172a"/>
+                        <text x="50" y="64" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="42" fill="url(#mjGrad)">MJ</text>
+                    </svg>
                 </div>
 
                 <div>
-                    <h1 class="text-lg sm:text-xl font-extrabold tracking-tight leading-tight">MJ Nihongo N5–N4</h1>
-                    <p class="text-[11px] sm:text-xs text-white/80">Minna no Nihongo • Dokkai • Choukai</p>
+                    <h1 class="text-base sm:text-lg font-extrabold tracking-tight leading-tight">MJ Nihongo N5–N4</h1>
+                    <p class="text-[11px] text-white/80" id="headerGreeting">Minna no Nihongo • Dokkai • Choukai</p>
                 </div>
             </div>
 
             <!-- Kontrol Kanan: Pengubah Tema & Progres -->
-            <div class="flex flex-col items-end gap-1.5">
-                <select id="themeSelector" onchange="changeTheme(this.value)" aria-label="Pilih Tema" class="bg-black/30 text-white text-xs font-semibold px-2.5 py-1 rounded-full border border-white/25 outline-none backdrop-blur-sm cursor-pointer">
+            <div class="flex flex-col items-end gap-1">
+                <select id="themeSelector" onchange="changeTheme(this.value)" aria-label="Pilih Tema" class="bg-black/30 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full border border-white/25 outline-none backdrop-blur-sm cursor-pointer">
                     <option value="tokyo" class="text-slate-900">🌃 Tokyo Night</option>
                     <option value="kyoto" class="text-slate-900">⛩️ Kyoto Torii</option>
                     <option value="sakura" class="text-slate-900">🌸 Tokyo Sakura</option>
                     <option value="fuji" class="text-slate-900">🗻 Mount Fuji</option>
                 </select>
-                <div class="bg-white/15 px-3 py-0.5 rounded-full text-xs font-semibold backdrop-blur-sm">
+                <div class="bg-white/15 px-2.5 py-0.5 rounded-full text-[11px] font-semibold backdrop-blur-sm">
                     Hafal: <span id="progressCount">0</span>/<span id="totalVocabCount">0</span>
                 </div>
             </div>
@@ -241,7 +311,6 @@
                 <h2 class="text-lg sm:text-xl font-bold mb-1">📘 Daftar Pola Tata Bahasa (Bunpou)</h2>
                 <p class="text-xs theme-text-muted mb-4">Minna no Nihongo Bab 1–50 • Lengkap dengan rumus & 2 contoh kalimat ber-audio</p>
 
-                <!-- Sakelar 2 Tabel: Bab 1-25 vs Bab 26-50 -->
                 <div class="grid grid-cols-2 gap-2 p-1 theme-subcard rounded-xl mb-4">
                     <button id="btnBunpouTable1" onclick="switchBunpouTable(1)" class="py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold theme-accent-bg shadow transition">
                         📗 Tabel 1: Bab 1–25 (N5)
@@ -251,7 +320,6 @@
                     </button>
                 </div>
 
-                <!-- Filter Bab & Pencarian -->
                 <div class="flex flex-col sm:flex-row gap-2">
                     <select id="bunpouLessonFilter" onchange="renderBunpouTables()" class="sm:w-48 theme-input p-2.5 rounded-xl outline-none text-xs sm:text-sm font-medium"></select>
                     <input type="text" id="bunpouSearchInput" oninput="renderBunpouTables()" placeholder="🔍 Cari pola (misal: ~te kudasai, harus, kalau)..." class="flex-1 theme-input p-2.5 rounded-xl outline-none text-xs sm:text-sm">
@@ -555,22 +623,61 @@
 
 <script>
 // =========================================================================
-// 1. MANAJEMEN TEMA JEPANG/TOKYO & LOGO KUSTOM "MJ"
+// 0. KONFIGURASI GOOGLE SHEETS WEB APP URL (TEMPELKAN LINK-MU DI SINI NANTI)
+// =========================================================================
+const GOOGLE_SHEET_WEBHOOK_URL = ""; // Contoh: "https://script.google.com/macros/s/AKfycb.../exec"
+
+function initVisitorTracking() {
+    const savedVisitor = JSON.parse(localStorage.getItem('mjVisitorProfile') || 'null');
+    if (savedVisitor && savedVisitor.nama) {
+        const greetEl = document.getElementById('headerGreeting');
+        if (greetEl) greetEl.innerText = `Ganbatte, ${savedVisitor.nama} (${savedVisitor.asal})!`;
+    } else if (GOOGLE_SHEET_WEBHOOK_URL) {
+        // Munculkan pop-up hanya jika URL Google Sheets sudah diisi dan pengunjung belum pernah isi
+        document.getElementById('visitorModal').classList.remove('hidden');
+    }
+}
+
+async function submitVisitorForm(e) {
+    e.preventDefault();
+    const nama = document.getElementById('visitorNameInput').value.trim();
+    const asal = document.getElementById('visitorOriginInput').value.trim();
+    if (!nama || !asal) return;
+
+    const btn = document.getElementById('visitorSubmitBtn');
+    btn.disabled = true;
+    btn.innerText = '⏳ Menyimpan...';
+
+    const perangkat = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'HP / Mobile' : 'Laptop / Desktop';
+    localStorage.setItem('mjVisitorProfile', JSON.stringify({ nama, asal }));
+
+    const greetEl = document.getElementById('headerGreeting');
+    if (greetEl) greetEl.innerText = `Ganbatte, ${nama} (${asal})!`;
+
+    if (GOOGLE_SHEET_WEBHOOK_URL) {
+        try {
+            await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nama, asal, perangkat })
+            });
+        } catch (err) {
+            console.warn('Gagal mengirim log ke Google Sheets:', err);
+        }
+    }
+
+    document.getElementById('visitorModal').classList.add('hidden');
+}
+
+// =========================================================================
+// 1. MANAJEMEN TEMA JEPANG/TOKYO & LOGO "MJ"
 // =========================================================================
 function initThemeAndLogo() {
     const savedTheme = localStorage.getItem('mjNihongoTheme') || 'tokyo';
     document.documentElement.setAttribute('data-theme', savedTheme);
     const themeSel = document.getElementById('themeSelector');
     if (themeSel) themeSel.value = savedTheme;
-
-    const savedLogo = localStorage.getItem('mjCustomLogo');
-    if (savedLogo) {
-        const imgEl = document.getElementById('appLogoImg');
-        const svgEl = document.getElementById('appLogoFallbackSvg');
-        imgEl.src = savedLogo;
-        imgEl.classList.remove('hidden');
-        svgEl.classList.add('hidden');
-    }
 }
 
 function changeTheme(themeName) {
@@ -588,27 +695,8 @@ function handleLogoFallback(imgEl) {
     }
 }
 
-function handleLogoUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const dataUrl = e.target.result;
-        try {
-            localStorage.setItem('mjCustomLogo', dataUrl);
-        } catch (err) {
-            console.warn('Ukuran gambar terlalu besar untuk localStorage, tetap ditampilkan di sesi ini.');
-        }
-        const imgEl = document.getElementById('appLogoImg');
-        const svgEl = document.getElementById('appLogoFallbackSvg');
-        imgEl.src = dataUrl;
-        imgEl.classList.remove('hidden');
-        svgEl.classList.add('hidden');
-    };
-    reader.readAsDataURL(file);
-}
-
 initThemeAndLogo();
+initVisitorTracking();
 
 // =========================================================================
 // 2. DATABASE BUNPOU MINNA NO NIHONGO BAB 1-50 (MASING-MASING 2 CONTOH)
@@ -1565,7 +1653,7 @@ function kanaToRomaji(kanaStr) {
         'ちゃ':'cha','ちゅ':'chu','ちょ':'cho','にゃ':'nya','にゅ':'nyu','にょ':'nyo',
         'ひゃ':'hya','ひゅ':'hyu','ひょ':'hyo','みゃ':'mya','みゅ':'myu','みょ':'myo',
         'りゃ':'rya','りゅ':'ryu','りょ':'ryo','ぎゃ':'gya','ぎゅ':'gyu','ぎょ':'gyo',
-        'じゃ':'ja','じゅ':'ju','じょ':'jo','びゃ':'bya','びゅ':'byu','びょ':'byo',
+        'じゃ':'ja','じゅ':'ju','じょ':'jo','びゃ':'bya','びゅ':'byu','びょ':'myo',
         'ぴゃ':'pya','ぴゅ':'pyu','ぴょ':'pyo'
     };
     const singles = {
@@ -2331,7 +2419,7 @@ function markMemorized(status) {
 const canvas = document.getElementById('writingCanvas');
 const ctx = canvas.getContext('2d');
 let painting = false;
-let strokes = []; // Format: { points: [{x,y},...], width: number }
+let strokes = [];
 let currentStrokePoints = [];
 let currentPenWidth = 6;
 let autoStraightenEnabled = true;
@@ -2359,7 +2447,6 @@ function toggleStrokeAutoCorrect() {
     }
 }
 
-// Algoritma Perapi Goresan Otomatis (Meluruskan garis hampir lurus & menghaluskan lengkungan)
 function refineStrokePoints(pts) {
     if (!autoStraightenEnabled || pts.length < 3) return pts;
 
@@ -2371,7 +2458,6 @@ function refineStrokePoints(pts) {
 
     if (lineLen < 12) return pts;
 
-    // Hitung penyimpangan tegak lurus maksimum dari garis lurus start->end
     let maxDist = 0;
     for (let i = 1; i < pts.length - 1; i++) {
         const p = pts[i];
@@ -2379,10 +2465,8 @@ function refineStrokePoints(pts) {
         if (dist > maxDist) maxDist = dist;
     }
 
-    // Jika rasio penyimpangan kecil (< 14% panjang garis), luruskan rapi!
     if (maxDist / lineLen < 0.14) {
         let finalEnd = { x: end.x, y: end.y };
-        // Kunci sudut horizontal / vertikal jika kemiringan < 8 derajat
         const angleDeg = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
         if (angleDeg < 8 || angleDeg > 172) {
             finalEnd.y = start.y;
@@ -2392,7 +2476,6 @@ function refineStrokePoints(pts) {
         return [start, finalEnd];
     }
 
-    // Jika goresan melengkung (misal: し, の, つ, atau kait Kanji), haluskan dengan rata-rata bergerak
     const smoothed = [pts[0]];
     for (let i = 1; i < pts.length - 1; i++) {
         smoothed.push({
