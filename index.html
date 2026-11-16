@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Master Japan Kanji</title>
+    <title>Nihongo Kanji Jlpt N5-N4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
@@ -17,6 +17,8 @@
         .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
         .flashcard-front, .flashcard-back { backface-visibility: hidden; }
         .flashcard-back { transform: rotateY(180deg); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="text-slate-800 pb-20">
@@ -26,7 +28,7 @@
         <div class="flex justify-between items-center mb-2">
             <div>
                 <h1 class="text-xl font-bold">Nihongo Jlpt N5-N4</h1>
-                <p class="text-sm text-blue-200">Latihan Kanji Menghafal & Menulis</p>
+                <p class="text-sm text-blue-200">Hafal, Baca Kalimat, Choukai & Tulis</p>
             </div>
             <div class="bg-white/20 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
                 Progres: <span id="progressCount">0</span>/<span id="totalVocabCount">0</span>
@@ -35,11 +37,13 @@
     </header>
 
     <!-- Navigation Tabs -->
-    <nav class="flex justify-around bg-white mx-4 mt-4 rounded-xl shadow-sm p-2 text-sm font-medium text-slate-500 mb-6">
-        <button onclick="switchTab('tab-flashcard')" id="btn-tab-flashcard" class="tab-btn active px-4 py-2 text-blue-600 border-b-2 border-blue-600">🎴 Flashcard</button>
-        <button onclick="switchTab('tab-kuis')" id="btn-tab-kuis" class="tab-btn px-4 py-2 hover:text-blue-600">🎮 Kuis</button>
-        <button onclick="switchTab('tab-menulis')" id="btn-tab-menulis" class="tab-btn px-4 py-2 hover:text-blue-600">✍️ Menulis</button>
-        <button onclick="switchTab('tab-daftar')" id="btn-tab-daftar" class="tab-btn px-4 py-2 hover:text-blue-600">📖 Daftar</button>
+    <nav class="flex overflow-x-auto no-scrollbar bg-white mx-4 mt-4 rounded-xl shadow-sm p-1.5 text-xs sm:text-sm font-medium text-slate-500 mb-6 gap-1">
+        <button onclick="switchTab('tab-flashcard')" id="btn-tab-flashcard" class="tab-btn active shrink-0 px-3 py-2 text-blue-600 border-b-2 border-blue-600">🎴 Kartu</button>
+        <button onclick="switchTab('tab-membaca')" id="btn-tab-membaca" class="tab-btn shrink-0 px-3 py-2 hover:text-blue-600">📖 Membaca</button>
+        <button onclick="switchTab('tab-choukai')" id="btn-tab-choukai" class="tab-btn shrink-0 px-3 py-2 hover:text-blue-600">🎧 Choukai</button>
+        <button onclick="switchTab('tab-kuis')" id="btn-tab-kuis" class="tab-btn shrink-0 px-3 py-2 hover:text-blue-600">🎮 Kuis Arti</button>
+        <button onclick="switchTab('tab-menulis')" id="btn-tab-menulis" class="tab-btn shrink-0 px-3 py-2 hover:text-blue-600">✍️ Tulis</button>
+        <button onclick="switchTab('tab-daftar')" id="btn-tab-daftar" class="tab-btn shrink-0 px-3 py-2 hover:text-blue-600">📚 Daftar</button>
     </nav>
 
     <main class="px-4">
@@ -63,13 +67,11 @@
 
             <div class="flashcard w-full h-80 perspective-1000 cursor-pointer" onclick="toggleFlashcard()">
                 <div class="flashcard-inner relative w-full h-full text-center">
-                    <!-- Front -->
                     <div class="flashcard-front absolute w-full h-full bg-white rounded-3xl shadow-md border-2 border-slate-100 flex flex-col justify-center items-center p-6">
                         <p class="text-sm text-slate-400 mb-4" id="fcCounter">1 / 150</p>
-                        <h2 class="text-7xl font-bold jp-text text-slate-800" id="fcKanji">私</h2>
+                        <h2 class="text-6xl sm:text-7xl font-bold jp-text text-slate-800" id="fcKanji">私</h2>
                         <button onclick="event.stopPropagation(); playAudioFc()" class="mt-8 bg-blue-100 text-blue-600 w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-blue-200 transition">🔊</button>
                     </div>
-                    <!-- Back -->
                     <div class="flashcard-back absolute w-full h-full bg-blue-50 rounded-3xl shadow-md border-2 border-blue-200 flex flex-col justify-center items-center p-6">
                         <p class="text-2xl font-bold text-blue-800 mb-2" id="fcRomaji">watashi</p>
                         <p class="text-lg text-slate-600 font-medium text-center" id="fcArti">Saya</p>
@@ -88,10 +90,162 @@
             </div>
         </section>
 
-        <!-- TAB: KUIS -->
+        <!-- TAB: LATIHAN MEMBACA (DOKKAI & POLA KALIMAT OTOMATIS) -->
+        <section id="tab-membaca" class="tab-content">
+            <div id="readSetup" class="bg-white p-6 rounded-2xl shadow-sm">
+                <h2 class="text-xl font-bold mb-1 text-center">📖 Latihan Membaca (Dokkai)</h2>
+                <p class="text-xs text-slate-400 mb-5 text-center">Otomatis merangkai kalimat & pola tata bahasa N5–N4 dari daftar kosakatamu</p>
+                
+                <label class="block text-left text-sm font-medium text-slate-600 mb-2">Panjang & Tingkat Teks:</label>
+                <select id="readTextLength" class="w-full bg-slate-100 p-3 rounded-xl outline-none mb-4 text-sm font-medium">
+                    <option value="SHORT">📝 Kalimat Pendek (1 Pola Tata Bahasa)</option>
+                    <option value="LONG">📄 Kalimat Panjang / Majemuk (2–3 Klausa)</option>
+                    <option value="PARAGRAPH">📰 Paragraf / Cerita Pendek (4–5 Kalimat)</option>
+                    <option value="MIXED">🎲 Campuran (Pendek, Panjang & Paragraf)</option>
+                </select>
+
+                <label class="block text-left text-sm font-medium text-slate-600 mb-2">Fokus Pola Tata Bahasa:</label>
+                <select id="readGrammarFocus" class="w-full bg-slate-100 p-3 rounded-xl outline-none mb-4 text-sm font-medium">
+                    <option value="ALL">Semua Pola (N5 & N4 Campur)</option>
+                    <option value="N5">Level N5 (Bentuk -masu, -te, -tai, perbandingan)</option>
+                    <option value="N4">Level N4 (Pengandaian, Potensial, Pasif, Keigo, Kausatif)</option>
+                </select>
+
+                <label class="block text-left text-sm font-medium text-slate-600 mb-2">Bantuan Romaji / Cara Baca:</label>
+                <select id="readShowRomaji" class="w-full bg-slate-100 p-3 rounded-xl outline-none mb-4 text-sm font-medium">
+                    <option value="HIDE">🙈 Sembunyikan (Uji Baca Kanji Murni)</option>
+                    <option value="SHOW">👁️ Tampilkan Romaji di Bawah Kalimat</option>
+                </select>
+
+                <label class="block text-left text-sm font-medium text-slate-600 mb-2">Jumlah Soal:</label>
+                <select id="readCount" class="w-full bg-slate-100 p-3 rounded-xl outline-none mb-6 text-sm font-medium">
+                    <option value="5">5 Soal</option>
+                    <option value="10" selected>10 Soal</option>
+                    <option value="20">20 Soal</option>
+                </select>
+
+                <button onclick="startReadingSession()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-indigo-700 transition">🚀 Buat & Mulai Bacaan</button>
+            </div>
+
+            <div id="readPlay" class="hidden">
+                <div class="bg-white p-5 rounded-2xl shadow-sm mb-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full" id="readBadge">Kalimat Pendek • N4</span>
+                        <span class="text-xs font-bold text-slate-400" id="readProgressText">1 / 10</span>
+                    </div>
+
+                    <!-- Area Bacaan Jepang -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 my-2 relative">
+                        <p class="text-lg sm:text-xl leading-relaxed font-medium jp-text text-slate-800 whitespace-pre-line" id="readJpPassage">-</p>
+                        <p class="text-xs text-slate-500 mt-3 italic hidden" id="readRomajiPassage">-</p>
+                        
+                        <div class="flex justify-end gap-2 mt-3 pt-2 border-t border-slate-200/70">
+                            <button onclick="toggleReadRomajiHint()" class="text-xs bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-100">👁️ Intip Bacaan</button>
+                            <button onclick="speakCurrentPassage()" class="text-xs bg-indigo-100 text-indigo-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-indigo-200">🔊 Dengarkan</button>
+                        </div>
+                    </div>
+
+                    <!-- Pertanyaan Pemahaman -->
+                    <p class="text-sm font-bold text-slate-700 mt-4" id="readQuestionText">Pertanyaan:</p>
+                    
+                    <!-- Kotak Penjelasan Pola & Terjemahan (Muncul setelah menjawab) -->
+                    <div id="readExplanationBox" class="hidden mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-left">
+                        <p class="text-xs font-bold text-amber-800 uppercase tracking-wide mb-1">📌 Pola Kalimat yang Digunakan:</p>
+                        <p class="text-sm font-bold text-slate-800 mb-2" id="readPatternInfo">-</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-0.5">🇮🇩 Terjemahan Lengkap:</p>
+                        <p class="text-xs sm:text-sm text-slate-700 leading-relaxed" id="readTranslationInfo">-</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-2.5" id="readOptions"></div>
+
+                <button id="readNextBtn" onclick="nextReadingQuestion()" class="hidden w-full mt-4 bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-indigo-700 transition">Soal Berikutnya ➡️</button>
+            </div>
+
+            <div id="readResult" class="hidden bg-white p-6 rounded-2xl shadow-sm text-center">
+                <h2 class="text-2xl font-bold mb-2 text-slate-800">Latihan Membaca Selesai! 📖</h2>
+                <p class="text-5xl font-extrabold text-indigo-600 my-6" id="readScore">100%</p>
+                <p class="text-slate-600 mb-6" id="readDetailScore">Benar: 10 | Salah: 0</p>
+                <button onclick="resetReadingUI()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md">Buat Latihan Baru</button>
+            </div>
+        </section>
+
+        <!-- TAB: CHOUKAI (PERCAKAPAN, BERITA & PENGUMUMAN) -->
+        <section id="tab-choukai" class="tab-content">
+            <div id="choukaiSetup" class="bg-white p-6 rounded-2xl shadow-sm">
+                <h2 class="text-xl font-bold mb-1 text-center">🎧 Latihan Choukai (Pendengaran)</h2>
+                <p class="text-xs text-slate-400 mb-5 text-center">Simulasi mendengarkan percakapan, berita singkat, & pengumuman berbahasa Jepang</p>
+                
+                <label class="block text-left text-sm font-medium text-slate-600 mb-2">Jenis Audio Choukai:</label>
+                <select id="choukaiType" class="w-full bg-slate-100 p-3 rounded-xl outline-none mb-4 text-sm font-medium">
+                    <option value="ALL">🎲 Semua Format (Percakapan, Berita & Pengumuman)</option>
+                    <option value="CONVERSATION">💬 Percakapan Sehari-hari (Dialog A & B)</option>
+                    <option value="NEWS">📺 Berita Singkat (Cuaca, Lalu Lintas, Bencana, Acara)</option>
+                    <option value="ANNOUNCEMENT">📢 Pengumuman (Stasiun, Toko, Aturan)</option>
+                </select>
+
+                <label class="block text-left text-sm font-medium text-slate-600 mb-2">Kecepatan Bicara:</label>
+                <select id="choukaiSpeed" class="w-full bg-slate-100 p-3 rounded-xl outline-none mb-4 text-sm font-medium">
+                    <option value="0.7">🐢 Lambat / Pemula (0.70x)</option>
+                    <option value="0.88" selected>🚶 Normal Ujian JFT/JLPT (0.88x)</option>
+                    <option value="1.05">🏃 Cepat / Native (1.05x)</option>
+                </select>
+
+                <label class="block text-left text-sm font-medium text-slate-600 mb-2">Jumlah Soal:</label>
+                <select id="choukaiCount" class="w-full bg-slate-100 p-3 rounded-xl outline-none mb-6 text-sm font-medium">
+                    <option value="5">5 Soal</option>
+                    <option value="10" selected>10 Soal</option>
+                    <option value="15">15 Soal</option>
+                </select>
+
+                <button onclick="startChoukaiSession()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-emerald-700 transition">🎧 Mulai Latihan Choukai</button>
+            </div>
+
+            <div id="choukaiPlay" class="hidden">
+                <div class="bg-white p-5 rounded-2xl shadow-sm mb-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full" id="choukaiBadge">💬 Percakapan</span>
+                        <span class="text-xs font-bold text-slate-400" id="choukaiProgressText">1 / 10</span>
+                    </div>
+
+                    <!-- Pemutar Audio -->
+                    <div class="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-5 text-center my-2">
+                        <button id="choukaiPlayBtn" onclick="playChoukaiAudio()" class="mx-auto w-20 h-20 rounded-full bg-emerald-600 text-white flex flex-col items-center justify-center shadow-md hover:bg-emerald-700 active:scale-95 transition">
+                            <span class="text-3xl" id="choukaiSpeakerIcon">🔊</span>
+                        </button>
+                        <p class="text-xs font-semibold text-emerald-800 mt-2.5" id="choukaiAudioStatus">Klik untuk memutar ulang audio</p>
+                        <button onclick="stopSpeech()" class="mt-2 text-[11px] text-slate-500 underline hover:text-slate-700">⏹️ Hentikan Suara</button>
+                    </div>
+
+                    <!-- Pertanyaan Choukai -->
+                    <p class="text-sm font-bold text-slate-800 mt-4" id="choukaiQuestionText">Pertanyaan:</p>
+
+                    <!-- Transkrip Lengkap (Tersembunyi sampai user menjawab) -->
+                    <div id="choukaiTranscriptBox" class="hidden mt-4 bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-left">
+                        <p class="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-1.5">📜 Transkrip & Terjemahan:</p>
+                        <div class="text-sm jp-text text-slate-800 whitespace-pre-line leading-relaxed mb-2" id="choukaiJpScript">-</div>
+                        <div class="text-xs text-slate-500 italic whitespace-pre-line mb-2" id="choukaiRomajiScript">-</div>
+                        <div class="text-xs text-slate-700 whitespace-pre-line pt-2 border-t border-slate-200" id="choukaiIdScript">-</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-2.5" id="choukaiOptions"></div>
+
+                <button id="choukaiNextBtn" onclick="nextChoukaiQuestion()" class="hidden w-full mt-4 bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-emerald-700 transition">Soal Berikutnya ➡️</button>
+            </div>
+
+            <div id="choukaiResult" class="hidden bg-white p-6 rounded-2xl shadow-sm text-center">
+                <h2 class="text-2xl font-bold mb-2 text-slate-800">Choukai Selesai! 🎧</h2>
+                <p class="text-5xl font-extrabold text-emerald-600 my-6" id="choukaiScore">100%</p>
+                <p class="text-slate-600 mb-6" id="choukaiDetailScore">Benar: 10 | Salah: 0</p>
+                <button onclick="resetChoukaiUI()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-md">Ulangi Choukai</button>
+            </div>
+        </section>
+
+        <!-- TAB: KUIS KOSAKATA -->
         <section id="tab-kuis" class="tab-content">
             <div id="quizSetup" class="bg-white p-6 rounded-2xl shadow-sm text-center">
-                <h2 class="text-xl font-bold mb-4">Pengaturan Kuis</h2>
+                <h2 class="text-xl font-bold mb-4">Pengaturan Kuis Kosakata</h2>
                 
                 <label class="block text-left text-sm font-medium text-slate-600 mb-2">Kategori Kosakata:</label>
                 <select id="quizCategory" class="w-full bg-slate-100 p-3 rounded-xl outline-none mb-4"></select>
@@ -117,7 +271,7 @@
             <div id="quizPlay" class="hidden">
                 <div class="bg-white p-6 rounded-2xl shadow-sm text-center mb-6">
                     <p class="text-sm font-bold text-slate-400 mb-2" id="quizProgressText">Soal 1 / 10</p>
-                    <h2 class="text-6xl font-bold jp-text text-slate-800 my-4" id="quizKanji">-</h2>
+                    <h2 class="text-5xl sm:text-6xl font-bold jp-text text-slate-800 my-4" id="quizKanji">-</h2>
                     <p id="quizFeedback" class="text-lg font-bold min-h-[28px] mt-2"></p>
                 </div>
                 <div class="grid grid-cols-1 gap-3" id="quizOptions"></div>
@@ -845,58 +999,6 @@ const masterData = [
     { id: '1052', kanji: '自由', romaji: 'jiyuu (na)', meaning: 'Bebas', category: 'Sifat & Kondisi', mastered: false },
     { id: '1053', kanji: '同じ', romaji: 'onaji', meaning: 'Sama', category: 'Sifat & Kondisi', mastered: false },
   
-    // --- KATA KERJA OTOMATIS / KONDISI (Jidoushi N4 - Bab 29) ---
-    { id: '1054', kanji: '開きます', romaji: 'akimasu', meaning: 'Terbuka (Pintu/Toko)', category: 'Kata Kerja', mastered: false },
-    { id: '1055', kanji: '閉まります', romaji: 'shimarimasu', meaning: 'Tertutup', category: 'Kata Kerja', mastered: false },
-    { id: '1056', kanji: 'つきます', romaji: 'tsukimasu', meaning: 'Menyala (Lampu/Listrik)', category: 'Kata Kerja', mastered: false },
-    { id: '1057', kanji: '消えます', romaji: 'kiemasu', meaning: 'Padam / Mati (Lampu)', category: 'Kata Kerja', mastered: false },
-    { id: '1058', kanji: '壊れます', romaji: 'kowaremasu', meaning: 'Rusak', category: 'Kata Kerja', mastered: false },
-    { id: '1059', kanji: '割れます', romaji: 'waremasu', meaning: 'Pecah (Gelas/Piring)', category: 'Kata Kerja', mastered: false },
-    { id: '1060', kanji: '折れます', romaji: 'oremasu', meaning: 'Patah (Pohon/Pensil)', category: 'Kata Kerja', mastered: false },
-    { id: '1061', kanji: '破れます', romaji: 'yaburemasu', meaning: 'Sobek (Kertas/Baju)', category: 'Kata Kerja', mastered: false },
-    { id: '1062', kanji: '汚れます', romaji: 'yogoremasu', meaning: 'Menjadi kotor', category: 'Kata Kerja', mastered: false },
-    { id: '1063', kanji: '落ちます', romaji: 'ochimasu', meaning: 'Jatuh / Gugur', category: 'Kata Kerja', mastered: false },
-    { id: '1064', kanji: '止まります', romaji: 'tomarimasu', meaning: 'Berhenti (Mobil/Jam)', category: 'Kata Kerja', mastered: false },
-
-    // --- KATA KERJA INTERAKSI SOSIAL & BANTUAN (Bab 37, 41, 48) ---
-    { id: '1065', kanji: '褒めます', romaji: 'homemasu', meaning: 'Memuji', category: 'Kata Kerja', mastered: false },
-    { id: '1066', kanji: 'しかります', romaji: 'shikarimasu', meaning: 'Memarahi', category: 'Kata Kerja', mastered: false },
-    { id: '1067', kanji: '誘います', romaji: 'sasoimasu', meaning: 'Mengajak / Mengundang', category: 'Kata Kerja', mastered: false },
-    { id: '1068', kanji: '招待します', romaji: 'shoutaishimasu', meaning: 'Mengundang resmi', category: 'Kata Kerja', mastered: false },
-    { id: '1069', kanji: '頼みます', romaji: 'tanomimasu', meaning: 'Meminta / Memohon', category: 'Kata Kerja', mastered: false },
-    { id: '1070', kanji: '注意します', romaji: 'chuuishimasu', meaning: 'Mengingatkan / Berhati-hati', category: 'Kata Kerja', mastered: false },
-    { id: '1071', kanji: '盗みます', romaji: 'nusumimasu', meaning: 'Mencuri', category: 'Kata Kerja', mastered: false },
-    { id: '1072', kanji: '踏みます', romaji: 'fumimasu', meaning: 'Menginjak', category: 'Kata Kerja', mastered: false },
-    { id: '1073', kanji: '助けます', romaji: 'tasukemasu', meaning: 'Menolong / Membantu', category: 'Kata Kerja', mastered: false },
-    { id: '1074', kanji: '相談します', romaji: 'soudanshimasu', meaning: 'Berkonsultasi / Berdiskusi', category: 'Kata Kerja', mastered: false },
-
-    // --- KATA KERJA KONDISI & HARI-HARI (Bab 31-47) ---
-    { id: '1075', kanji: '困ります', romaji: 'komarimasu', meaning: 'Kesulitan / Kesusahan', category: 'Kata Kerja', mastered: false },
-    { id: '1076', kanji: '拾います', romaji: 'hiroimasu', meaning: 'Memungut / Mengambil', category: 'Kata Kerja', mastered: false },
-    { id: '1077', kanji: '慣れます', romaji: 'naremasu', meaning: 'Terbiasa', category: 'Kata Kerja', mastered: false },
-    { id: '1078', kanji: '太ります', romaji: 'futorimasu', meaning: 'Menjadi gemuk', category: 'Kata Kerja', mastered: false },
-    { id: '1079', kanji: 'やせます', romaji: 'yasemasu', meaning: 'Menjadi kurus', category: 'Kata Kerja', mastered: false },
-    { id: '1080', kanji: '失敗します', romaji: 'shippaishimasu', meaning: 'Gagal', category: 'Kata Kerja', mastered: false },
-    { id: '1081', kanji: '成功します', romaji: 'seikoushimasu', meaning: 'Berhasil / Sukses', category: 'Kata Kerja', mastered: false },
-    { id: '1082', kanji: '咲きます', romaji: 'sakimasu', meaning: 'Mekar (Bunga)', category: 'Kata Kerja', mastered: false },
-    { id: '1083', kanji: '渡します', romaji: 'watashimasu', meaning: 'Menyerahkan / Memberikan', category: 'Kata Kerja', mastered: false },
-    { id: '1084', kanji: '届きます', romaji: 'todokimasu', meaning: 'Tiba / Sampai (Paket)', category: 'Kata Kerja', mastered: false },
-    { id: '1085', kanji: '焼きます', romaji: 'yakimasu', meaning: 'Membakar / Memanggang', category: 'Kata Kerja', mastered: false },
-
-    // --- KATA KERJA BAHASA HORMAT / KEIGO (Bab 49 & 50) ---
-    { id: '1086', kanji: 'いらっしゃいます', romaji: 'irasshaimasu', meaning: 'Ada / Pergi / Datang (Hormat/Sonkeigo)', category: 'Kata Kerja', mastered: false },
-    { id: '1087', kanji: 'おっしゃいます', romaji: 'osshaimasu', meaning: 'Bicara / Berkata (Hormat/Sonkeigo)', category: 'Kata Kerja', mastered: false },
-    { id: '1088', kanji: 'なさいます', romaji: 'nasaimasu', meaning: 'Melakukan (Hormat/Sonkeigo)', category: 'Kata Kerja', mastered: false },
-    { id: '1089', kanji: 'ご覧になります', romaji: 'goran ni narimasu', meaning: 'Melihat (Hormat/Sonkeigo)', category: 'Kata Kerja', mastered: false },
-    { id: '1090', kanji: '参ります', romaji: 'mairimasu', meaning: 'Pergi / Datang (Rendah Diri/Kenjougo)', category: 'Kata Kerja', mastered: false },
-    { id: '1091', kanji: '申します', romaji: 'moushimasu', meaning: 'Bicara / Bernama (Rendah Diri/Kenjougo)', category: 'Kata Kerja', mastered: false },
-    { id: '1092', kanji: 'いたします', romaji: 'itashimasu', meaning: 'Melakukan (Rendah Diri/Kenjougo)', category: 'Kata Kerja', mastered: false },
-    { id: '1093', kanji: 'いただきます', romaji: 'itadakimasu', meaning: 'Makan / Minum / Menerima (Rendah Diri)', category: 'Kata Kerja', mastered: false },
-    { id: '1094', kanji: '拝見します', romaji: 'haikenshimasu', meaning: 'Melihat (Rendah Diri/Kenjougo)', category: 'Kata Kerja', mastered: false },
-    { id: '1095', kanji: '助けます', romaji: 'tasukemasu', meaning: 'Menolong / Membantu', category: 'Kata Kerja', mastered: false },
-    { id: '1096', kanji: '渡します', romaji: 'watashimasu', meaning: 'Menyerahkan / Memberikan', category: 'Kata Kerja', mastered: false },
-    { id: '1097', kanji: '届きます', romaji: 'todokimasu', meaning: 'Tiba / Sampai (Paket/Barang)', category: 'Kata Kerja', mastered: false },
-  
     // --- KOSAKATA TAMBAHAN: PERATURAN & TANDA ---
     { id: '2001', kanji: '標識', romaji: 'hyoushiki', meaning: 'Tanda / Rambu-rambu', category: 'Peraturan', mastered: false },
     { id: '2002', kanji: '禁止', romaji: 'kinshi', meaning: 'Larangan / Dilarang', category: 'Peraturan', mastered: false },
@@ -1541,9 +1643,8 @@ const kanjiReadings = {
 let cachedKanjiReadings = JSON.parse(localStorage.getItem('nihongoKanjiCache')) || {};
 
 function kanaToRomaji(kanaStr) {
-    // Konversi katakana ke hiragana terlebih dahulu
     let hira = kanaStr.replace(/[\u30a1-\u30f6]/g, m => String.fromCharCode(m.charCodeAt(0) - 0x60));
-    hira = hira.replace(/\./g, ''); // Hilangkan titik okurigana untuk romaji
+    hira = hira.replace(/\./g, '');
 
     const digraphs = {
         'きゃ':'kya','きゅ':'kyu','きょ':'kyo','しゃ':'sha','しゅ':'shu','しょ':'sho',
@@ -1626,7 +1727,6 @@ async function fetchKanjiReadingAuto(char) {
     }
 }
 
-// --- DETEKSI KARAKTER KANJI ---
 function extractKanjiChars(text) {
     const matches = text.match(/[\u4E00-\u9FAF]/g);
     if (!matches) return [];
@@ -1646,7 +1746,6 @@ function updateProgressUI() {
     document.getElementById('totalVocabCount').innerText = masterData.length;
 }
 
-// --- GENERATE KATEGORI OPTIONS DENGAN JUMLAH ---
 function populateCategoryDropdowns() {
     let categories = [...new Set(masterData.map(item => item.category))];
     let optionsHtml = `<option value="ALL">Semua Kategori (${masterData.length} Kosakata)</option>`;
@@ -1658,27 +1757,63 @@ function populateCategoryDropdowns() {
 
     ['flashcardCategory', 'quizCategory', 'writeCategory', 'listCategoryFilter'].forEach(id => {
         let el = document.getElementById(id);
-        if (el) {
-            el.innerHTML = optionsHtml;
-        }
+        if (el) el.innerHTML = optionsHtml;
     });
 }
 
 populateCategoryDropdowns();
 updateProgressUI();
 
-// --- TEXT TO SPEECH ---
-function speakText(text) {
+// --- TEXT TO SPEECH (SINGLE & MULTI-SPEAKER DIALOG) ---
+function speakText(text, rate = 0.85, pitch = 1.0) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
+        const cleanText = text.replace(/～|~/g, '').split('/')[0].trim();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.lang = 'ja-JP';
-        utterance.rate = 0.8; 
+        utterance.rate = rate;
+        utterance.pitch = pitch;
         window.speechSynthesis.speak(utterance);
     }
 }
 
-// --- UTILITIES ---
+function stopSpeech() {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+    const statusEl = document.getElementById('choukaiAudioStatus');
+    if (statusEl) statusEl.innerText = 'Audio dihentikan. Klik untuk putar ulang';
+}
+
+function speakSequence(lines, rate = 0.85, onStart, onEnd) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    if (onStart) onStart();
+
+    let idx = 0;
+    function nextLine() {
+        if (idx >= lines.length) {
+            if (onEnd) onEnd();
+            return;
+        }
+        const line = lines[idx];
+        const utt = new SpeechSynthesisUtterance(line.text);
+        utt.lang = 'ja-JP';
+        utt.rate = rate;
+        utt.pitch = line.pitch || 1.0;
+        utt.onend = () => {
+            idx++;
+            setTimeout(nextLine, 350);
+        };
+        utt.onerror = () => {
+            idx++;
+            nextLine();
+        };
+        window.speechSynthesis.speak(utt);
+    }
+    nextLine();
+}
+
 function shuffle(array) {
     let arr = [...array];
     for (let i = arr.length - 1; i > 0; i--) {
@@ -1688,7 +1823,12 @@ function shuffle(array) {
     return arr;
 }
 
+function pickRandom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
 function switchTab(tabId) {
+    stopSpeech();
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => {
         el.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
@@ -1706,149 +1846,978 @@ function switchTab(tabId) {
     if(tabId === 'tab-daftar') renderList();
 }
 
+// =========================================================================
+// ENGINE OTOMATIS: PEMBUAT KALIMAT & POLA TATA BAHASA (DOKKAI N5 - N4)
+// =========================================================================
+
+// Helper mengambil kosakata dinamis dari masterData
+function getVocabByIds(ids) {
+    return masterData.filter(item => ids.includes(item.id));
+}
+
+// Konjugasi dasar bentuk -masu ke bentuk kamus / te / ta / nai untuk generator kalimat
+function conjugateMasu(masuJp, masuRom, targetForm) {
+    // Kasus khusus
+    const irregulars = {
+        '行きます': { dict: ['行く', 'iku'], te: ['行って', 'itte'], ta: ['行った', 'itta'], nai: ['行かない', 'ikanai'], pot: ['行けます', 'ikemasu'] },
+        '来ます': { dict: ['来る', 'kuru'], te: ['来て', 'kite'], ta: ['来た', 'kita'], nai: ['来ない', 'konai'], pot: ['来られます', 'koraremasu'] },
+        'します': { dict: ['する', 'suru'], te: ['して', 'shite'], ta: ['した', 'shita'], nai: ['しない', 'shinai'], pot: ['できます', 'dekimasu'] }
+    };
+    if (irregulars[masuJp] && irregulars[masuJp][targetForm]) {
+        return irregulars[masuJp][targetForm];
+    }
+    if (masuJp.endsWith('します')) {
+        const stemJp = masuJp.slice(0, -3);
+        const stemRom = masuRom.replace(/\s*shimasu$/, '');
+        if (targetForm === 'dict') return [stemJp + 'する', stemRom + ' suru'];
+        if (targetForm === 'te') return [stemJp + 'して', stemRom + ' shite'];
+        if (targetForm === 'ta') return [stemJp + 'した', stemRom + ' shita'];
+        if (targetForm === 'nai') return [stemJp + 'しない', stemRom + ' shinai'];
+        if (targetForm === 'pot') return [stemJp + 'できます', stemRom + ' dekimasu'];
+    }
+    // Golongan 2 umum (-emasu / -imasu tertentu)
+    const g2List = ['食べます','見ます','起きます','寝ます','開けます','閉めます','教えます','覚えます','忘れます','調べます','考えます','続けます','やめます','片づけます','捨てます','出かけます','答えます'];
+    if (g2List.includes(masuJp)) {
+        const stemJp = masuJp.slice(0, -2);
+        const stemRom = masuRom.slice(0, -4);
+        if (targetForm === 'dict') return [stemJp + 'る', stemRom + 'ru'];
+        if (targetForm === 'te') return [stemJp + 'て', stemRom + 'te'];
+        if (targetForm === 'ta') return [stemJp + 'た', stemRom + 'ta'];
+        if (targetForm === 'nai') return [stemJp + 'ない', stemRom + 'nai'];
+        if (targetForm === 'pot') return [stemJp + 'られます', stemRom + 'raremasu'];
+    }
+    // Golongan 1
+    const stemJp = masuJp.slice(0, -2);
+    if (masuRom.endsWith('kimasu')) {
+        const r = masuRom.slice(0, -6);
+        if (targetForm === 'dict') return [stemJp + 'く', r + 'ku'];
+        if (targetForm === 'te') return [stemJp + 'いて', r + 'ite'];
+        if (targetForm === 'ta') return [stemJp + 'いた', r + 'ita'];
+        if (targetForm === 'nai') return [stemJp + 'かない', r + 'kanai'];
+    }
+    if (masuRom.endsWith('gimasu')) {
+        const r = masuRom.slice(0, -6);
+        if (targetForm === 'dict') return [stemJp + 'ぐ', r + 'gu'];
+        if (targetForm === 'te') return [stemJp + 'いで', r + 'ide'];
+        if (targetForm === 'ta') return [stemJp + 'いだ', r + 'ida'];
+        if (targetForm === 'nai') return [stemJp + 'がない', r + 'ganai'];
+    }
+    if (masuRom.endsWith('shimasu')) {
+        const r = masuRom.slice(0, -7);
+        if (targetForm === 'dict') return [stemJp + 'す', r + 'su'];
+        if (targetForm === 'te') return [stemJp + 'して', r + 'shite'];
+        if (targetForm === 'ta') return [stemJp + 'した', r + 'shita'];
+        if (targetForm === 'nai') return [stemJp + 'さない', r + 'sanai'];
+    }
+    if (masuRom.endsWith('chimasu')) {
+        const r = masuRom.slice(0, -7);
+        if (targetForm === 'dict') return [stemJp + 'つ', r + 'tsu'];
+        if (targetForm === 'te') return [stemJp + 'って', r + 'tte'];
+        if (targetForm === 'ta') return [stemJp + 'った', r + 'tta'];
+        if (targetForm === 'nai') return [stemJp + 'たない', r + 'tanai'];
+    }
+    if (masuRom.endsWith('mimasu') || masuRom.endsWith('bimasu')) {
+        const r = masuRom.slice(0, -6);
+        if (targetForm === 'dict') return [stemJp + (masuRom.endsWith('mimasu') ? 'む' : 'ぶ'), r + (masuRom.endsWith('mimasu') ? 'mu' : 'bu')];
+        if (targetForm === 'te') return [stemJp + 'んで', r + 'nde'];
+        if (targetForm === 'ta') return [stemJp + 'んだ', r + 'nda'];
+        if (targetForm === 'nai') return [stemJp + (masuRom.endsWith('mimasu') ? 'まない' : 'ばない'), r + (masuRom.endsWith('mimasu') ? 'manai' : 'banai')];
+    }
+    if (masuRom.endsWith('rimasu')) {
+        const r = masuRom.slice(0, -6);
+        if (targetForm === 'dict') return [stemJp + 'る', r + 'ru'];
+        if (targetForm === 'te') return [stemJp + 'って', r + 'tte'];
+        if (targetForm === 'ta') return [stemJp + 'った', r + 'tta'];
+        if (targetForm === 'nai') return [stemJp + 'らない', r + 'ranai'];
+    }
+    if (masuRom.endsWith('imasu')) {
+        const r = masuRom.slice(0, -5);
+        if (targetForm === 'dict') return [stemJp + 'う', r + 'u'];
+        if (targetForm === 'te') return [stemJp + 'って', r + 'tte'];
+        if (targetForm === 'ta') return [stemJp + 'った', r + 'tta'];
+        if (targetForm === 'nai') return [stemJp + 'わない', r + 'wanai'];
+    }
+    return [masuJp, masuRom];
+}
+
+function generateReadingQuestion(lengthPref, levelPref) {
+    // Tentukan tipe panjang aktual
+    let actualLength = lengthPref;
+    if (lengthPref === 'MIXED') {
+        actualLength = pickRandom(['SHORT', 'LONG', 'PARAGRAPH']);
+    }
+
+    // Bank kosakata kontekstual dari masterData
+    const places = getVocabByIds(['86', '87', '131', '132', '133', '144', '145', '153', '2041', '2042', '2043', '2044', '2045']);
+    const times = getVocabByIds(['1', '4', '8', '9', '18', '19', '20', '25', '26', '42', '43', '44', '61']);
+    const foods = getVocabByIds(['118', '119', '154', '157', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038']);
+    const objects = getVocabByIds(['96', '97', '98', '99', '104', '107', '108', '109', '110', '113', '115', '143', '146', '161', '163', '2052', '2063', '2064']);
+    const transitiveVerbs = getVocabByIds(['110', '111', '113', '115', '116', '117', '118', '120', '121', '147', '174', '175', '184', '213', '233', '234', '241', '901']);
+    const adjI = getVocabByIds(['931', '932', '933', '934', '937', '939', '941', '942', '943', '944', '946', '947', '948', '949', '950', '951', '952', '953']);
+    const adjNa = getVocabByIds(['978', '979', '980', '981', '982', '983', '984', '985', '986', '992', '993', '994', '1002', '1029', '1030']);
+
+    const t = pickRandom(times);
+    const p = pickRandom(places);
+    const f = pickRandom(foods);
+    const obj = pickRandom(objects);
+    const v = pickRandom(transitiveVerbs);
+    const ai = pickRandom(adjI);
+    const an = pickRandom(adjNa);
+
+    // 1. GENERATOR KALIMAT PENDEK
+    if (actualLength === 'SHORT') {
+        const shortTemplates = [
+            // N5 Templates
+            {
+                level: 'N5',
+                pattern: 'Waktu + Tempat + で + Objek + を + Kata Kerja (-masu)',
+                build: () => ({
+                    jp: `私は${t.kanji}、${p.kanji}で${obj.kanji}を${v.kanji}。`,
+                    romaji: `Watashi wa ${t.romaji}, ${p.romaji} de ${obj.romaji} o ${v.romaji}.`,
+                    id: `Saya ${t.meaning.toLowerCase()} ${v.meaning.toLowerCase()} ${obj.meaning.toLowerCase()} di ${p.meaning.toLowerCase()}.`,
+                    q: `Apa yang dilakukan "Saya" pada kalimat di atas?`,
+                    correct: `${v.meaning} ${obj.meaning.toLowerCase()} di ${p.meaning.toLowerCase()}`,
+                    wrong: [
+                        `Membeli ${f.meaning.toLowerCase()} di stasiun`,
+                        `Tidur dan beristirahat di rumah`,
+                        `Menunggu teman di depan kantor pos`
+                    ]
+                })
+            },
+            {
+                level: 'N5',
+                pattern: 'Kata Kerja (-te) + います (Sedang berlangsung / Kebiasaan)',
+                build: () => {
+                    const [teJp, teRom] = conjugateMasu(v.kanji, v.romaji, 'te');
+                    return {
+                        jp: `今、${p.kanji}で${obj.kanji}を${teJp}います。`,
+                        romaji: `Ima, ${p.romaji} de ${obj.romaji} o ${teRom} imasu.`,
+                        id: `Sekarang, sedang ${v.meaning.toLowerCase()} ${obj.meaning.toLowerCase()} di ${p.meaning.toLowerCase()}.`,
+                        q: `Kapan kegiatan "${v.meaning} ${obj.meaning.toLowerCase()}" dilakukan?`,
+                        correct: `Sekarang (sedang berlangsung)`,
+                        wrong: [
+                            `Kemarin malam sebelum tidur`,
+                            `Minggu depan bersama keluarga`,
+                            `Tahun lalu saat liburan`
+                        ]
+                    };
+                }
+            },
+            {
+                level: 'N5',
+                pattern: 'Kata Benda + は + Kata Sifat-i / Kata Sifat-na です',
+                build: () => ({
+                    jp: `あの${p.kanji}は新しくて、とても${an.kanji.replace(' (na)','')}です。`,
+                    romaji: `Ano ${p.romaji} wa atarashikute, totemo ${an.romaji.replace(' (na)','')} desu.`,
+                    id: `${p.meaning} itu baru dan sangat ${an.meaning.toLowerCase()}.`,
+                    q: `Bagaimana kondisi "${p.meaning}" tersebut?`,
+                    correct: `Baru dan sangat ${an.meaning.toLowerCase()}`,
+                    wrong: [
+                        `Kuno dan sangat kotor`,
+                        `Jauh dan tidak praktis`,
+                        `Sempit dan gelap`
+                    ]
+                })
+            },
+            // N4 Templates
+            {
+                level: 'N4',
+                pattern: 'Kata Kerja (-ta) + ことがあります (Pernah melakukan sesuatu)',
+                build: () => {
+                    const [taJp, taRom] = conjugateMasu(v.kanji, v.romaji, 'ta');
+                    return {
+                        jp: `私は一度も${p.kanji}で${obj.kanji}を${taJp}ことがありません。`,
+                        romaji: `Watashi wa ichido mo ${p.romaji} de ${obj.romaji} o ${taRom} koto ga arimasen.`,
+                        id: `Saya sekali pun belum pernah ${v.meaning.toLowerCase()} ${obj.meaning.toLowerCase()} di ${p.meaning.toLowerCase()}.`,
+                        q: `Manakah pernyataan yang sesuai dengan kalimat di atas?`,
+                        correct: `Pembicara belum pernah ${v.meaning.toLowerCase()} ${obj.meaning.toLowerCase()} di sana`,
+                        wrong: [
+                            `Pembicara setiap hari ${v.meaning.toLowerCase()} di sana`,
+                            `Pembicara akan pergi ke sana besok pagi`,
+                            `Pembicara lupa membawa ${obj.meaning.toLowerCase()}`
+                        ]
+                    };
+                }
+            },
+            {
+                level: 'N4',
+                pattern: 'Kata Kerja (-nai) + なければなりません (Harus melakukan sesuatu)',
+                build: () => {
+                    const [naiJp, naiRom] = conjugateMasu(v.kanji, v.romaji, 'nai');
+                    const stemNaiJp = naiJp.slice(0, -1);
+                    const stemNaiRom = naiRom.slice(0, -1);
+                    return {
+                        jp: `${t.kanji}までに、この${obj.kanji}を${stemNaiJp}なければなりません。`,
+                        romaji: `${t.romaji} made ni, kono ${obj.romaji} o ${stemNaiRom}nakereba narimasen.`,
+                        id: `Paling lambat ${t.meaning.toLowerCase()}, harus ${v.meaning.toLowerCase()} ${obj.meaning.toLowerCase()} ini.`,
+                        q: `Apa maksud dari kalimat tersebut?`,
+                        correct: `Wajib ${v.meaning.toLowerCase()} ${obj.meaning.toLowerCase()} sebelum batas waktu`,
+                        wrong: [
+                            `Dilarang menyentuh ${obj.meaning.toLowerCase()} ini`,
+                            `Boleh tidak ${v.meaning.toLowerCase()} jika sibuk`,
+                            `${obj.meaning} ini sudah hilang kemarin`
+                        ]
+                    };
+                }
+            },
+            {
+                level: 'N4',
+                pattern: 'Kata Kerja (Bentuk Kamus) + 前に、～ (Sebelum melakukan A, lakukan B)',
+                build: () => {
+                    const [dictJp, dictRom] = conjugateMasu(v.kanji, v.romaji, 'dict');
+                    return {
+                        jp: `${obj.kanji}を${dictJp}前に、よく手を洗います。`,
+                        romaji: `${obj.romaji} o ${dictRom} mae ni, yoku te o araimasu.`,
+                        id: `Sebelum ${v.meaning.toLowerCase()} ${obj.meaning.toLowerCase()}, mencuci tangan dengan bersih.`,
+                        q: `Urutan tindakan yang benar sesuai kalimat adalah...`,
+                        correct: `Mencuci tangan dulu, baru ${v.meaning.toLowerCase()} ${obj.meaning.toLowerCase()}`,
+                        wrong: [
+                            `${v.meaning} ${obj.meaning.toLowerCase()} dulu, baru mencuci tangan`,
+                            `Tidak perlu mencuci tangan`,
+                            `Mencuci ${obj.meaning.toLowerCase()} dengan air panas`
+                        ]
+                    };
+                }
+            }
+        ];
+
+        let pool = shortTemplates.filter(tpl => levelPref === 'ALL' || tpl.level === levelPref);
+        if (pool.length === 0) pool = shortTemplates;
+        const chosen = pickRandom(pool);
+        const built = chosen.build();
+        return {
+            badge: `📝 Kalimat Pendek • ${chosen.level}`,
+            pattern: chosen.pattern,
+            ...built
+        };
+    }
+
+    // 2. GENERATOR KALIMAT PANJANG (MAJEMUK 2-3 KLAUSA)
+    if (actualLength === 'LONG') {
+        const longTemplates = [
+            {
+                level: 'N5',
+                pattern: 'Alasan ～から、～ (Karena A, maka B) + ～たいです (Ingin)',
+                build: () => ({
+                    jp: `今日は天気がいいですから、友達と一緒に${p.kanji}へ行って、美味しい${f.kanji}を食べたいです。`,
+                    romaji: `Kyou wa tenki ga ii desu kara, tomodachi to issho ni ${p.romaji} e itte, oishii ${f.romaji} o tabetai desu.`,
+                    id: `Karena hari ini cuacanya cerah, saya ingin pergi ke ${p.meaning.toLowerCase()} bersama teman dan makan ${f.meaning.toLowerCase()} yang enak.`,
+                    q: `Mengapa pembicara ingin pergi ke ${p.meaning.toLowerCase()}?`,
+                    correct: `Karena hari ini cuacanya bagus/cerah`,
+                    wrong: [
+                        `Karena hari ini turun hujan deras`,
+                        `Karena disuruh oleh guru di sekolah`,
+                        `Karena ${f.meaning.toLowerCase()} di rumah sudah habis`
+                    ]
+                })
+            },
+            {
+                level: 'N4',
+                pattern: 'Pengandaian ～たら、～ (Kalau/Jika A, maka B) + ～つもりです (Berencana)',
+                build: () => ({
+                    jp: `来月、日本の会社に合格したら、家族と相談してから日本へ引っ越しするつもりです。`,
+                    romaji: `Raigetsu, Nihon no kaisha ni goukaku shitara, kazoku to soudan shite kara Nihon e hikkoshi suru tsumori desu.`,
+                    id: `Bulan depan, kalau lulus seleksi perusahaan Jepang, setelah berdiskusi dengan keluarga saya berencana pindah ke Jepang.`,
+                    q: `Apa yang akan dilakukan pembicara setelah lulus seleksi perusahaan?`,
+                    correct: `Berdiskusi dengan keluarga lalu pindah ke Jepang`,
+                    wrong: [
+                        `Langsung berangkat hari ini tanpa memberi tahu keluarga`,
+                        `Membatalkan rencana kerja di Jepang`,
+                        `Membeli mobil baru di Indonesia`
+                    ]
+                })
+            },
+            {
+                level: 'N4',
+                pattern: 'Kontras ～のに、～ (Padahal A, tetapi B)',
+                build: () => ({
+                    jp: `毎日一生懸命日本語を勉強しているのに、まだ漢字を読むのが難しいです。`,
+                    romaji: `Mainichi isshoukenmei Nihongo o benkyou shite iru noni, mada kanji o yomu no ga muzukashii desu.`,
+                    id: `Padahal setiap hari belajar bahasa Jepang dengan sungguh-sungguh, membaca Kanji masih terasa sulit.`,
+                    q: `Apa keluhan yang dirasakan penulis?`,
+                    correct: `Membaca Kanji masih sulit meskipun sudah belajar giat setiap hari`,
+                    wrong: [
+                        `Tidak punya waktu untuk belajar bahasa Jepang`,
+                        `Kanji sangat mudah dihafal dalam satu hari`,
+                        `Sudah berhenti belajar bahasa Jepang`
+                    ]
+                })
+            },
+            {
+                level: 'N4',
+                pattern: 'Alasan Sopan ～ので、～ (Karena A, maka B) + Potensial',
+                build: () => ({
+                    jp: `雨が降って道がひどく混んでいるので、今日の会議に間に合わないかもしれません。`,
+                    romaji: `Ame ga futte michi ga hidoku konde iru node, kyou no kaigi ni maniawanai kamoshiremasen.`,
+                    id: `Karena turun hujan dan jalanan macet parah, mungkin saya tidak akan keburu datang ke rapat hari ini.`,
+                    q: `Apa kemungkinan yang akan terjadi pada pembicara?`,
+                    correct: `Terlambat / tidak tepat waktu menghadiri rapat`,
+                    wrong: [
+                        `Rapat dibatalkan karena cuaca cerah`,
+                        `Sudah tiba di ruang rapat sejak pagi`,
+                        `Jalanan sangat sepi sehingga cepat sampai`
+                    ]
+                })
+            },
+            {
+                level: 'N4',
+                pattern: 'Sambil ～ながら、～ (Melakukan B sambil melakukan A)',
+                build: () => ({
+                    jp: `私はいつも部屋を掃除しながら、日本の音楽を聞くのが好きです。`,
+                    romaji: `Watashi wa itsumo heya o souji shinagara, Nihon no ongaku o kiku no ga suki desu.`,
+                    id: `Saya selalu suka mendengarkan musik Jepang sambil membersihkan kamar.`,
+                    q: `Apa kebiasaan yang disukai penulis?`,
+                    correct: `Mendengarkan musik Jepang sambil membersihkan kamar`,
+                    wrong: [
+                        `Menonton televisi sambil makan malam`,
+                        `Tidur sambil menyalakan lampu kamar`,
+                        `Membaca koran sambil berjalan kaki`
+                    ]
+                })
+            }
+        ];
+
+        let pool = longTemplates.filter(tpl => levelPref === 'ALL' || tpl.level === levelPref);
+        if (pool.length === 0) pool = longTemplates;
+        const chosen = pickRandom(pool);
+        const built = chosen.build();
+        return {
+            badge: `📄 Kalimat Panjang • ${chosen.level}`,
+            pattern: chosen.pattern,
+            ...built
+        };
+    }
+
+    // 3. GENERATOR PARAGRAF / CERITA MINI (4-5 KALIMAT)
+    const paragraphTemplates = [
+        {
+            level: 'N4',
+            pattern: 'Narasi Kronologis: ～てから (Setelah) • ～たり～たりします (Melakukan A, B, dll) • ～と思います (Menurut saya)',
+            build: () => ({
+                jp: `先週の日曜日、友達と電車で有名な港へ行きました。駅に着いてから、まず海を見ながら美味しい魚を食べました。それから、近くのお寺を散歩したり、写真を撮ったりしました。帰る時、急に雨が降りましたが、とても楽しい週末だったと思います。`,
+                romaji: `Senshuu no nichiyoubi, tomodachi to densha de yuumei na minato e ikimashita. Eki ni tsuite kara, mazu umi o minagara oishii sakana o tabemashita. Sorekara, chikaku no otera o sanpo shitari, shashin o tottari shimashita. Kaeru toki, kyuu ni ame ga furimashita ga, totemo tanoshii shuumatsu datta to omoimasu.`,
+                id: `Hari Minggu lalu, saya pergi ke pelabuhan terkenal naik kereta bersama teman. Setelah tiba di stasiun, pertama-tama kami makan ikan enak sambil melihat laut. Setelah itu, kami jalan-jalan di kuil dekat sana dan berfoto-foto. Saat pulang, tiba-tiba turun hujan, tetapi menurut saya itu adalah akhir pekan yang sangat menyenangkan.`,
+                q: `Apa yang pertama kali dilakukan setelah tiba di stasiun?`,
+                correct: `Makan ikan yang enak sambil melihat laut`,
+                wrong: [
+                    `Langsung pulang karena turun hujan deras`,
+                    `Berfoto-foto di depan kantor pos`,
+                    `Membeli payung di department store`
+                ]
+            })
+        },
+        {
+            level: 'N4',
+            pattern: 'Pengumuman Kantor/Sekolah: ～ために (Demi/Untuk) • ～てください (Tolong) • ～なければなりません (Harus)',
+            build: () => ({
+                jp: `皆さん、お知らせがあります。来週の金曜日の午後、会議室で新しい機械の説明会を行います。参加したい人は、水曜日までに事務所で申し込まなければなりません。当日はメモを取るために、ノートと鉛筆を持って来てください。`,
+                romaji: `Minasan, oshirase ga arimasu. Raishuu no kinyoubi no gogo, kaigishitsu de atarashii kikai no setsumeikai o okonaimasu. Sanka shitai hito wa, suiyoubi made ni jimusho de moushikomanakereba narimasen. Toujitsu wa memo o toru tame ni, nooto to enpitsu o motte kite kudasai.`,
+                id: `Semuanya, ada pengumuman. Jumat sore minggu depan, akan diadakan sesi penjelasan mesin baru di ruang rapat. Orang yang ingin berpartisipasi harus mendaftar di kantor paling lambat hari Rabu. Pada hari-H, tolong bawa buku catatan dan pensil untuk mencatat.`,
+                q: `Kapan batas akhir pendaftaran sesi penjelasan mesin baru?`,
+                correct: `Hari Rabu (sebelum Jumat minggu depan)`,
+                wrong: [
+                    `Hari Jumat sore tepat saat acara dimulai`,
+                    `Hari Minggu pagi di ruang makan`,
+                    `Tidak perlu mendaftar terlebih dahulu`
+                ]
+            })
+        },
+        {
+            level: 'N5',
+            pattern: 'Rutinitas Harian: 毎朝 (Setiap pagi) • ～から～まで (Dari... sampai...) • ～て、～ (Lalu)',
+            build: () => ({
+                jp: `私は毎朝六時に起きます。朝ご飯を食べてから、自転車で学校へ行きます。授業は午前九時から午後三時までです。学校が終わった後、毎日図書館で二時間ぐらい日本語の宿題をします。`,
+                romaji: `Watashi wa maiasa rokuji ni okimasu. Asagohan o tabete kara, jitensha de gakkou e ikimasu. Jugyou wa gozen kuji kara gogo sanji made desu. Gakkou ga owatta ato, mainichi toshokan de nijikan gurai Nihongo no shukudai o shimasu.`,
+                id: `Setiap pagi saya bangun jam 6. Setelah makan sarapan, saya pergi ke sekolah naik sepeda. Pelajaran berlangsung dari jam 9 pagi sampai jam 3 sore. Setelah sekolah selesai, setiap hari saya mengerjakan PR bahasa Jepang di perpustakaan sekitar 2 jam.`,
+                q: `Di mana penulis mengerjakan PR bahasa Jepang setelah pulang sekolah?`,
+                correct: `Di perpustakaan`,
+                wrong: [
+                    `Di kantin sekolah bersama teman`,
+                    `Di rumah setelah menonton televisi`,
+                    `Di dalam kereta saat pulang`
+                ]
+            })
+        },
+        {
+            level: 'N4',
+            pattern: 'Keadaan Darurat & Keselamatan: ～時 (Ketika) • ～ないでください (Jangan) • ～ておきます (Melakukan persiapan)',
+            build: () => ({
+                jp: `日本では時々大きな地震があります。地震が起きた時、慌てて外へ逃げないでください。まず机の下に入って、頭を守ってください。また、普段から水や非常食を準備しておいたほうがいいです。`,
+                romaji: `Nihon de wa tokidoki ookina jishin ga arimasu. Jishin ga okita toki, awatete soto e nigenaide kudasai. Mazu tsukue no shita ni haitte, atama o mamotte kudasai. Mata, fudan kara mizu ya hijoushoku o junbi shite oita hou ga ii desu.`,
+                id: `Di Jepang kadang-kadang terjadi gempa bumi besar. Ketika gempa terjadi, jangan panik berlari keluar. Pertama-tama masuklah ke bawah meja dan lindungi kepala Anda. Selain itu, sebaiknya dari hari biasa sudah menyiapkan air dan makanan darurat.`,
+                q: `Apa hal pertama yang harus dilakukan ketika gempa terjadi menurut bacaan?`,
+                correct: `Masuk ke bawah meja dan melindungi kepala`,
+                wrong: [
+                    `Segera berlari keluar gedung secepat mungkin`,
+                    `Menggunakan elevator untuk turun ke lantai dasar`,
+                    `Membuka semua jendela dan pintu`
+                ]
+            })
+        }
+    ];
+
+    let pool = paragraphTemplates.filter(tpl => levelPref === 'ALL' || tpl.level === levelPref);
+    if (pool.length === 0) pool = paragraphTemplates;
+    const chosen = pickRandom(pool);
+    const built = chosen.build();
+    return {
+        badge: `📰 Paragraf • ${chosen.level}`,
+        pattern: chosen.pattern,
+        ...built
+    };
+}
+
+// =========================================================================
+// ENGINE OTOMATIS: CHOUKAI (PERCAKAPAN, BERITA & PENGUMUMAN)
+// =========================================================================
+
+function generateChoukaiItem(typePref) {
+    let actualType = typePref;
+    if (typePref === 'ALL') {
+        actualType = pickRandom(['CONVERSATION', 'NEWS', 'ANNOUNCEMENT']);
+    }
+
+    const places = getVocabByIds(['131', '133', '145', '2041', '2044', '2045', '2055', '2053']);
+    const foods = getVocabByIds(['119', '157', '2032', '2033', '2034', '2036', '2037']);
+    const items = getVocabByIds(['96', '97', '107', '109', '110', '113', '163']);
+    const p = pickRandom(places);
+    const f = pickRandom(foods);
+    const it = pickRandom(items);
+
+    // 1. PERCAKAPAN (KAIWA DIALOG A & B)
+    if (actualType === 'CONVERSATION') {
+        const convList = [
+            {
+                badge: '💬 Percakapan Sehari-hari',
+                lines: [
+                    { speaker: '男', text: `すみません、今週末一緒に${p.kanji}へ行きませんか。`, romaji: `Sumimasen, konshuumatsu issho ni ${p.romaji} e ikimasen ka.`, id: `Pria: Permisi, akhir pekan ini mau pergi ke ${p.meaning.toLowerCase()} bersama?`, pitch: 0.9 },
+                    { speaker: '女', text: `いいですね。でも、土曜日はちょっと用事がありますから、日曜日でもいいですか。`, romaji: `Ii desu ne. Demo, doyoubi wa chotto youji ga arimasu kara, nichiyoubi demo ii desu ka.`, id: `Wanita: Boleh juga. Tapi hari Sabtu ada sedikit urusan, jadi hari Minggu saja bagaimana?`, pitch: 1.2 },
+                    { speaker: '男', text: `はい、大丈夫です。じゃあ、日曜日の午前十時に駅の入口で会いましょう。`, romaji: `Hai, daijoubu desu. Jaa, nichiyoubi no gozen juuji ni eki no iriguchi de aimashou.`, id: `Pria: Ya, tidak masalah. Kalau begitu, mari bertemu di pintu masuk stasiun jam 10 pagi hari Minggu.`, pitch: 0.9 }
+                ],
+                q: `Kapan dan di mana mereka berdua akan bertemu?`,
+                correct: `Hari Minggu jam 10 pagi di pintu masuk stasiun`,
+                wrong: [
+                    `Hari Sabtu jam 10 pagi di depan ${p.meaning.toLowerCase()}`,
+                    `Hari Minggu jam 3 sore di dalam kereta`,
+                    `Hari Jumat malam di ruang rapat`
+                ]
+            },
+            {
+                badge: '💬 Percakapan di Kantor / Kampus',
+                lines: [
+                    { speaker: '女', text: `田中さん、さっきから何を探しているんですか。`, romaji: `Tanaka-san, sakki kara nani o sagashite iru n desu ka.`, id: `Wanita: Tanaka-san, dari tadi sedang mencari apa?`, pitch: 1.2 },
+                    { speaker: '男', text: `実は、大事な${it.kanji}をなくしてしまったんです。会議室に忘れたかもしれません。`, romaji: `Jitsu wa, daiji na ${it.romaji} o nakushite shimatta n desu. Kaigishitsu ni wasureta kamoshiremasen.`, id: `Pria: Sebenarnya, saya kehilangan ${it.meaning.toLowerCase()} yang penting. Mungkin tertinggal di ruang rapat.`, pitch: 0.9 },
+                    { speaker: '女', text: `あ、さっき受付の人が黒い鞄の中に${it.kanji}が入っていたと言っていましたよ。聞いてみてください。`, romaji: `A, sakki uketsuke no hito ga kuroi kaban no naka ni ${it.romaji} ga haitte ita to itte imashita yo. Kiite mite kudasai.`, id: `Wanita: Ah, tadi petugas resepsionis bilang di dalam tas hitam ada ${it.meaning.toLowerCase()}. Coba tanyakan ke sana.`, pitch: 1.2 }
+                ],
+                q: `Di mana Tanaka-san harus menanyakan barangnya yang hilang?`,
+                correct: `Di bagian resepsionis`,
+                wrong: [
+                    `Di ruang makan / kantin`,
+                    `Di dalam mobilnya di tempat parkir`,
+                    `Di kantor pos dekat stasiun`
+                ]
+            },
+            {
+                badge: '💬 Percakapan Undangan & Makanan',
+                lines: [
+                    { speaker: '男', text: `明日の晩、私の家でパーティーをしますが、来ませんか。`, romaji: `Ashita no ban, watashi no uchi de paatii o shimasu ga, kimasen ka.`, id: `Pria: Besok malam akan diadakan pesta di rumah saya, mau datang?`, pitch: 0.9 },
+                    { speaker: '女', text: `ありがとうございます！ぜひ行きたいです。何か持って行きましょうか。`, romaji: `Arigatou gozaimasu! Zehi ikitai desu. Nanika motte ikimashou ka.`, id: `Wanita: Terima kasih! Saya sangat ingin pergi. Perlu saya bawakan sesuatu?`, pitch: 1.2 },
+                    { speaker: '男', text: `${f.kanji}はもうたくさん用意してありますから、何も持って来なくてもいいですよ。`, romaji: `${f.romaji} wa mou takusan youi shite arimasu kara, nanimo motte konakute mo ii desu yo.`, id: `Pria: ${f.meaning} sudah disiapkan banyak, jadi tidak bawa apa-apa juga tidak apa-apa.`, pitch: 0.9 }
+                ],
+                q: `Apa yang harus dibawa oleh wanita itu ke pesta besok malam?`,
+                correct: `Tidak perlu membawa apa-apa`,
+                wrong: [
+                    `Harus membawa ${f.meaning.toLowerCase()} yang banyak`,
+                    `Harus membawa minuman dan buah-buahan`,
+                    `Harus membawa kamera dan buku catatan`
+                ]
+            }
+        ];
+        return pickRandom(convList);
+    }
+
+    // 2. BERITA SINGKAT (NYUUSU)
+    if (actualType === 'NEWS') {
+        const newsList = [
+            {
+                badge: '📺 Berita Cuaca & Transportasi',
+                lines: [
+                    { speaker: 'アナウンサー', text: `次のニュースです。今朝から強い台風が近づいているため、午後から激しい雨が降り、風も強くなるでしょう。`, romaji: `Tsugi no nyuusu desu. Kesa kara tsuyoi taifuu ga chikazuite iru tame, gogo kara hageshii ame ga furi, kaze mo tsuyoku naru deshou.`, id: `Penyiar: Berita selanjutnya. Karena sejak pagi ini topan kuat sedang mendekat, mulai sore hari akan turun hujan lebat dan angin juga akan bertiup kencang.`, pitch: 1.0 },
+                    { speaker: 'アナウンサー', text: `このため、新幹線や飛行機が遅れる可能性があります。出かける前に、必ず最新の情報を確かめてください。`, romaji: `Kono tame, shinkansen ya hikouki ga okureru kanousei ga arimasu. Dekakeru mae ni, kanarazu saishin no jouhou o tashikamete kudasai.`, id: `Penyiar: Oleh karena itu, ada kemungkinan Shinkansen dan pesawat terbang mengalami keterlambatan. Sebelum keluar rumah, pastikan untuk memeriksa informasi terbaru.`, pitch: 1.0 }
+                ],
+                q: `Mengapa Shinkansen dan pesawat berpotensi terlambat menurut berita?`,
+                correct: `Karena topan kuat mendekat sehingga hujan lebat dan angin kencang`,
+                wrong: [
+                    `Karena terjadi kecelakaan di jalan tol`,
+                    `Karena salju tebal menutupi rel kereta`,
+                    `Karena sedang ada festival besar di kota`
+                ]
+            },
+            {
+                badge: '📺 Berita Acara Budaya',
+                lines: [
+                    { speaker: 'アナウンサー', text: `昨日、大阪の大きな公園で毎年恒例の夏祭りが行われました。`, romaji: `Kinou, Oosaka no ookina kouen de maitoshi kourei no natsumatsuri ga okonawaremashita.`, id: `Penyiar: Kemarin, di taman besar Osaka telah diadakan festival musim panas tahunan.`, pitch: 1.0 },
+                    { speaker: 'アナウンサー', text: `会場では日本の伝統的な料理が売られ、夜にはきれいな花火も上がりました。外国人の観光客もたくさん参加して、とてもにぎやかでした。`, romaji: `Kaijou de wa Nihon no dentouteki na ryouri ga urare, yoru ni wa kirei na hanabi mo agarimashita. Gaikokujin no kankoukyaku mo takusan sanka shite, totemo nigiyaka deshita.`, id: `Penyiar: Di lokasi acara dijual masakan tradisional Jepang, dan pada malam hari kembang api yang indah juga diluncurkan. Banyak wisatawan asing ikut berpartisipasi sehingga sangat ramai.`, pitch: 1.0 }
+                ],
+                q: `Apa yang terjadi pada malam hari di festival tersebut?`,
+                correct: `Diluncurkan kembang api yang indah`,
+                wrong: [
+                    `Acara dihentikan karena hujan badai`,
+                    `Semua toko tutup lebih awal`,
+                    `Diadakan upacara kelulusan mahasiswa`
+                ]
+            },
+            {
+                badge: '📺 Berita Peringatan Gempa',
+                lines: [
+                    { speaker: 'アナウンサー', text: `先ほど午前八時十分ごろ、関東地方で地震がありました。この地震による津波の心配はありません。`, romaji: `Sakihodo gozen hachiji juppun goro, Kantou chihou de jishin ga arimashita. Kono jishin ni yoru tsunami no shinpai wa arimasen.`, id: `Penyiar: Baru saja sekitar pukul 8 lewat 10 menit pagi, terjadi gempa bumi di wilayah Kanto. Tidak ada kekhawatiran tsunami akibat gempa ini.`, pitch: 1.0 },
+                    { speaker: 'アナウンサー', text: `念のため、火の元に注意し、近くの避難場所を確認しておいてください。`, romaji: `Nen no tame, hi no moto ni chuui shi, chikaku no hinan basho o kakunin shite oite kudasai.`, id: `Penyiar: Untuk berjaga-jaga, harap perhatikan sumber api dan pastikan lokasi tempat evakuasi terdekat.`, pitch: 1.0 }
+                ],
+                q: `Bagaimana status tsunami berdasarkan laporan berita tersebut?`,
+                correct: `Tidak ada kekhawatiran / potensi tsunami`,
+                wrong: [
+                    `Tsunami besar akan tiba dalam 10 menit`,
+                    `Semua penduduk harus segera naik ke atap gedung`,
+                    `Pelabuhan ditutup selama satu minggu`
+                ]
+            }
+        ];
+        return pickRandom(newsList);
+    }
+
+    // 3. PENGUMUMAN (OSHIRASE)
+    const announcementList = [
+        {
+            badge: '📢 Pengumuman Stasiun / Kereta',
+            lines: [
+                { speaker: '駅員', text: `まもなく一番線に東京行きの電車が参ります。危ないですから、黄色い線の内側までお下がりください。`, romaji: `Mamonaku ichibansen ni Toukyou-yuki no densha ga mairimasu. Abunai desu kara, kiiroi sen no uchigawa made osagari kudasai.`, id: `Petugas Stasiun: Sebentar lagi di jalur 1 kereta tujuan Tokyo akan tiba. Karena berbahaya, harap mundur ke bagian dalam garis kuning.`, pitch: 0.95 },
+                { speaker: '駅員', text: `また、車内では携帯電話での通話はご遠慮ください。ご協力をお願いいたします。`, romaji: `Mata, shanai de wa keitai denwa de no tsuuwa wa goenryo kudasai. Gokyouryoku o onegai itashimasu.`, id: `Petugas Stasiun: Selain itu, di dalam kereta mohon menahan diri untuk tidak menelepon dengan ponsel. Terima kasih atas kerja samanya.`, pitch: 0.95 }
+            ],
+            q: `Apa yang diminta petugas stasiun kepada penumpang yang menunggu?`,
+            correct: `Mundur ke belakang garis kuning dan tidak menelepon di dalam kereta`,
+            wrong: [
+                `Segera berlari menuju pintu keluar selatan`,
+                `Membeli tiket khusus di mesin penjual otomatis`,
+                `Meninggalkan tas besar di peron stasiun`
+            ]
+        },
+        {
+            badge: '📢 Pengumuman Toko / Department Store',
+            lines: [
+                { speaker: '店員', text: `本日はご来店いただきまして、誠にありがとうございます。ただいま地下一階の食品売り場では、果物や野菜の特別割引を行っております。`, romaji: `Honjitsu wa goraiten itadakimashite, makoto ni arigatou gozaimasu. Tadaima chika ikkai no shokuhin uriba de wa, kudamono ya yasai no tokubetsu waribiki o okonatte orimasu.`, id: `Staf Toko: Terima kasih banyak telah berkunjung hari ini. Saat ini di area penjualan makanan lantai B1 sedang diadakan diskon khusus buah-buahan dan sayuran.`, pitch: 1.15 },
+                { speaker: '店員', text: `午後六時からはお弁当も半額になりますので、ぜひお立ち寄りください。`, romaji: `Gogo rokuji kara wa obentou mo hangaku ni narimasu node, zehi otachiyori kudasai.`, id: `Staf Toko: Mulai pukul 6 sore bento juga akan menjadi setengah harga, jadi silakan mampir.`, pitch: 1.15 }
+            ],
+            q: `Kapan bento dijual dengan harga setengah (diskon 50%)?`,
+            correct: `Mulai pukul 6 sore`,
+            wrong: [
+                `Mulai pukul 9 pagi saat toko baru buka`,
+                `Hanya pada hari Minggu siang`,
+                `Di lantai atap gedung (rooftop)`
+            ]
+        }
+    ];
+    return pickRandom(announcementList);
+}
+
+// =========================================================================
+// LOGIKA UI TAB MEMBACA (DOKKAI)
+// =========================================================================
+let readSessionQuestions = [];
+let readCurrentIdx = 0;
+let readCorrectCount = 0;
+let readWrongCount = 0;
+let readAnswered = false;
+
+function startReadingSession() {
+    const lengthPref = document.getElementById('readTextLength').value;
+    const levelPref = document.getElementById('readGrammarFocus').value;
+    const count = parseInt(document.getElementById('readCount').value);
+
+    readSessionQuestions = [];
+    for (let i = 0; i < count; i++) {
+        readSessionQuestions.push(generateReadingQuestion(lengthPref, levelPref));
+    }
+
+    readCurrentIdx = 0;
+    readCorrectCount = 0;
+    readWrongCount = 0;
+
+    document.getElementById('readSetup').classList.add('hidden');
+    document.getElementById('readResult').classList.add('hidden');
+    document.getElementById('readPlay').classList.remove('hidden');
+
+    renderReadingQuestion();
+}
+
+function renderReadingQuestion() {
+    readAnswered = false;
+    const item = readSessionQuestions[readCurrentIdx];
+    const showRomajiSetting = document.getElementById('readShowRomaji').value;
+
+    document.getElementById('readBadge').innerText = item.badge;
+    document.getElementById('readProgressText').innerText = `${readCurrentIdx + 1} / ${readSessionQuestions.length}`;
+    document.getElementById('readJpPassage').innerText = item.jp;
+
+    const romajiEl = document.getElementById('readRomajiPassage');
+    romajiEl.innerText = item.romaji;
+    if (showRomajiSetting === 'SHOW') {
+        romajiEl.classList.remove('hidden');
+    } else {
+        romajiEl.classList.add('hidden');
+    }
+
+    document.getElementById('readQuestionText').innerText = `❓ ${item.q}`;
+    document.getElementById('readExplanationBox').classList.add('hidden');
+    document.getElementById('readNextBtn').classList.add('hidden');
+
+    const allOptions = shuffle([item.correct, ...item.wrong]);
+    const optContainer = document.getElementById('readOptions');
+    optContainer.innerHTML = '';
+
+    allOptions.forEach(optText => {
+        const btn = document.createElement('button');
+        btn.className = "w-full bg-white border-2 border-slate-200 p-3.5 rounded-xl font-medium text-sm sm:text-base text-left text-slate-700 hover:border-indigo-400 active:scale-[0.99] transition";
+        btn.innerText = optText;
+        btn.onclick = () => checkReadingAnswer(btn, optText, item);
+        optContainer.appendChild(btn);
+    });
+}
+
+function toggleReadRomajiHint() {
+    document.getElementById('readRomajiPassage').classList.toggle('hidden');
+}
+
+function speakCurrentPassage() {
+    const item = readSessionQuestions[readCurrentIdx];
+    if (item) speakText(item.jp, 0.85);
+}
+
+function checkReadingAnswer(selectedBtn, chosenText, item) {
+    if (readAnswered) return;
+    readAnswered = true;
+
+    const buttons = document.getElementById('readOptions').querySelectorAll('button');
+    buttons.forEach(b => b.disabled = true);
+
+    if (chosenText === item.correct) {
+        readCorrectCount++;
+        selectedBtn.classList.replace('border-slate-200', 'border-green-500');
+        selectedBtn.classList.add('bg-green-50', 'text-green-800', 'font-bold');
+    } else {
+        readWrongCount++;
+        selectedBtn.classList.replace('border-slate-200', 'border-red-500');
+        selectedBtn.classList.add('bg-red-50', 'text-red-800');
+        buttons.forEach(b => {
+            if (b.innerText === item.correct) {
+                b.classList.replace('border-slate-200', 'border-green-500');
+                b.classList.add('bg-green-50', 'text-green-800', 'font-bold');
+            }
+        });
+    }
+
+    // Buka otomatis Romaji, Pola Kalimat, dan Terjemahan Lengkap
+    document.getElementById('readRomajiPassage').classList.remove('hidden');
+    document.getElementById('readPatternInfo').innerText = item.pattern;
+    document.getElementById('readTranslationInfo').innerText = item.id;
+    document.getElementById('readExplanationBox').classList.remove('hidden');
+    document.getElementById('readNextBtn').classList.remove('hidden');
+}
+
+function nextReadingQuestion() {
+    stopSpeech();
+    readCurrentIdx++;
+    if (readCurrentIdx < readSessionQuestions.length) {
+        renderReadingQuestion();
+    } else {
+        document.getElementById('readPlay').classList.add('hidden');
+        document.getElementById('readResult').classList.remove('hidden');
+        const pct = Math.round((readCorrectCount / readSessionQuestions.length) * 100);
+        document.getElementById('readScore').innerText = `${pct}%`;
+        document.getElementById('readDetailScore').innerText = `Benar: ${readCorrectCount} | Salah: ${readWrongCount}`;
+    }
+}
+
+function resetReadingUI() {
+    stopSpeech();
+    document.getElementById('readPlay').classList.add('hidden');
+    document.getElementById('readResult').classList.add('hidden');
+    document.getElementById('readSetup').classList.remove('hidden');
+}
+
+// =========================================================================
+// LOGIKA UI TAB CHOUKAI (PERCAKAPAN, BERITA & PENGUMUMAN)
+// =========================================================================
+let choukaiSessionQuestions = [];
+let choukaiCurrentIdx = 0;
+let choukaiCorrectCount = 0;
+let choukaiWrongCount = 0;
+let choukaiAnswered = false;
+
+function startChoukaiSession() {
+    const typePref = document.getElementById('choukaiType').value;
+    const count = parseInt(document.getElementById('choukaiCount').value);
+
+    choukaiSessionQuestions = [];
+    for (let i = 0; i < count; i++) {
+        choukaiSessionQuestions.push(generateChoukaiItem(typePref));
+    }
+
+    choukaiCurrentIdx = 0;
+    choukaiCorrectCount = 0;
+    choukaiWrongCount = 0;
+
+    document.getElementById('choukaiSetup').classList.add('hidden');
+    document.getElementById('choukaiResult').classList.add('hidden');
+    document.getElementById('choukaiPlay').classList.remove('hidden');
+
+    renderChoukaiQuestion();
+}
+
+function renderChoukaiQuestion() {
+    choukaiAnswered = false;
+    const item = choukaiSessionQuestions[choukaiCurrentIdx];
+
+    document.getElementById('choukaiBadge').innerText = item.badge;
+    document.getElementById('choukaiProgressText').innerText = `${choukaiCurrentIdx + 1} / ${choukaiSessionQuestions.length}`;
+    document.getElementById('choukaiQuestionText').innerText = `❓ ${item.q}`;
+
+    // Siapkan isi transkrip (tetap hidden sampai dijawab)
+    document.getElementById('choukaiTranscriptBox').classList.add('hidden');
+    document.getElementById('choukaiNextBtn').classList.add('hidden');
+
+    document.getElementById('choukaiJpScript').innerText = item.lines.map(l => `${l.speaker}：${l.text}`).join('\n');
+    document.getElementById('choukaiRomajiScript').innerText = item.lines.map(l => `${l.romaji}`).join('\n');
+    document.getElementById('choukaiIdScript').innerText = item.lines.map(l => `${l.id}`).join('\n');
+
+    const allOptions = shuffle([item.correct, ...item.wrong]);
+    const optContainer = document.getElementById('choukaiOptions');
+    optContainer.innerHTML = '';
+
+    allOptions.forEach(optText => {
+        const btn = document.createElement('button');
+        btn.className = "w-full bg-white border-2 border-slate-200 p-3.5 rounded-xl font-medium text-sm sm:text-base text-left text-slate-700 hover:border-emerald-400 active:scale-[0.99] transition";
+        btn.innerText = optText;
+        btn.onclick = () => checkChoukaiAnswer(btn, optText, item);
+        optContainer.appendChild(btn);
+    });
+
+    // Putar otomatis saat soal muncul
+    setTimeout(() => playChoukaiAudio(), 300);
+}
+
+function playChoukaiAudio() {
+    const item = choukaiSessionQuestions[choukaiCurrentIdx];
+    if (!item) return;
+    const speed = parseFloat(document.getElementById('choukaiSpeed').value);
+    const statusEl = document.getElementById('choukaiAudioStatus');
+    const iconEl = document.getElementById('choukaiSpeakerIcon');
+
+    speakSequence(
+        item.lines,
+        speed,
+        () => {
+            statusEl.innerText = 'Sedang memutar audio... Dengarkan baik-baik!';
+            iconEl.innerText = '🔉';
+        },
+        () => {
+            statusEl.innerText = 'Selesai diputar. Klik tombol untuk mengulang';
+            iconEl.innerText = '🔊';
+        }
+    );
+}
+
+function checkChoukaiAnswer(selectedBtn, chosenText, item) {
+    if (choukaiAnswered) return;
+    choukaiAnswered = true;
+
+    const buttons = document.getElementById('choukaiOptions').querySelectorAll('button');
+    buttons.forEach(b => b.disabled = true);
+
+    if (chosenText === item.correct) {
+        choukaiCorrectCount++;
+        selectedBtn.classList.replace('border-slate-200', 'border-green-500');
+        selectedBtn.classList.add('bg-green-50', 'text-green-800', 'font-bold');
+    } else {
+        choukaiWrongCount++;
+        selectedBtn.classList.replace('border-slate-200', 'border-red-500');
+        selectedBtn.classList.add('bg-red-50', 'text-red-800');
+        buttons.forEach(b => {
+            if (b.innerText === item.correct) {
+                b.classList.replace('border-slate-200', 'border-green-500');
+                b.classList.add('bg-green-50', 'text-green-800', 'font-bold');
+            }
+        });
+    }
+
+    // Tampilkan Transkrip & Terjemahan setelah menjawab
+    document.getElementById('choukaiTranscriptBox').classList.remove('hidden');
+    document.getElementById('choukaiNextBtn').classList.remove('hidden');
+}
+
+function nextChoukaiQuestion() {
+    stopSpeech();
+    choukaiCurrentIdx++;
+    if (choukaiCurrentIdx < choukaiSessionQuestions.length) {
+        renderChoukaiQuestion();
+    } else {
+        document.getElementById('choukaiPlay').classList.add('hidden');
+        document.getElementById('choukaiResult').classList.remove('hidden');
+        const pct = Math.round((choukaiCorrectCount / choukaiSessionQuestions.length) * 100);
+        document.getElementById('choukaiScore').innerText = `${pct}%`;
+        document.getElementById('choukaiDetailScore').innerText = `Benar: ${choukaiCorrectCount} | Salah: ${choukaiWrongCount}`;
+    }
+}
+
+function resetChoukaiUI() {
+    stopSpeech();
+    document.getElementById('choukaiPlay').classList.add('hidden');
+    document.getElementById('choukaiResult').classList.add('hidden');
+    document.getElementById('choukaiSetup').classList.remove('hidden');
+}
+
 // --- FLASHCARD LOGIC ---
 let fcData = [];
 let fcIndex = 0;
 
 function initFlashcard() {
-    let cat = document.getElementById('flashcardCategory').value;
-    let stat = document.getElementById('flashcardFilter').value;
-    let order = document.getElementById('flashcardOrder').value;
+    const category = document.getElementById('flashcardCategory').value;
+    const filter = document.getElementById('flashcardFilter').value;
+    const order = document.getElementById('flashcardOrder').value;
     
-    fcData = masterData.filter(item => {
-        let matchCat = (cat === 'ALL' || item.category === cat);
-        let isMem = memorizedKanji.includes(item.kanji);
-        let matchStat = (stat === 'ALL') || (stat === 'hafal' && isMem) || (stat === 'belum' && !isMem);
+    let filtered = masterData.filter(item => {
+        let matchCat = (category === 'ALL' || item.category === category);
+        let matchStat = true;
+        if (filter === 'hafal') matchStat = memorizedKanji.includes(item.kanji);
+        if (filter === 'belum') matchStat = !memorizedKanji.includes(item.kanji);
         return matchCat && matchStat;
     });
 
-    if(fcData.length === 0) {
-        document.getElementById('fcKanji').innerText = "Kosong";
-        document.getElementById('fcRomaji').innerText = "-";
-        document.getElementById('fcArti').innerText = "Ganti filter";
-        document.getElementById('fcCounter').innerText = "0 / 0";
-        return;
+    if (filtered.length === 0) {
+        alert("Tidak ada data untuk filter ini! Kembali ke 'Semua'.");
+        document.getElementById('flashcardFilter').value = 'ALL';
+        return initFlashcard();
     }
     
-    if (order === 'SHUFFLE') {
-        fcData = shuffle(fcData);
-    }
+    fcData = (order === 'SHUFFLE') ? shuffle(filtered) : filtered;
     fcIndex = 0;
     renderFlashcard();
 }
 
 function renderFlashcard() {
-    if(fcData.length === 0) return;
     document.querySelector('.flashcard').classList.remove('flipped');
-    let item = fcData[fcIndex];
-    document.getElementById('fcCounter').innerText = `${fcIndex + 1} / ${fcData.length}`;
+    const item = fcData[fcIndex];
     document.getElementById('fcKanji').innerText = item.kanji;
     document.getElementById('fcRomaji').innerText = item.romaji;
     document.getElementById('fcArti').innerText = item.meaning;
+    document.getElementById('fcCounter').innerText = `${fcIndex + 1} / ${fcData.length}`;
 }
 
-function toggleFlashcard() { document.querySelector('.flashcard').classList.toggle('flipped'); }
-function nextCard() { if(fcData.length > 0) { fcIndex = (fcIndex + 1) % fcData.length; renderFlashcard(); } }
-function prevCard() { if(fcData.length > 0) { fcIndex = (fcIndex - 1 + fcData.length) % fcData.length; renderFlashcard(); } }
-function playAudioFc() { if(fcData.length > 0) speakText(fcData[fcIndex].kanji); }
+function toggleFlashcard() {
+    document.querySelector('.flashcard').classList.toggle('flipped');
+}
 
-function markMemorized(isHafal) {
-    if(fcData.length === 0) return;
-    let currentKanji = fcData[fcIndex].kanji;
-    if(isHafal && !memorizedKanji.includes(currentKanji)) {
-        memorizedKanji.push(currentKanji);
-    } else if(!isHafal && memorizedKanji.includes(currentKanji)) {
+function playAudioFc() {
+    speakText(fcData[fcIndex].kanji);
+}
+
+function nextCard() {
+    fcIndex = (fcIndex + 1) % fcData.length;
+    renderFlashcard();
+}
+
+function prevCard() {
+    fcIndex = (fcIndex - 1 + fcData.length) % fcData.length;
+    renderFlashcard();
+}
+
+function markMemorized(status) {
+    const currentKanji = fcData[fcIndex].kanji;
+    if (status) {
+        if (!memorizedKanji.includes(currentKanji)) memorizedKanji.push(currentKanji);
+    } else {
         memorizedKanji = memorizedKanji.filter(k => k !== currentKanji);
     }
     saveProgress();
-    setTimeout(nextCard, 300);
+    nextCard();
 }
 
 // --- QUIZ LOGIC ---
 let quizData = [];
-let quizIndex = 0;
-let quizScore = 0;
-let isAnswered = false;
+let currentQuizIdx = 0;
+let correctAnswers = 0;
+let wrongAnswers = 0;
+let isAnswering = false;
 
 function startQuiz() {
-    let cat = document.getElementById('quizCategory').value;
-    let len = document.getElementById('quizLength').value;
-    let order = document.getElementById('quizOrder').value;
+    const category = document.getElementById('quizCategory').value;
+    const order = document.getElementById('quizOrder').value;
+    const lengthOpt = document.getElementById('quizLength').value;
 
-    let filtered = masterData.filter(item => cat === 'ALL' || item.category === cat);
-    
-    if (order === 'SHUFFLE') {
-        filtered = shuffle(filtered);
-    }
-    
-    if (len !== 'ALL') {
-        quizData = filtered.slice(0, parseInt(len));
-    } else {
-        quizData = filtered;
-    }
+    let pool = masterData.filter(item => category === 'ALL' || item.category === category);
+    if (order === 'SHUFFLE') pool = shuffle(pool);
+    if (lengthOpt !== 'ALL') pool = pool.slice(0, parseInt(lengthOpt));
 
-    if(quizData.length < 4) {
-        alert('Kosakata pada kategori ini kurang untuk dijadikan kuis (minimal 4 soal). Ganti kategori atau jumlah soal.');
-        return;
-    }
+    quizData = pool;
+    currentQuizIdx = 0;
+    correctAnswers = 0;
+    wrongAnswers = 0;
 
-    quizIndex = 0;
-    quizScore = 0;
     document.getElementById('quizSetup').classList.add('hidden');
     document.getElementById('quizResult').classList.add('hidden');
     document.getElementById('quizPlay').classList.remove('hidden');
-    loadQuizQuestion();
+
+    renderQuizQuestion();
 }
 
-function loadQuizQuestion() {
-    isAnswered = false;
+function renderQuizQuestion() {
+    isAnswering = false;
+    const item = quizData[currentQuizIdx];
+    document.getElementById('quizProgressText').innerText = `Soal ${currentQuizIdx + 1} / ${quizData.length}`;
+    document.getElementById('quizKanji').innerText = item.kanji;
     document.getElementById('quizFeedback').innerText = "";
-    document.getElementById('quizProgressText').innerText = `Soal ${quizIndex + 1} / ${quizData.length}`;
-    
-    let currentQ = quizData[quizIndex];
-    document.getElementById('quizKanji').innerText = currentQ.kanji;
-    
-    let options = [currentQ];
-    let pool = masterData.filter(x => x.kanji !== currentQ.kanji);
-    pool = shuffle(pool).slice(0, 3);
-    options = shuffle([...options, ...pool]);
 
-    let optsContainer = document.getElementById('quizOptions');
-    optsContainer.innerHTML = "";
-    
+    let options = [item.meaning];
+    let distractors = shuffle(masterData.filter(x => x.kanji !== item.kanji)).slice(0, 3);
+    distractors.forEach(d => options.push(d.meaning));
+    options = shuffle(options);
+
+    const optContainer = document.getElementById('quizOptions');
+    optContainer.innerHTML = '';
+
     options.forEach(opt => {
-        let btn = document.createElement('button');
-        btn.className = "w-full bg-slate-50 border-2 border-slate-200 text-slate-700 font-semibold py-4 rounded-xl text-left px-6 hover:bg-slate-100 transition";
-        btn.innerText = opt.meaning;
-        btn.onclick = () => checkAnswer(opt, currentQ, btn);
-        optsContainer.appendChild(btn);
+        const btn = document.createElement('button');
+        btn.className = "w-full bg-white border-2 border-slate-200 p-4 rounded-xl font-bold text-slate-700 hover:border-blue-400 active:scale-95 transition";
+        btn.innerText = opt;
+        btn.onclick = () => checkAnswer(btn, opt, item.meaning, item.kanji);
+        optContainer.appendChild(btn);
     });
 }
 
-function checkAnswer(selected, correct, btnNode) {
-    if(isAnswered) return;
-    isAnswered = true;
-    speakText(correct.kanji); 
+function checkAnswer(btnElement, chosen, correct, kanji) {
+    if (isAnswering) return;
+    isAnswering = true;
 
-    let feedback = document.getElementById('quizFeedback');
-    
-    if(selected.kanji === correct.kanji) {
-        btnNode.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-700');
-        btnNode.classList.add('bg-green-100', 'border-green-500', 'text-green-700');
-        feedback.innerText = `✅ Benar! (${correct.romaji})`;
-        feedback.className = "text-lg font-bold min-h-[28px] mt-2 text-green-600";
-        quizScore++;
+    const feedback = document.getElementById('quizFeedback');
+    speakText(kanji);
+
+    if (chosen === correct) {
+        correctAnswers++;
+        btnElement.classList.replace('border-slate-200', 'border-green-500');
+        btnElement.classList.add('bg-green-50', 'text-green-700');
+        feedback.innerText = "✅ Benar!";
+        feedback.className = "text-lg font-bold text-green-600 mt-2";
     } else {
-        btnNode.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-700');
-        btnNode.classList.add('bg-red-100', 'border-red-500', 'text-red-700');
-        feedback.innerText = `❌ Salah! Jawaban: ${correct.meaning} (${correct.romaji})`;
-        feedback.className = "text-lg font-bold min-h-[28px] mt-2 text-red-600";
+        wrongAnswers++;
+        btnElement.classList.replace('border-slate-200', 'border-red-500');
+        btnElement.classList.add('bg-red-50', 'text-red-700');
+        feedback.innerText = `❌ Salah! Jawaban: ${correct}`;
+        feedback.className = "text-lg font-bold text-red-500 mt-2";
     }
 
     setTimeout(() => {
-        quizIndex++;
-        if(quizIndex < quizData.length) {
-            loadQuizQuestion();
+        currentQuizIdx++;
+        if (currentQuizIdx < quizData.length) {
+            renderQuizQuestion();
         } else {
             showQuizResult();
         }
@@ -1858,360 +2827,262 @@ function checkAnswer(selected, correct, btnNode) {
 function showQuizResult() {
     document.getElementById('quizPlay').classList.add('hidden');
     document.getElementById('quizResult').classList.remove('hidden');
-    let percentage = Math.round((quizScore / quizData.length) * 100);
+    let percentage = Math.round((correctAnswers / quizData.length) * 100);
     document.getElementById('quizScore').innerText = `${percentage}%`;
-    document.getElementById('quizDetailScore').innerText = `Benar: ${quizScore} | Salah: ${quizData.length - quizScore}`;
+    document.getElementById('quizDetailScore').innerText = `Benar: ${correctAnswers} | Salah: ${wrongAnswers}`;
 }
 
-// --- MENULIS CANVAS LOGIC ---
+// --- WRITING CANVAS LOGIC ---
 const canvas = document.getElementById('writingCanvas');
 const ctx = canvas.getContext('2d');
-let writeData = [];
-let writeIndex = 0;
-
+let painting = false;
 let strokes = [];
 let currentStroke = [];
-let animatingStroke = null;
-let isDrawing = false;
+let writeData = [];
+let writeIdx = 0;
+
+function initWrite() {
+    const category = document.getElementById('writeCategory').value;
+    const order = document.getElementById('writeOrder').value;
+
+    let filtered = masterData.filter(item => category === 'ALL' || item.category === category);
+    if (filtered.length === 0) filtered = [...masterData];
+
+    writeData = (order === 'SHUFFLE') ? shuffle(filtered) : filtered;
+    writeIdx = 0;
+    resizeCanvas();
+    loadWriteCard();
+}
+
+function loadWriteCard() {
+    if (writeData.length === 0) return;
+    clearCanvas();
+    const item = writeData[writeIdx];
+    document.getElementById('writeKanji').innerText = item.kanji;
+    document.getElementById('writeRomaji').innerText = item.romaji;
+    document.getElementById('writeArti').innerText = item.meaning;
+    document.getElementById('writeCounter').innerText = `${writeIdx + 1} / ${writeData.length}`;
+}
+
+function nextWrite() {
+    if (writeData.length === 0) return;
+    writeIdx = (writeIdx + 1) % writeData.length;
+    loadWriteCard();
+}
+
+function playWriteAudio() {
+    if (writeData.length > 0) speakText(writeData[writeIdx].kanji);
+}
 
 function resizeCanvas() {
-    const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.scale(dpr, dpr);
-
-    ctx.lineWidth = 7;
+    if (rect.width === 0) return;
+    canvas.width = rect.width;
+    canvas.height = rect.width;
+    ctx.lineWidth = 6;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.strokeStyle = '#1e293b';
-
-    redrawAll();
-}
-
-function drawSmoothStroke(points) {
-    if (!points || points.length === 0) return;
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-
-    if (points.length < 3) {
-        for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i].x, points[i].y);
-        }
-        ctx.stroke();
-        return;
-    }
-
-    for (let i = 1; i < points.length - 1; i++) {
-        const midX = (points[i].x + points[i + 1].x) / 2;
-        const midY = (points[i].y + points[i + 1].y) / 2;
-        ctx.quadraticCurveTo(points[i].x, points[i].y, midX, midY);
-    }
-    const last = points[points.length - 1];
-    ctx.lineTo(last.x, last.y);
-    ctx.stroke();
-}
-
-function resampleLine(start, end, count) {
-    const result = [];
-    for (let i = 0; i < count; i++) {
-        const t = count === 1 ? 0 : i / (count - 1);
-        result.push({
-            x: start.x + (end.x - start.x) * t,
-            y: start.y + (end.y - start.y) * t
-        });
-    }
-    return result;
-}
-
-function autoCorrectStroke(points) {
-    if (points.length < 5) return { points, isCorrected: false };
-
-    const start = points[0];
-    const end = points[points.length - 1];
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    const directDist = Math.hypot(dx, dy);
-
-    let pathLength = 0;
-    for (let i = 0; i < points.length - 1; i++) {
-        pathLength += Math.hypot(
-            points[i + 1].x - points[i].x,
-            points[i + 1].y - points[i].y
-        );
-    }
-
-    if (directDist > 25 && pathLength / directDist < 1.075) {
-        const angle = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
-        let targetEnd = { ...end };
-        let isCorrected = false;
-
-        if (angle <= 15 || angle >= 165) {
-            targetEnd.y = start.y;
-            isCorrected = true;
-        } else if (Math.abs(angle - 90) <= 15) {
-            targetEnd.x = start.x;
-            isCorrected = true;
-        }
-
-        if (isCorrected) {
-            return {
-                points: resampleLine(start, targetEnd, points.length),
-                isCorrected: true
-            };
-        }
-    }
-
-    return { points, isCorrected: false };
-}
-
-function redrawAll() {
-    const dpr = window.devicePixelRatio || 1;
-    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-
-    strokes.forEach(stroke => drawSmoothStroke(stroke));
-
-    if (animatingStroke) {
-        drawSmoothStroke(animatingStroke.current);
-    }
-    if (currentStroke.length > 0) {
-        drawSmoothStroke(currentStroke);
-    }
-}
-
-function animateCorrection(fromPoints, toPoints, duration = 120) {
-    const startTime = performance.now();
-    animatingStroke = { from: fromPoints, to: toPoints, current: fromPoints };
-
-    function step(now) {
-        if (!animatingStroke) return;
-
-        const elapsed = now - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const ease = 1 - Math.pow(1 - progress, 3);
-
-        animatingStroke.current = fromPoints.map((pt, i) => ({
-            x: pt.x + (toPoints[i].x - pt.x) * ease,
-            y: pt.y + (toPoints[i].y - pt.y) * ease
-        }));
-
-        redrawAll();
-
-        if (progress < 1) {
-            requestAnimationFrame(step);
-        } else {
-            strokes.push(toPoints);
-            animatingStroke = null;
-            redrawAll();
-        }
-    }
-
-    requestAnimationFrame(step);
+    redrawStrokes();
 }
 
 function getPos(e) {
     const rect = canvas.getBoundingClientRect();
+    if (e.touches && e.touches.length > 0) {
+        return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+        };
+    }
     return {
         x: e.clientX - rect.left,
         y: e.clientY - rect.top
     };
 }
 
-canvas.addEventListener('pointerdown', (e) => {
-    if (animatingStroke) {
-        strokes.push(animatingStroke.to);
-        animatingStroke = null;
-    }
-    isDrawing = true;
-    currentStroke = [getPos(e)];
-    redrawAll();
-});
+function startPosition(e) {
+    e.preventDefault();
+    painting = true;
+    const pos = getPos(e);
+    currentStroke = [pos];
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+}
 
-canvas.addEventListener('pointermove', (e) => {
-    if (!isDrawing) return;
-    currentStroke.push(getPos(e));
-    redrawAll();
-});
-
-canvas.addEventListener('pointerup', () => {
-    if (!isDrawing) return;
-    isDrawing = false;
-
+function finishedPosition(e) {
+    if (!painting) return;
+    if (e) e.preventDefault();
+    painting = false;
+    ctx.beginPath();
     if (currentStroke.length > 0) {
-        const rawPoints = [...currentStroke];
+        strokes.push(currentStroke);
         currentStroke = [];
+    }
+}
 
-        const { points, isCorrected } = autoCorrectStroke(rawPoints);
+function draw(e) {
+    if (!painting) return;
+    e.preventDefault();
+    const pos = getPos(e);
+    currentStroke.push(pos);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+}
 
-        if (isCorrected) {
-            animateCorrection(rawPoints, points, 120);
-        } else {
-            strokes.push(points);
-            redrawAll();
+function redrawStrokes() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    strokes.forEach(stroke => {
+        if (stroke.length === 0) return;
+        ctx.beginPath();
+        ctx.moveTo(stroke[0].x, stroke[0].y);
+        for (let i = 1; i < stroke.length; i++) {
+            ctx.lineTo(stroke[i].x, stroke[i].y);
         }
-    }
-});
-
-canvas.addEventListener('pointercancel', () => {
-    isDrawing = false;
-    currentStroke = [];
-    redrawAll();
-});
-
-function initWrite() {
-    let cat = document.getElementById('writeCategory').value;
-    let order = document.getElementById('writeOrder').value;
-    writeData = masterData.filter(item => cat === 'ALL' || item.category === cat);
-    
-    if (order === 'SHUFFLE') {
-        writeData = shuffle(writeData);
-    }
-    writeIndex = 0;
-    loadWriteData();
-    resizeCanvas();
-}
-
-function loadWriteData() {
-    if (writeData.length === 0) return;
-    let item = writeData[writeIndex];
-    document.getElementById('writeCounter').innerText = `${writeIndex + 1} / ${writeData.length}`;
-    document.getElementById('writeKanji').innerText = item.kanji;
-    document.getElementById('writeRomaji').innerText = item.romaji;
-    document.getElementById('writeArti').innerText = item.meaning;
-    clearCanvas();
-}
-
-function playWriteAudio() {
-    if (writeData.length > 0) speakText(writeData[writeIndex].kanji);
-}
-
-function nextWrite() {
-    if (writeData.length > 0) {
-        writeIndex = (writeIndex + 1) % writeData.length;
-        loadWriteData();
-    }
+        if (stroke.length === 1) {
+            ctx.lineTo(stroke[0].x, stroke[0].y);
+        }
+        ctx.stroke();
+    });
 }
 
 function undoCanvas() {
-    if (animatingStroke) {
-        animatingStroke = null;
-    } else if (strokes.length > 0) {
-        strokes.pop();
-    }
-    redrawAll();
+    strokes.pop();
+    redrawStrokes();
 }
 
 function clearCanvas() {
     strokes = [];
-    currentStroke = [];
-    animatingStroke = null;
-    redrawAll();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-window.addEventListener('resize', resizeCanvas);
+canvas.addEventListener('mousedown', startPosition);
+canvas.addEventListener('mouseup', finishedPosition);
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('touchstart', startPosition, { passive: false });
+canvas.addEventListener('touchend', finishedPosition, { passive: false });
+canvas.addEventListener('touchmove', draw, { passive: false });
 
-// --- DAFTAR KOSAKATA LOGIC (AUTO-FETCH KUN'YOMI & ON'YOMI) ---
-async function toggleKanjiDetail(detailId, kanjiWord) {
-    const el = document.getElementById(detailId);
-    if (!el) return;
+// --- LIST / DAFTAR KOSAKATA DENGAN KUN'YOMI & ON'YOMI ---
+async function toggleKanjiDetail(uniqueId, kanjiWord) {
+    const detailRow = document.getElementById('detail-' + uniqueId);
+    if (!detailRow) return;
+    
+    const isOpening = detailRow.classList.contains('hidden');
+    detailRow.classList.toggle('hidden');
 
-    const isOpening = el.classList.contains('hidden');
-    el.classList.toggle('hidden');
-
-    if (isOpening && !el.dataset.loaded) {
+    if (isOpening && !detailRow.dataset.loaded) {
         const chars = extractKanjiChars(kanjiWord);
-        for (const char of chars) {
-            const reading = await fetchKanjiReadingAuto(char);
-            const kunCell = el.querySelector(`[data-kun="${char}"]`);
-            const onCell = el.querySelector(`[data-on="${char}"]`);
-            if (kunCell) kunCell.innerText = reading.kun;
-            if (onCell) onCell.innerText = reading.on;
+        if (chars.length === 0) return;
+
+        let rowsHtml = '';
+        for (const ch of chars) {
+            const info = await fetchKanjiReadingAuto(ch);
+            rowsHtml += `
+                <tr class="border-b border-blue-100 last:border-0">
+                    <td class="py-1.5 px-2 font-bold jp-text text-xl text-blue-700 text-center w-12">${ch}</td>
+                    <td class="py-1.5 px-2 text-xs text-slate-700 font-medium">${info.kun}</td>
+                    <td class="py-1.5 px-2 text-xs text-slate-700 font-medium">${info.on}</td>
+                </tr>
+            `;
         }
-        el.dataset.loaded = 'true';
+
+        detailRow.innerHTML = `
+            <div class="bg-blue-50/70 rounded-xl p-2.5 border border-blue-100">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-[11px] uppercase tracking-wider text-blue-600 border-b border-blue-200">
+                            <th class="py-1 px-2 text-center">Kanji</th>
+                            <th class="py-1 px-2">Kun'yomi</th>
+                            <th class="py-1 px-2">On'yomi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        detailRow.dataset.loaded = 'true';
     }
 }
 
 function renderList() {
-    let cat = document.getElementById('listCategoryFilter').value;
-    let stat = document.getElementById('listStatusFilter').value;
-    
-    const listEl = document.getElementById('vocabList');
-    listEl.innerHTML = "";
+    const listContainer = document.getElementById('vocabList');
+    const catFilter = document.getElementById('listCategoryFilter').value;
+    const statusFilter = document.getElementById('listStatusFilter').value;
+
+    listContainer.innerHTML = '';
 
     let filtered = masterData.filter(item => {
-        let matchCat = (cat === 'ALL' || item.category === cat);
+        let matchCat = (catFilter === 'ALL' || item.category === catFilter);
         let isMem = memorizedKanji.includes(item.kanji);
-        let matchStat = (stat === 'ALL') || (stat === 'hafal' && isMem) || (stat === 'belum' && !isMem);
+        let matchStat = true;
+        if (statusFilter === 'hafal') matchStat = isMem;
+        if (statusFilter === 'belum') matchStat = !isMem;
         return matchCat && matchStat;
     });
 
-    filtered.forEach((item, index) => {
-        let isMem = memorizedKanji.includes(item.kanji);
-        let kanjiChars = extractKanjiChars(item.kanji);
-        let hasKanji = kanjiChars.length > 0;
-        let detailId = `kanji-detail-${index}`;
+    if (filtered.length === 0) {
+        listContainer.innerHTML = '<li class="p-8 text-center text-slate-400">Tidak ada kosakata ditemukan.</li>';
+        return;
+    }
 
-        let li = document.createElement('li');
+    filtered.forEach((item, index) => {
+        const isMem = memorizedKanji.includes(item.kanji);
+        const kanjiChars = extractKanjiChars(item.kanji);
+        const hasKanji = kanjiChars.length > 0;
+        const uniqueId = `item-${index}-${item.id}`;
+
+        const li = document.createElement('li');
         li.className = "p-4 hover:bg-slate-50 transition";
 
-        let tableHtml = "";
+        let detailSection = '';
         if (hasKanji) {
-            let rowsHtml = kanjiChars.map(char => {
-                let reading = kanjiReadings[char] || cachedKanjiReadings[char] || { kun: 'Memuat...', on: 'Memuat...' };
-                return `
-                    <tr class="border-t border-slate-200">
-                        <td class="py-2 px-3 font-bold text-lg jp-text text-center text-slate-800 bg-white">${char}</td>
-                        <td data-kun="${char}" class="py-2 px-3 text-xs text-slate-700 bg-white">${reading.kun}</td>
-                        <td data-on="${char}" class="py-2 px-3 text-xs text-slate-700 bg-white">${reading.on}</td>
-                    </tr>
-                `;
-            }).join('');
-
-            tableHtml = `
-                <div id="${detailId}" class="hidden mt-3 overflow-hidden rounded-xl border border-slate-200 shadow-xs">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-blue-50 text-blue-800 text-xs font-semibold">
-                                <th class="py-2 px-3 text-center w-14">Kanji</th>
-                                <th class="py-2 px-3">Kun'yomi</th>
-                                <th class="py-2 px-3">On'yomi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rowsHtml}
-                        </tbody>
-                    </table>
+            detailSection = `
+                <div id="detail-${uniqueId}" class="hidden mt-3 pt-2 border-t border-slate-100">
+                    <div class="bg-blue-50/70 rounded-xl p-3 text-center text-xs text-blue-600 font-medium animate-pulse">
+                        ⏳ Mengambil data Kun'yomi & On'yomi...
+                    </div>
                 </div>
             `;
         }
 
         li.innerHTML = `
-            <div class="flex justify-between items-center ${hasKanji ? 'cursor-pointer' : ''}" ${hasKanji ? `onclick="toggleKanjiDetail('${detailId}', '${item.kanji}')"` : ''}>
-                <div class="flex items-center gap-4">
-                    <button onclick="event.stopPropagation(); speakText('${item.kanji}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-2 rounded-full w-10 h-10 flex items-center justify-center shrink-0">🔊</button>
-                    <div>
-                        <h3 class="text-xl font-bold jp-text flex items-center gap-2">
-                            ${item.kanji}
-                            <span class="text-sm text-slate-400 font-normal font-sans">${item.romaji}</span>
-                            ${hasKanji ? '<span class="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded font-sans">▼ Info Kanji</span>' : ''}
-                        </h3>
-                        <p class="text-sm text-slate-600">${item.meaning} <span class="text-xs bg-slate-200 px-2 py-0.5 rounded text-slate-500 ml-1">${item.category}</span></p>
+            <div class="flex justify-between items-center ${hasKanji ? 'cursor-pointer' : ''}" ${hasKanji ? `onclick="toggleKanjiDetail('${uniqueId}', '${item.kanji}')"` : ''}>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-2xl font-bold jp-text text-slate-800">${item.kanji}</span>
+                        <span class="text-sm font-medium text-blue-600">${item.romaji}</span>
+                        ${hasKanji ? `<span class="text-[11px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-medium">🔍 Cara Baca</span>` : ''}
                     </div>
+                    <p class="text-sm text-slate-500 mt-1">${item.meaning} • <span class="text-xs text-slate-400">${item.category}</span></p>
                 </div>
-                <div class="shrink-0 ml-2">
-                    ${isMem ? '<span class="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">✅ Hafal</span>' : '<span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Belum</span>'}
+                <div class="flex items-center gap-2">
+                    <button onclick="event.stopPropagation(); speakText('${item.kanji}')" class="p-2 bg-slate-100 rounded-full hover:bg-blue-100">🔊</button>
+                    <button onclick="event.stopPropagation(); toggleMemFromList('${item.kanji}')" class="px-3 py-1 rounded-full text-xs font-bold ${isMem ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'}">
+                        ${isMem ? '✅ Hafal' : 'Belum'}
+                    </button>
                 </div>
             </div>
-            ${tableHtml}
+            ${detailSection}
         `;
-        listEl.appendChild(li);
+        listContainer.appendChild(li);
     });
 }
 
-// Inisialisasi awal flashcard
+function toggleMemFromList(kanji) {
+    if (memorizedKanji.includes(kanji)) {
+        memorizedKanji = memorizedKanji.filter(k => k !== kanji);
+    } else {
+        memorizedKanji.push(kanji);
+    }
+    saveProgress();
+    renderList();
+}
+
+// Init First Load
 initFlashcard();
 </script>
 </body>
