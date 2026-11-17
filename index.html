@@ -720,6 +720,54 @@
                 <p class="theme-text-muted mb-6" id="quizDetailScore">Benar: 10 | Salah: 0</p>
                 <button onclick="document.getElementById('quizPlay').classList.add('hidden'); document.getElementById('quizResult').classList.add('hidden'); document.getElementById('quizSetup').classList.remove('hidden');" class="w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md">Ulangi Kuis</button>
             </div>
+
+                        <!-- SIMULASI UJIAN SETARA JLPT N5 & JFT-BASIC A2 / N4 -->
+            <div id="exam-selector" class="theme-card p-6 rounded-2xl shadow-sm mt-6 space-y-4">
+                <div class="text-center">
+                    <h3 class="text-xl font-bold">🎯 Simulasi Ujian (JLPT / JFT-Basic)</h3>
+                    <p class="text-xs theme-text-muted mt-1">Ujian lengkap 4 sesi (Kosakata, Tata Bahasa & Kaiwa, Choukai, Dokkai) dengan batas waktu otomatis</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button onclick="startMockExam('N5')" class="theme-subcard p-4 text-left rounded-xl border border-emerald-500/40 hover:border-emerald-500 transition">
+                        <div class="font-bold text-emerald-500">Opsi 1: Level N5 (Dasar)</div>
+                        <p class="text-xs theme-text-muted mt-1">30 Soal • 35 Menit • Kosakata, Tata Bahasa Dasar, Choukai & Dokkai</p>
+                    </button>
+                    <button onclick="startMockExam('N4')" class="theme-subcard p-4 text-left rounded-xl border border-indigo-500/40 hover:border-indigo-500 transition">
+                        <div class="font-bold text-indigo-500">Opsi 2: Simulasi Penuh JFT-Basic A2 / N4</div>
+                        <p class="text-xs theme-text-muted mt-1">50 Soal • 60 Menit • 15 Kosakata, 15 Tata Bahasa, 10 Choukai & 10 Dokkai</p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ARENA UJIAN BERLANGSUNG -->
+            <div id="exam-arena" class="hidden theme-card p-5 rounded-2xl shadow-sm mt-6 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b theme-border pb-3">
+                    <div>
+                        <span id="exam-level-badge" class="px-2.5 py-1 text-xs font-bold rounded-full theme-accent-soft">JFT-Basic A2 / N4</span>
+                        <span id="exam-section-label" class="ml-1 text-xs font-semibold theme-text-muted">Sesi 1</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="exam-progress" class="text-xs font-bold">1 / 50</span>
+                        <span id="exam-timer" class="px-2.5 py-1 rounded-lg bg-red-500/15 text-red-500 font-mono text-xs font-bold">60:00</span>
+                    </div>
+                </div>
+
+                <div id="exam-audio-box" class="hidden p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-2">
+                    <span class="text-xs font-medium">🔊 Dengarkan audio (Maksimal 2x putar):</span>
+                    <button id="exam-play-audio-btn" onclick="playExamAudio()" class="px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-bold shrink-0">Putar Audio (2x)</button>
+                </div>
+
+                <div id="exam-question-text" class="text-sm sm:text-base font-semibold leading-relaxed whitespace-pre-line"></div>
+                <div id="exam-options" class="space-y-2"></div>
+
+                <div class="flex justify-between items-center pt-3 border-t theme-border">
+                    <button onclick="abortMockExam()" class="text-xs theme-text-muted hover:text-red-500">✕ Keluar Ujian</button>
+                    <button id="exam-next-btn" onclick="nextExamQuestion()" disabled class="px-4 py-2 rounded-xl theme-accent-bg disabled:opacity-40 text-xs sm:text-sm font-bold">Lanjut →</button>
+                </div>
+            </div>
+
+            <!-- LAYAR HASIL SKOR UJIAN -->
+            <div id="exam-result" class="hidden theme-card p-6 rounded-2xl shadow-sm mt-6 space-y-4"></div>
         </section>
 
         <!-- ==================== TAB 7: DAFTAR KOSAKATA ==================== -->
@@ -4432,7 +4480,572 @@ function nextArrangeSentence() {
     psIdx++;
     renderArrangeSentence();
 }
-    
+
+// =========================================================================
+// 5. SIMULASI UJIAN SETARA JLPT N5 (30 SOAL) & JFT-BASIC A2 / N4 (50 SOAL)
+// =========================================================================
+let examState = null;
+let examTimerInterval = null;
+
+function buildVocabExamQuestion(level) {
+    const n5Cats = ['Waktu', 'Tempat & Benda', 'Sifat & Kondisi'];
+    const pool = level === 'N5'
+        ? masterData.filter(x => n5Cats.includes(x.category) && x.kanji.length <= 4)
+        : masterData.filter(x => ['Kata Kerja', 'Peraturan', 'Bencana & Darurat', 'Partikel & Keterangan'].includes(x.category));
+
+    const target = pickRandom(pool.length ? pool : masterData);
+    const askReading = Math.random() > 0.45 && /[\u4e00-\u9faf]/.test(target.kanji);
+
+    const distractors = shuffle(
+        masterData.filter(x => x.id !== target.id && x.category === target.category)
+    ).slice(0, 3);
+
+    if (askReading) {
+        return {
+            section: 'Sesi 1: Kanji & Cara Baca',
+            prompt: `Pilih cara baca (romaji) yang tepat untuk kata: 【 ${target.kanji} 】 (${target.meaning})`,
+            correct: target.romaji,
+            options: shuffle([target.romaji, ...distractors.map(d => d.romaji)]),
+            explanation: `${target.kanji} dibaca "${target.romaji}" artinya "${target.meaning}".`
+        };
+    }
+    return {
+        section: 'Sesi 1: Kosakata',
+        prompt: `Apa arti dari kosakata 【 ${target.kanji} 】 (${target.romaji})?`,
+        correct: target.meaning,
+        options: shuffle([target.meaning, ...distractors.map(d => d.meaning)]),
+        explanation: `${target.kanji} (${target.romaji}) = ${target.meaning}.`
+    };
+}
+
+function buildGrammarExamQuestion(level) {
+    const { v, obj } = getValidActionPair();
+    const { v: vMove, place } = getValidMovePair();
+    const { v: vIntr, subj: intrSubj } = getValidIntransitivePair();
+    const { noun: adjNoun, adj: adjItem } = getValidNounAdjPair();
+
+    const [dictJp] = conjugateMasu(v.kanji, v.romaji, 'dict');
+    const [teJp] = conjugateMasu(v.kanji, v.romaji, 'te');
+    const [taJp] = conjugateMasu(v.kanji, v.romaji, 'ta');
+    const [naiJp] = conjugateMasu(v.kanji, v.romaji, 'nai');
+    const [intrTeJp] = conjugateMasu(vIntr.kanji, vIntr.romaji, 'te');
+
+    const rawAdj = adjItem.kanji.replace(/\s*\(na\)/gi, '').trim();
+    const isNaAdj = adjItem.romaji.includes('(na)');
+
+    if (level === 'N5') {
+        const n5Bank = [
+            {
+                prompt: `Lengkapi partikel yang tepat:\n私は毎日、${place.kanji}（　　）${obj.kanji}を${v.kanji}。`,
+                correct: 'で',
+                options: shuffle(['で', 'へ', 'を', 'が']),
+                explanation: `Partikel で menunjukkan tempat berlangsungnya aksi (${v.meaning}).`
+            },
+            {
+                prompt: `Lengkapi partikel yang tepat:\n来週の日曜日、家族と${place.kanji}（　　）${vMove.kanji}。`,
+                correct: 'へ',
+                options: shuffle(['へ', 'を', 'で', 'から']),
+                explanation: `Partikel へ digunakan untuk menandai arah tujuan perpindahan tempat.`
+            },
+            {
+                prompt: `Lengkapi partikel yang tepat:\n私は毎朝、${obj.kanji}（　　）${v.kanji}。`,
+                correct: 'を',
+                options: shuffle(['を', 'が', 'に', 'で']),
+                explanation: `Partikel を menandai objek langsung dari kata kerja transitif.`
+            },
+            {
+                prompt: `Pilih bentuk sopan mengajak (～ましょうか) yang tepat:\nA: 荷物が多いですね。私が（　　）。\nB: ありがとうございます。お願いします。`,
+                correct: '持ちましょうか',
+                options: shuffle(['持ちましょうか', '持ちませんでした', '持たないです', '持っていません']),
+                explanation: `～ましょうか digunakan untuk menawarkan bantuan ("Bagaimana kalau saya bawakan?").`
+            },
+            {
+                prompt: `Pilih ungkapan meminta izin (～てもいいですか) yang tepat:\nすみません、この${obj.kanji}を（　　）いいですか。`,
+                correct: `${teJp}も`,
+                options: shuffle([`${teJp}も`, `${taJp}も`, `${naiJp}も`, `${v.kanji}も`]),
+                explanation: `Pola izin sopan: Kata Kerja bentuk -te + もいいですか ("Bolehkah saya...?").`
+            },
+            {
+                prompt: `Pilih bentuk kata kerja urutan kegiatan (～てから) yang tepat:\n手を（　　）から、晩ご飯を食べます。`,
+                correct: '洗って',
+                options: shuffle(['洗って', '洗った', '洗う', '洗わない']),
+                explanation: `Pola urutan kegiatan: Kata Kerja bentuk -te + から ("Setelah mencuci tangan, makan malam").`
+            },
+            {
+                prompt: `Pilih bentuk lampau kata sifat yang tepat:\n昨日のテストはとても（　　）です。`,
+                correct: '難しかった',
+                options: shuffle(['難しかった', '難しいかった', '難しくない', '難しいでした']),
+                explanation: `Kata sifat-i lampau positif: huruf い terakhir diganti かった (難しかった).`
+            },
+            {
+                prompt: `Pilih ungkapan keinginan (～たいです) yang tepat:\n夏休みに日本へ（　　）です。`,
+                correct: '行きたい',
+                options: shuffle(['行きたい', '行くたい', '行ったい', '行かない']),
+                explanation: `Akar bentuk -masu (行き) + たいです menyatakan keinginan diri sendiri.`
+            },
+            {
+                prompt: `Lengkapi percakapan di restoran berikut:\n店員：いらっしゃいませ。何名様ですか。\n客　：（　　）。`,
+                correct: '二人です',
+                options: shuffle(['二人です', '二本です', '二枚です', '二台です']),
+                explanation: `Kata bantu bilangan untuk orang adalah ～人 (hitori, futari, sannin...).`
+            },
+            {
+                prompt: `Pilih kata tanya yang tepat untuk percakapan berikut:\nA: 駅まで（　　）ぐらいかかりますか。\nB: 歩いて十分ぐらいです。`,
+                correct: 'どの',
+                options: shuffle(['どの', 'だれ', 'どこ', 'どれ']),
+                explanation: `どのぐらい digunakan untuk menanyakan perkiraan durasi waktu atau jarak.`
+            }
+        ];
+        return { section: 'Sesi 2: Tata Bahasa & Percakapan', ...pickRandom(n5Bank) };
+    }
+
+    const n4Bank = [
+        {
+            prompt: `Pilih bentuk kata kerja untuk menyatakan pengalaman (～たことがあります):\n私は一度もこの${obj.kanji}を（　　）ことがありません。`,
+            correct: taJp,
+            options: shuffle([taJp, teJp, naiJp, dictJp]),
+            explanation: `Pengalaman: Kata Kerja bentuk lampau (-ta) + ことがあります / ありません.`
+        },
+        {
+            prompt: `Pilih bentuk kata kerja untuk menyatakan keharusan (～なければなりません):\n明日までに、この${obj.kanji}を（　　）なければなりません。`,
+            correct: naiJp.slice(0, -1),
+            options: shuffle([naiJp.slice(0, -1), teJp, taJp, dictJp]),
+            explanation: `Keharusan: Bentuk -nai tanpa い + なければなりません.`
+        },
+        {
+            prompt: `Pilih bentuk kata kerja untuk menyatakan "tidak perlu" (～なくてもいいです):\n明日は日曜日ですから、早く（　　）なくてもいいです。`,
+            correct: '起き',
+            options: shuffle(['起き', '起きた', '起きて', '起きる']),
+            explanation: `Tidak perlu melakukan: Bentuk -nai tanpa い (起きない → 起き) + なくてもいいです.`
+        },
+        {
+            prompt: `Pilih bentuk kata kerja untuk memberi saran (～たほうがいいです):\n風邪をひいた時は、早く薬を（　　）ほうがいいですよ。`,
+            correct: '飲んだ',
+            options: shuffle(['飲んだ', '飲む', '飲んで', '飲まない']),
+            explanation: `Saran positif ("Sebaiknya..."): Kata Kerja bentuk lampau (-ta) + ほうがいいです.`
+        },
+        {
+            prompt: `Pilih kata sambung yang tepat untuk kontras (～のに):\n毎日一生懸命練習している（　　）、なかなか上手になりません。`,
+            correct: 'のに',
+            options: shuffle(['のに', 'から', 'たら', 'ながら']),
+            explanation: `のに menyatakan hasil yang berlawanan dari harapan ("Padahal sudah berlatih giat, tetapi...").`
+        },
+        {
+            prompt: `Pilih kata kerja untuk menyatakan "sambil" (～ながら):\n私はいつも音楽を（　　）ながら、日本語を勉強します。`,
+            correct: '聞き',
+            options: shuffle(['聞き', '聞いて', '聞いた', '聞く']),
+            explanation: `Akar bentuk -masu (聞き) + ながら menyatakan dua kegiatan dilakukan bersamaan.`
+        },
+        {
+            prompt: `Pilih bentuk kata kerja sebelum 前に (sebelum melakukan...):\n寝る（　　）、必ず歯を磨きます。`,
+            correct: '前に',
+            options: shuffle(['前に', '後で', 'ながら', '間に']),
+            explanation: `Kata Kerja bentuk kamus (寝る) + 前に berarti "Sebelum tidur...".`
+        },
+        {
+            prompt: `Pilih bentuk kata kerja sebelum 後で (setelah melakukan...):\n仕事が（　　）後で、友達と飲みに行きます。`,
+            correct: '終わった',
+            options: shuffle(['終わった', '終わる', '終わって', '終わらない']),
+            explanation: `Kata Kerja bentuk lampau (-ta) + 後で berarti "Setelah selesai bekerja...".`
+        },
+        {
+            prompt: `Pilih bentuk pengandaian yang tepat (～たら):\nもし日本へ（　　）、一番行きたい所はどこですか。`,
+            correct: '行ったら',
+            options: shuffle(['行ったら', '行くたら', '行ってたら', '行かないたら']),
+            explanation: `Pengandaian ～たら dibentuk dari bentuk lampau (-ta) + ら (行った + ら).`
+        },
+        {
+            prompt: `Pilih bentuk yang tepat untuk "mencoba melakukan" (～てみます):\nこの靴はとても軽そうですから、一度（　　）みたいです。`,
+            correct: '履いて',
+            options: shuffle(['履いて', '履いた', '履く', '履かない']),
+            explanation: `Kata Kerja bentuk -te + みます berarti "mencoba melakukan sesuatu".`
+        },
+        {
+            prompt: `Pilih ungkapan dugaan berdasarkan penampilan (～そうです):\n空が暗くなりましたね。今にも雨が（　　）そうです。`,
+            correct: '降り',
+            options: shuffle(['降り', '降って', '降った', '降る']),
+            explanation: `Akar bentuk -masu (降り) + そうです menyatakan dugaan kuat ("Kelihatannya akan segera turun hujan").`
+        },
+        {
+            prompt: `Pilih bentuk keadaan sedang berlangsung (～ています):\nあ、あそこの${intrSubj.kanji}が（　　）いますよ。気をつけてください。`,
+            correct: intrTeJp,
+            options: shuffle([intrTeJp, vIntr.kanji, conjugateMasu(vIntr.kanji, vIntr.romaji, 'nai')[0], conjugateMasu(vIntr.kanji, vIntr.romaji, 'dict')[0]]),
+            explanation: `Kata Kerja intransitif bentuk -te + います menggambarkan kondisi yang sedang terjadi.`
+        },
+        {
+            prompt: `Pilih bentuk biasa (普通形) sebelum と思います:\nこの${adjNoun.kanji}はとても（　　）と思います。`,
+            correct: isNaAdj ? `${rawAdj}だ` : rawAdj,
+            options: shuffle([
+                isNaAdj ? `${rawAdj}だ` : rawAdj,
+                `${rawAdj}です`,
+                `${rawAdj}て`,
+                `${rawAdj}に`
+            ]),
+            explanation: `Sebelum と思います digunakan bentuk biasa (Kata sifat-i tetap ～い, Kata sifat-na ditambah だ).`
+        },
+        {
+            prompt: `Lengkapi percakapan permohonan sopan berikut:\n社員：部長、明日の会議の資料ですが、もうコピー（　　）か。\n部長：ええ、お願いできますか。`,
+            correct: 'しましょう',
+            options: shuffle(['しましょう', 'しました', 'しませんでした', 'しないで']),
+            explanation: `～ましょうか digunakan untuk menawarkan bantuan secara sopan kepada atasan atau rekan kerja.`
+        },
+        {
+            prompt: `Lengkapi percakapan di tempat kerja berikut:\n先輩：この機械の使い方、わかりますか。\n後輩：すみません、まだよくわからないので、（　　）。`,
+            correct: '教えていただけませんか',
+            options: shuffle(['教えていただけませんか', '教えてあげましょうか', '教えてしまいました', '教えないでください']),
+            explanation: `～ていただけませんか adalah bentuk permohonan yang sangat sopan ("Maukah Anda mengajari saya?").`
+        },
+        {
+            prompt: `Pilih ungkapan yang tepat saat melihat teman terlihat sakit:\nA: 顔色が悪いですね。どうしたんですか。\nB: 朝から頭が（　　）。`,
+            correct: '痛いんです',
+            options: shuffle(['痛いんです', '痛いましょう', '痛くありません', '痛かったですから']),
+            explanation: `Pola ～んです digunakan untuk menjelaskan alasan atau kondisi yang ditanyakan lawan bicara.`
+        }
+    ];
+
+    return { section: 'Sesi 2: Tata Bahasa & Percakapan (Kaiwa)', ...pickRandom(n4Bank) };
+}
+
+function buildReadingExamQuestion(level) {
+    if (level === 'N5') {
+        const qObj = generateReadingQuestion(pickRandom(['SHORT', 'PARAGRAPH']), 'N5');
+        return {
+            section: 'Sesi 4: Pemahaman Membaca (Dokkai)',
+            prompt: `${qObj.jp}\n\nPertanyaan: ${qObj.q}`,
+            correct: qObj.correct,
+            options: shuffle([qObj.correct, ...qObj.wrong]),
+            explanation: `Terjemahan: "${qObj.id}" (${qObj.pattern})`
+        };
+    }
+
+    const jftPracticalTexts = [
+        {
+            jp: `【お知らせ】\n来週の火曜日（15日）はビルの電気の工事がありますから、図書館は休みです。本を返したい人は、入口の横にある白い箱に入れてください。水曜日からいつもどおり午前9時に開きます。`,
+            q: `火曜日に本を返したい人は、どうしなければなりませんか。`,
+            correct: `入口の横にある白い箱に本を入れます`,
+            wrong: [
+                `水曜日まで待ってから受付へ持って行きます`,
+                `午前9時前に図書館の中へ入って返します`,
+                `電話で図書館の人に連絡してから行きます`
+            ],
+            explanation: `Pengumuman: Selasa libur karena perbaikan listrik; pengembalian buku dimasukkan ke kotak putih di samping pintu masuk.`
+        },
+        {
+            jp: `【メール：佐藤さんへ】\nお疲れ様です。田中です。今日の午後3時から会議室で打ち合わせをする予定でしたが、急にお客様が来ることになりました。すみませんが、時間を午後4時半に変更してもいいですか。返事を待っています。`,
+            q: `田中さんはどうして会議の時間を変えたいのですか。`,
+            correct: `急にお客様が来ることになったから`,
+            wrong: [
+                `会議室がまだ掃除されていないから`,
+                `佐藤さんが午後3時に帰ってしまうから`,
+                `資料のコピーがまだ終わっていないから`
+            ],
+            explanation: `Email Tanaka: Jadwal rapat jam 3 sore minta diubah ke 4.30 sore karena mendadak ada tamu datang.`
+        },
+        {
+            jp: `【ゴミの出し方ルール】\n・燃えるゴミ：月曜日と木曜日の朝8時までに出してください。\n・ペットボトルと缶：水曜日に出してください。\n・注意：前の日の夜には絶対に出さないでください。`,
+            q: `ゴミを出す時、気をつけなければならないことは何ですか。`,
+            correct: `前の日の夜にゴミを出さないこと`,
+            wrong: [
+                `月曜日にペットボトルを出すこと`,
+                `朝8時を過ぎてからゴミを出すこと`,
+                `缶と燃えるゴミを同じ袋に入れること`
+            ],
+            explanation: `Aturan sampah: Sampah bakar (Senin & Kamis s.d. jam 8 pagi), botol/kaleng (Rabu), dan dilarang membuang pada malam sebelumnya.`
+        }
+    ];
+
+    if (Math.random() < 0.45) {
+        const item = pickRandom(jftPracticalTexts);
+        return {
+            section: 'Sesi 4: Pemahaman Membaca (Dokkai)',
+            prompt: `${item.jp}\n\nPertanyaan: ${item.q}`,
+            correct: item.correct,
+            options: shuffle([item.correct, ...item.wrong]),
+            explanation: item.explanation
+        };
+    }
+
+    const qObj = generateReadingQuestion(pickRandom(['LONG', 'PARAGRAPH']), 'N4');
+    return {
+        section: 'Sesi 4: Pemahaman Membaca (Dokkai)',
+        prompt: `${qObj.jp}\n\nPertanyaan: ${qObj.q}`,
+        correct: qObj.correct,
+        options: shuffle([qObj.correct, ...qObj.wrong]),
+        explanation: `Terjemahan: "${qObj.id}" (${qObj.pattern})`
+    };
+}
+
+function buildListeningExamQuestion(level) {
+    const choukaiDialogs = [
+        {
+            level: 'N5',
+            audioText: `女の人：すみません、郵便局はどこですか。男の人：あそこの銀行の隣ですよ。女の人：ありがとうございます。`,
+            q: `郵便局はどこにありますか。`,
+            correct: `銀行の隣`,
+            wrong: [`駅の後ろ`, `デパートの中`, `病院の前`],
+            explanation: `Dialog: Wanita bertanya letak kantor pos, Pria menjawab "Di sebelah bank di sana" (銀行の隣).`
+        },
+        {
+            level: 'N5',
+            audioText: `男の人：明日、何時に駅で会いましょうか。女の人：映画は十時からですから、九時半に会いましょう。男の人：わかりました。`,
+            q: `二人は明日、何時に会いますか。`,
+            correct: `九時半`,
+            wrong: [`十時`, `九時`, `十時半`],
+            explanation: `Dialog: Film mulai jam 10, jadi mereka sepakat bertemu di stasiun jam 9.30 (九時半).`
+        },
+        {
+            level: 'N4',
+            audioText: `男の人：山田さん、もう昼ご飯を食べましたか。女の人：いいえ、まだです。これから食堂へ行きます。男の人：じゃあ、一緒に行きませんか。今日はカレーが安いですよ。女の人：いいですね。行きましょう。`,
+            q: `女の人はこれから何をしますか。`,
+            correct: `男の人と一緒に食堂へ行く`,
+            wrong: [`一人で外へ買い物に行く`, `会議室で資料を作る`, `もう食べたので部屋で休む`],
+            explanation: `Dialog: Wanita belum makan siang dan diajak pria pergi bersama ke kantin karena kari sedang murah.`
+        },
+        {
+            level: 'N4',
+            audioText: `女の人：すみません、このバスは駅へ行きますか。運転手：いいえ、このバスは病院行きですよ。駅へ行くバスは、三番の乗り場から出ます。女の人：そうですか。どうもありがとうございます。`,
+            q: `女の人はこれからどうしますか。`,
+            correct: `三番の乗り場へ行く`,
+            wrong: [`今止まっているバスに乗る`, `歩いて病院まで行く`, `タクシーを呼んで駅へ行く`],
+            explanation: `Dialog: Bus ini menuju rumah sakit; bus menuju stasiun berangkat dari halte nomor 3 (三番の乗り場).`
+        },
+        {
+            level: 'N4',
+            audioText: `男の人：林さん、週末のパーティー、何か手伝いましょうか。女の人：ありがとうございます。じゃあ、飲み物を買っておいてくれませんか。私は料理を作りますから。男の人：わかりました。任せください。`,
+            q: `男の人はパーティーのために何をしますか。`,
+            correct: `飲み物を買っておく`,
+            wrong: [`料理を作る`, `部屋の掃除をする`, `友達に連絡する`],
+            explanation: `Dialog: Wanita meminta pria membelikan minuman (飲み物を買っておく) sementara ia memasak.`
+        }
+    ];
+
+    const matchingDialogs = choukaiDialogs.filter(d => d.level === level);
+    if (matchingDialogs.length > 0 && Math.random() < 0.55) {
+        const d = pickRandom(matchingDialogs);
+        return {
+            section: 'Sesi 3: Pemahaman Mendengar (Choukai)',
+            isAudio: true,
+            audioText: d.audioText,
+            prompt: `Dengarkan percakapan dengan saksama (maksimal 2x putar), lalu pilih jawaban yang tepat:\nPertanyaan: ${d.q}`,
+            correct: d.correct,
+            options: shuffle([d.correct, ...d.wrong]),
+            explanation: `Transkrip: ${d.audioText}\nCatatan: ${d.explanation}`
+        };
+    }
+
+    const lengthType = level === 'N5' ? 'SHORT' : 'LONG';
+    const qObj = generateReadingQuestion(lengthType, level);
+    return {
+        section: 'Sesi 3: Pemahaman Mendengar (Choukai)',
+        isAudio: true,
+        audioText: qObj.jp,
+        prompt: `Dengarkan audio dengan saksama (maksimal 2x putar), lalu pilih jawaban yang tepat:\nPertanyaan: ${qObj.q}`,
+        correct: qObj.correct,
+        options: shuffle([qObj.correct, ...qObj.wrong]),
+        explanation: `Transkrip Audio: ${qObj.jp}\nArti: "${qObj.id}"`
+    };
+}
+
+function startMockExam(level) {
+    const questions = [];
+    const usedPrompts = new Set();
+
+    function addUniqueQuestions(builderFn, count) {
+        let attempts = 0;
+        let added = 0;
+        while (added < count && attempts < count * 8) {
+            attempts++;
+            const q = builderFn(level);
+            if (!usedPrompts.has(q.prompt)) {
+                usedPrompts.add(q.prompt);
+                questions.push(q);
+                added++;
+            }
+        }
+        while (added < count) {
+            questions.push(builderFn(level));
+            added++;
+        }
+    }
+
+    if (level === 'N5') {
+        addUniqueQuestions(buildVocabExamQuestion, 10);
+        addUniqueQuestions(buildGrammarExamQuestion, 8);
+        addUniqueQuestions(buildListeningExamQuestion, 6);
+        addUniqueQuestions(buildReadingExamQuestion, 6);
+    } else {
+        addUniqueQuestions(buildVocabExamQuestion, 15);
+        addUniqueQuestions(buildGrammarExamQuestion, 15);
+        addUniqueQuestions(buildListeningExamQuestion, 10);
+        addUniqueQuestions(buildReadingExamQuestion, 10);
+    }
+
+    examState = {
+        level,
+        questions,
+        currentIndex: 0,
+        answers: new Array(questions.length).fill(null),
+        audioPlaysLeft: 2,
+        secondsLeft: level === 'N5' ? 35 * 60 : 60 * 60
+    };
+
+    document.getElementById('exam-selector').classList.add('hidden');
+    document.getElementById('exam-result').classList.add('hidden');
+    document.getElementById('exam-arena').classList.remove('hidden');
+    document.getElementById('exam-level-badge').textContent = level === 'N5' ? 'JLPT N5 (30 Soal)' : 'JFT-Basic A2 / N4 (50 Soal)';
+
+    startExamTimer();
+    renderExamQuestion();
+}
+
+function startExamTimer() {
+    clearInterval(examTimerInterval);
+    examTimerInterval = setInterval(() => {
+        if (!examState) return;
+        examState.secondsLeft--;
+        const m = String(Math.floor(examState.secondsLeft / 60)).padStart(2, '0');
+        const s = String(examState.secondsLeft % 60).padStart(2, '0');
+        document.getElementById('exam-timer').textContent = `${m}:${s}`;
+        if (examState.secondsLeft <= 0) finishMockExam();
+    }, 1000);
+}
+
+function renderExamQuestion() {
+    const q = examState.questions[examState.currentIndex];
+    examState.audioPlaysLeft = 2;
+
+    document.getElementById('exam-section-label').textContent = q.section;
+    document.getElementById('exam-progress').textContent = `${examState.currentIndex + 1} / ${examState.questions.length}`;
+    document.getElementById('exam-question-text').innerText = q.prompt;
+    document.getElementById('exam-next-btn').disabled = true;
+    document.getElementById('exam-next-btn').textContent =
+        examState.currentIndex === examState.questions.length - 1 ? 'Selesai & Lihat Skor ✓' : 'Lanjut →';
+
+    const audioBox = document.getElementById('exam-audio-box');
+    if (q.isAudio) {
+        audioBox.classList.remove('hidden');
+        const btn = document.getElementById('exam-play-audio-btn');
+        btn.disabled = false;
+        btn.textContent = `Putar Audio (${examState.audioPlaysLeft}x)`;
+    } else {
+        audioBox.classList.add('hidden');
+    }
+
+    const optContainer = document.getElementById('exam-options');
+    optContainer.innerHTML = '';
+    q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full p-3 text-left rounded-xl border theme-border theme-subcard hover:opacity-90 text-xs sm:text-sm transition';
+        btn.textContent = opt;
+        btn.onclick = () => selectExamOption(opt, btn);
+        optContainer.appendChild(btn);
+    });
+}
+
+function playExamAudio() {
+    const q = examState.questions[examState.currentIndex];
+    if (!q.isAudio || examState.audioPlaysLeft <= 0) return;
+
+    examState.audioPlaysLeft--;
+    const btn = document.getElementById('exam-play-audio-btn');
+    btn.textContent = `Putar Audio (${examState.audioPlaysLeft}x)`;
+    if (examState.audioPlaysLeft === 0) btn.disabled = true;
+
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(q.audioText);
+    utter.lang = 'ja-JP';
+    utter.rate = examState.level === 'N5' ? 0.85 : 1.0;
+    window.speechSynthesis.speak(utter);
+}
+
+function selectExamOption(chosen, clickedBtn) {
+    examState.answers[examState.currentIndex] = chosen;
+    document.querySelectorAll('#exam-options button').forEach(b => {
+        b.classList.remove('theme-accent-bg', 'font-bold');
+        b.classList.add('theme-subcard');
+    });
+    clickedBtn.classList.remove('theme-subcard');
+    clickedBtn.classList.add('theme-accent-bg', 'font-bold');
+    document.getElementById('exam-next-btn').disabled = false;
+}
+
+function nextExamQuestion() {
+    window.speechSynthesis.cancel();
+    if (examState.currentIndex < examState.questions.length - 1) {
+        examState.currentIndex++;
+        renderExamQuestion();
+    } else {
+        finishMockExam();
+    }
+}
+
+function finishMockExam() {
+    clearInterval(examTimerInterval);
+    window.speechSynthesis.cancel();
+
+    let correctCount = 0;
+    const sectionStats = {};
+
+    examState.questions.forEach((q, idx) => {
+        if (!sectionStats[q.section]) sectionStats[q.section] = { right: 0, total: 0 };
+        sectionStats[q.section].total++;
+        if (examState.answers[idx] === q.correct) {
+            correctCount++;
+            sectionStats[q.section].right++;
+        }
+    });
+
+    const total = examState.questions.length;
+    const jftScaledScore = Math.round((correctCount / total) * 250);
+    const passed = examState.level === 'N5' ? (correctCount / total) >= 0.7 : jftScaledScore >= 200;
+
+    let breakdownHtml = Object.entries(sectionStats).map(([sec, st]) =>
+        `<div class="flex justify-between text-xs py-1.5 border-b theme-border"><span>${sec}</span><span class="font-bold">${st.right} / ${st.total}</span></div>`
+    ).join('');
+
+    let reviewHtml = examState.questions.map((q, i) => {
+        const userAns = examState.answers[i] || '(Tidak dijawab)';
+        const isOk = userAns === q.correct;
+        return `
+        <div class="p-3 rounded-xl border ${isOk ? 'border-emerald-500/40 bg-emerald-500/10' : 'border-red-500/40 bg-red-500/10'} text-xs space-y-1">
+            <div class="font-bold">${i + 1}. [${q.section}] ${isOk ? '✅ Benar' : '❌ Salah'}</div>
+            <div class="whitespace-pre-line">${q.prompt}</div>
+            <div>Jawabanmu: <b>${userAns}</b> | Kunci: <b class="text-emerald-500">${q.correct}</b></div>
+            <div class="theme-text-muted">${q.explanation}</div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('exam-arena').classList.add('hidden');
+    const resEl = document.getElementById('exam-result');
+    resEl.classList.remove('hidden');
+    resEl.innerHTML = `
+        <div class="text-center space-y-1">
+            <div class="text-2xl font-extrabold ${passed ? 'text-emerald-500' : 'text-red-500'}">
+                ${passed ? '🎉 LULUS SIMULASI!' : '📚 BELUM LULUS — TERUS LATIHAN!'}
+            </div>
+            <div class="text-xs sm:text-sm font-semibold">
+                Skor Benar: ${correctCount}/${total} (${Math.round((correctCount / total) * 100)}%)
+                ${examState.level === 'N4' ? `• Skor Skala JFT: <b>${jftScaledScore} / 250</b> (Batas Lulus: 200)` : ''}
+            </div>
+        </div>
+        <div class="p-3 rounded-xl theme-subcard">${breakdownHtml}</div>
+        <div class="flex gap-2">
+            <button onclick="startMockExam('${examState.level}')" class="flex-1 py-2.5 rounded-xl theme-accent-bg text-xs font-bold">Ulangi Level ${examState.level}</button>
+            <button onclick="abortMockExam()" class="flex-1 py-2.5 rounded-xl theme-subcard border theme-border text-xs font-bold">Pilih Level Lain</button>
+        </div>
+        <div class="space-y-2 max-h-80 overflow-y-auto pt-2">${reviewHtml}</div>
+    `;
+}
+
+function abortMockExam() {
+    clearInterval(examTimerInterval);
+    window.speechSynthesis.cancel();
+    examState = null;
+    document.getElementById('exam-arena').classList.add('hidden');
+    document.getElementById('exam-result').classList.add('hidden');
+    document.getElementById('exam-selector').classList.remove('hidden');
+}
+   
 // Init Awal
 initFlashcard();
 initBunpouDropdown();
