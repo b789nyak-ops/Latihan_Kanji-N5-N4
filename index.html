@@ -266,6 +266,7 @@
         <button onclick="switchTab('tab-menulis')" id="btn-tab-menulis" class="tab-btn shrink-0 px-3 py-2">✍️ Menulis</button>
         <button onclick="switchTab('tab-kuis')" id="btn-tab-kuis" class="tab-btn shrink-0 px-3 py-2">🎮 Kuis</button>
         <button onclick="switchTab('tab-daftar')" id="btn-tab-daftar" class="tab-btn shrink-0 px-3 py-2">📚 Daftar</button>
+        <button onclick="switchTab('tab-partikel')" id="btn-tab-partikel" class="tab-btn shrink-0 px-3 py-2">🧩 Partikel</button>
     </nav>
 
     <main class="max-w-3xl mx-auto px-3 sm:px-4">
@@ -374,6 +375,114 @@
             </div>
         </section>
 
+        <!-- ==================== TAB BARU: PARTIKEL & SUSUN KALIMAT ==================== -->
+        <section id="tab-partikel" class="tab-content">
+            <div class="theme-card p-4 sm:p-5 rounded-2xl shadow-sm mb-4">
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-bold">🧩 Partikel Jepang (助詞)</h2>
+                        <p class="text-xs theme-text-muted">Fungsi, aturan pakai, kuis partikel, & latihan menyusun kalimat</p>
+                    </div>
+                    <select id="partikelLevelFilter" onchange="onPartikelFilterChange()" class="theme-input px-3 py-2 rounded-xl outline-none text-xs font-semibold">
+                        <option value="ALL">Semua Level (N5 & N4)</option>
+                        <option value="N5">Level N5</option>
+                        <option value="N4">Level N4</option>
+                    </select>
+                </div>
+
+                <!-- 3 Sub-Menu Partikel -->
+                <div class="grid grid-cols-3 gap-1.5 p-1 theme-subcard rounded-xl">
+                    <button id="subTabPartikelMateri" onclick="switchPartikelSubTab('materi')" class="py-2 px-2 rounded-lg text-xs font-bold theme-accent-bg shadow transition">
+                        📖 Fungsi & Pakai
+                    </button>
+                    <button id="subTabPartikelKuis" onclick="switchPartikelSubTab('kuis')" class="py-2 px-2 rounded-lg text-xs font-bold theme-text-muted hover:opacity-80 transition">
+                        🎯 Isi Partikel
+                    </button>
+                    <button id="subTabPartikelSusun" onclick="switchPartikelSubTab('susun')" class="py-2 px-2 rounded-lg text-xs font-bold theme-text-muted hover:opacity-80 transition">
+                        🧱 Susun Kalimat
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-TAB 1: MATERI FUNGSI & CARA MENGGUNAKAN -->
+            <div id="partikelViewMateri">
+                <div class="mb-3">
+                    <input type="text" id="partikelSearchInput" oninput="renderPartikelList()" placeholder="🔍 Cari partikel (misal: は, が, で, しか, tempat, alat)..." class="w-full theme-input p-3 rounded-xl outline-none text-xs sm:text-sm">
+                </div>
+                <div id="partikelCardsContainer" class="space-y-3"></div>
+            </div>
+
+            <!-- SUB-TAB 2: KUIS ISI PARTIKEL -->
+            <div id="partikelViewKuis" class="hidden">
+                <div class="theme-card p-5 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-center text-xs font-bold theme-text-muted mb-3">
+                        <span id="pkProgress">Soal 1 / 10</span>
+                        <span class="theme-accent-text">Skor: <span id="pkScore">0</span></span>
+                    </div>
+
+                    <div class="theme-subcard p-4 rounded-xl mb-4">
+                        <span id="pkLevelBadge" class="inline-block text-[10px] font-bold theme-accent-soft px-2.5 py-0.5 rounded-full mb-2">N5</span>
+                        <p id="pkQuestion" class="text-lg sm:text-xl font-bold jp-text leading-relaxed mb-1.5">-</p>
+                        <p id="pkHint" class="text-xs theme-text-muted">-</p>
+                    </div>
+
+                    <div id="pkOptions" class="grid grid-cols-2 gap-2.5 mb-4"></div>
+
+                    <div id="pkFeedback" class="hidden p-3.5 rounded-xl text-xs leading-relaxed mb-4 border"></div>
+
+                    <button id="pkNextBtn" onclick="nextPartikelQuiz()" class="hidden w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md transition">
+                        Soal Berikutnya ➡️
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-TAB 3: LATIHAN MENYUSUN KALIMAT -->
+            <div id="partikelViewSusun" class="hidden">
+                <div class="theme-card p-5 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-center text-xs font-bold theme-text-muted mb-3">
+                        <span id="psProgress">Kalimat 1 / 10</span>
+                        <span class="theme-accent-text">Benar: <span id="psScore">0</span></span>
+                    </div>
+
+                    <!-- Soal Bahasa Indonesia -->
+                    <div class="theme-subcard p-4 rounded-xl mb-4">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span id="psLevelBadge" class="text-[10px] font-bold theme-accent-soft px-2.5 py-0.5 rounded-full">N5</span>
+                            <button onclick="toggleArrangeHint()" class="text-[11px] theme-accent-text font-semibold underline">💡 Petunjuk Pola</button>
+                        </div>
+                        <p class="text-xs theme-text-muted mb-1">Susun menjadi kalimat bahasa Jepang yang tepat:</p>
+                        <p id="psPromptId" class="text-sm sm:text-base font-bold">-</p>
+                        <p id="psPatternHint" class="hidden text-xs theme-accent-text mt-2 pt-2 border-t theme-border">-</p>
+                    </div>
+
+                    <!-- Area Hasil Susunan User -->
+                    <p class="text-[11px] font-semibold theme-text-muted mb-1.5">Jawabanmu (ketuk blok untuk melepas):</p>
+                    <div id="psAnswerSlots" class="min-h-[64px] p-3 rounded-xl border-2 border-dashed theme-border theme-subcard flex flex-wrap gap-2 items-center mb-4"></div>
+
+                    <!-- Bank Potongan Kata & Partikel -->
+                    <p class="text-[11px] font-semibold theme-text-muted mb-1.5">Pilihan Kata & Partikel (ketuk untuk menyusun):</p>
+                    <div id="psWordBank" class="min-h-[64px] p-3 rounded-xl theme-card flex flex-wrap gap-2 items-center mb-4"></div>
+
+                    <!-- Feedback & Penjelasan Susunan -->
+                    <div id="psFeedback" class="hidden p-3.5 rounded-xl text-xs leading-relaxed mb-4 border"></div>
+
+                    <!-- Tombol Kontrol -->
+                    <div id="psActionBtns" class="flex gap-2">
+                        <button onclick="resetCurrentArrange()" class="px-4 py-3 rounded-xl text-xs sm:text-sm font-bold theme-subcard hover:opacity-80 transition">
+                            🔄 Reset
+                        </button>
+                        <button onclick="checkArrangeSentence()" class="flex-1 theme-accent-bg font-bold py-3 rounded-xl shadow-md text-xs sm:text-sm transition">
+                            ✅ Periksa Kalimat
+                        </button>
+                    </div>
+
+                    <button id="psNextBtn" onclick="nextArrangeSentence()" class="hidden w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md transition">
+                        Kalimat Berikutnya ➡️
+                    </button>
+                </div>
+            </div>
+        </section>
+        
         <!-- ==================== TAB 3: MEMBACA (DOKKAI) ==================== -->
         <section id="tab-membaca" class="tab-content">
             <div id="readSetup" class="theme-card p-6 rounded-2xl shadow-sm">
@@ -1528,7 +1637,7 @@ const masterData = [
     { id: '203', kanji: 'かぶります', romaji: 'kaburimasu', meaning: 'Memakai (Topi)', category: 'Kata Kerja', mastered: false },
     { id: '204', kanji: 'かけます', romaji: 'kakemasu', meaning: 'Memakai (Kacamata)', category: 'Kata Kerja', mastered: false },
     { id: '205', kanji: '生まれます', romaji: 'umaremasu', meaning: 'Lahir', category: 'Kata Kerja', mastered: false },
-    { id: '207', kanji: '', romaji: 'mawashimasu', meaning: 'Memutar', category: 'Kata Kerja', mastered: false },
+    { id: '207', kanji: '回します', romaji: 'mawashimasu', meaning: 'Memutar', category: 'Kata Kerja', mastered: false },
     { id: '208', kanji: '引きます', romaji: 'hikimasu', meaning: 'Menarik', category: 'Kata Kerja', mastered: false },
     { id: '209', kanji: '触ります', romaji: 'sawarimasu', meaning: 'Menyentuh', category: 'Kata Kerja', mastered: false },
     { id: '210', kanji: '渡ります', romaji: 'watarimasu', meaning: 'Menyeberang', category: 'Kata Kerja', mastered: false },
@@ -1847,7 +1956,7 @@ const masterData = [
   { id: '1069', kanji: '頼みます', romaji: 'tanomimasu', meaning: 'Meminta / Memohon', category: 'Kata Kerja', mastered: false },
   { id: '1070', kanji: '注意します', romaji: 'chuuishimasu', meaning: 'Mengingatkan / Berhati-hati', category: 'Kata Kerja', mastered: false },
   { id: '1071', kanji: '盗みます', romaji: 'nusumimasu', meaning: 'Mencuri', category: 'Kata Kerja', mastered: false },
-  { id: '1072', kanji: '踏みます', romaji: 'fumimasu', meaning: 'Mengaingjak', category: 'Kata Kerja', mastered: false },
+  { id: '1072', kanji: '踏みます', romaji: 'fumimasu', meaning: 'Menginjak', category: 'Kata Kerja', mastered: false },
   { id: '1073', kanji: '助けます', romaji: 'tasukemasu', meaning: 'Menolong / Membantu', category: 'Kata Kerja', mastered: false },
   { id: '1074', kanji: '相談します', romaji: 'soudanshimasu', meaning: 'Berkonsultasi / Berdiskusi', category: 'Kata Kerja', mastered: false },
 
@@ -1978,7 +2087,7 @@ const masterData = [
   { id: '4022', kanji: 'すごく', romaji: 'sugoku', meaning: 'Sangat (Kasual)', category: 'Partikel & Keterangan', mastered: false },
   { id: '4023', kanji: 'とても', romaji: 'totemo', meaning: 'Sangat', category: 'Partikel & Keterangan', mastered: false },
   { id: '4024', kanji: 'あまり', romaji: 'amari', meaning: 'Tidak begitu (diikuti bentuk negatif)', category: 'Partikel & Keterangan', mastered: false },
-  { id: '4025', kanji: 'すlごく', romaji: 'sukoshi', meaning: 'Sedikit', category: 'Partikel & Keterangan', mastered: false },
+  { id: '4025', kanji: '少し', romaji: 'sukoshi', meaning: 'Sedikit', category: 'Partikel & Keterangan', mastered: false },
   { id: '4026', kanji: 'だいぶ', romaji: 'daibu', meaning: 'Cukup banyak / Lumayan', category: 'Partikel & Keterangan', mastered: false },
   { id: '4027', kanji: 'だんだん', romaji: 'dandan', meaning: 'Berangsur-angsur / Lambat laun', category: 'Partikel & Keterangan', mastered: false },
   { id: '4028', kanji: '急に', romaji: 'kyuuni', meaning: 'Tiba-tiba', category: 'Partikel & Keterangan', mastered: false },
@@ -2680,7 +2789,8 @@ function switchTab(tabId) {
 
     if (tabId === 'tab-flashcard') initFlashcard();
     if (tabId === 'tab-bunpou') { initBunpouDropdown(); renderBunpouTables(); }
-    if (tabId === 'tab-menulis') {
+    if (tabId === 'tab-partikel') renderPartikelList();
+    if (tabId === 'tab-menulis') {   
         setTimeout(() => {
             if (writeData.length === 0) initWrite();
             else resizeCanvas();
@@ -3955,6 +4065,537 @@ async function submitVisitorForm(event) {
   }
 }
 
+// =========================================================================
+// 6. DATABASE & LOGIKA PARTIKEL + LATIHAN SUSUN KALIMAT
+// =========================================================================
+const partikelDatabase = [
+    {
+        particle: 'は (wa)',
+        level: 'N5',
+        fungsi: 'Penanda topik utama atau subjek umum yang sedang dibicarakan.',
+        caraPakai: 'Letakkan tepat setelah topik kalimat (orang, benda, atau waktu). Ditulis dengan hiragana は tetapi selalu dibaca "wa".',
+        ex1: { jp: '私は会社員です。', id: 'Saya adalah karyawan perusahaan.' },
+        ex2: { jp: '今日はとても暑いです。', id: 'Hari ini sangat panas.' }
+    },
+    {
+        particle: 'が (ga)',
+        level: 'N5',
+        fungsi: 'Penanda subjek spesifik, keberadaan benda/orang, kesukaan, atau kemampuan.',
+        caraPakai: 'Wajib dipakai sebelum kata kerja keberadaan (あります・います), kata sifat perasaan/kemampuan (好き・上手・わかります), serta setelah kata tanya (誰・何).',
+        ex1: { jp: '部屋に猫がいます。', id: 'Di dalam kamar ada kucing.' },
+        ex2: { jp: '私は日本語が少しわかります。', id: 'Saya mengerti bahasa Jepang sedikit.' }
+    },
+    {
+        particle: 'を (o)',
+        level: 'N5',
+        fungsi: 'Penanda objek langsung yang dikenai tindakan oleh kata kerja aktif.',
+        caraPakai: 'Letakkan di antara kata benda (objek) dan kata kerja transitif (食べます・飲みます・買います・見ます).',
+        ex1: { jp: '毎朝コーヒーを飲みます。', id: 'Setiap pagi minum kopi.' },
+        ex2: { jp: '図書館で本を読みました。', id: 'Kemarin membaca buku di perpustakaan.' }
+    },
+    {
+        particle: 'に (ni)',
+        level: 'N5',
+        fungsi: 'Menunjukkan waktu spesifik, titik tujuan perpindahan, letak keberadaan, atau penerima.',
+        caraPakai: 'Dipakai setelah angka waktu (6時に, 月曜日に), tempat tujuan (日本に行きます), atau lokasi benda diam (机の上に本があります). Tidak dipakai untuk kata waktu relatif seperti 今日 atau 明日.',
+        ex1: { jp: '毎朝6時に起きます。', id: 'Setiap pagi bangun pada pukul 6.' },
+        ex2: { jp: '友達にプレゼントをあげました。', id: 'Memberikan hadiah kepada teman.' }
+    },
+    {
+        particle: 'で (de)',
+        level: 'N5',
+        fungsi: 'Menunjukkan lokasi terjadinya aktivitas atau alat/sarana/bahasa yang digunakan.',
+        caraPakai: 'Bedakan dengan に: jika di tempat itu ada aksi aktif (makan, belajar, beli), gunakan で. Juga dipakai setelah kendaraan (電車で) atau alat (日本語で).',
+        ex1: { jp: '食堂で昼ご飯を食べます。', id: 'Makan siang di kantin.' },
+        ex2: { jp: '毎日電車で会社へ行きます。', id: 'Setiap hari pergi ke perusahaan naik kereta.' }
+    },
+    {
+        particle: 'へ (e)',
+        level: 'N5',
+        fungsi: 'Menunjukkan arah tujuan pergerakan.',
+        caraPakai: 'Ditulis dengan hiragana へ tetapi dibaca "e". Khusus digunakan bersama kata kerja perpindahan (行きます・来ます・帰ります).',
+        ex1: { jp: '来年日本へ行きます。', id: 'Tahun depan pergi ke Jepang.' },
+        ex2: { jp: '5時に家へ帰ります。', id: 'Pulang ke rumah pada jam 5.' }
+    },
+    {
+        particle: 'と (to)',
+        level: 'N5',
+        fungsi: 'Penghubung kata benda ("dan") atau penanda rekan melakukan aktivitas ("bersama").',
+        caraPakai: 'Gunakan di antara dua kata benda (本と鉛筆) atau setelah kata benda orang sebelum kata kerja (友達と行きます).',
+        ex1: { jp: '机の上に本と辞書があります。', id: 'Di atas meja ada buku dan kamus.' },
+        ex2: { jp: '家族と映画を見ました。', id: 'Menonton film bersama keluarga.' }
+    },
+    {
+        particle: 'の (no)',
+        level: 'N5',
+        fungsi: 'Menunjukkan kepemilikan, asal-usul, atau menerangkan kata benda di belakangnya.',
+        caraPakai: 'Urutan dibalik dari bahasa Indonesia: pemilik/keterangan diletakkan sebelum の, benda utamanya setelah の (私の本 = buku saya).',
+        ex1: { jp: 'これは私の鞄です。', id: 'Ini adalah tas milik saya.' },
+        ex2: { jp: '田中さんは日本の会社の社員です。', id: 'Saudara Tanaka adalah karyawan perusahaan Jepang.' }
+    },
+    {
+        particle: 'しか (shika)',
+        level: 'N4',
+        fungsi: 'Bermakna "hanya / cuma" dengan nuansa jumlah yang terasa kurang/sedikit.',
+        caraPakai: 'Letakkan setelah kata benda/jumlah, dan predikat di akhir kalimat WAJIB berbentuk negatif (〜ません / 〜ない).',
+        ex1: { jp: '財布に千円しかありません。', id: 'Di dompet hanya ada 1.000 yen.' },
+        ex2: { jp: '時間がなかったので、パンしか食べませんでした。', id: 'Karena tidak ada waktu, hanya makan roti.' }
+    },
+    {
+        particle: 'までに (made ni)',
+        level: 'N4',
+        fungsi: 'Menunjukkan tenggat waktu maksimal suatu tindakan harus selesai ("paling lambat").',
+        caraPakai: 'Bedakan dengan まで (sampai terus-menerus): までに dipakai untuk aksi sekali selesai sebelum batas waktu berakhir.',
+        ex1: { jp: '金曜日までにレポートを出してください。', id: 'Tolong kumpulkan laporan paling lambat hari Jumat.' },
+        ex2: { jp: '12時までに家へ帰らなければなりません。', id: 'Harus pulang ke rumah paling lambat jam 12.' }
+    },
+    {
+        particle: 'ので (node)',
+        level: 'N4',
+        fungsi: 'Menyatakan alasan atau sebab akibat secara halus dan sopan ("karena").',
+        caraPakai: 'Sambungkan dengan Bentuk Biasa; khusus Kata Benda dan Kata Sifat-na tambahkan な sebelum ので (雨なので / 暇なので).',
+        ex1: { jp: '雨が降っているので、出かけません。', id: 'Karena sedang turun hujan, saya tidak keluar rumah.' },
+        ex2: { jp: '頭が痛いので、先に帰ってもいいですか。', id: 'Karena kepala sakit, bolehkah saya pulang duluan?' }
+    },
+    {
+        particle: 'のに (noni)',
+        level: 'N4',
+        fungsi: 'Menyatakan pertentangan antara fakta dan hasil ("padahal / meskipun").',
+        caraPakai: 'Aturan sambung sama seperti ので (KB/KS-na + な + のに), digunakan saat hasilnya mengecewakan atau di luar dugaan.',
+        ex1: { jp: '薬を飲んだのに、まだ熱があります。', id: 'Padahal sudah minum obat, tetapi masih demam.' },
+        ex2: { jp: '日曜日なのに、会社へ行かなければなりません。', id: 'Padahal hari Minggu, tetapi harus pergi ke perusahaan.' }
+    }
+];
+
+const partikelFillQuizBank = [
+    {
+        level: 'N5',
+        question: '毎日バス（　）学校へ行きます。',
+        hint: 'Setiap hari pergi ke sekolah naik bus.',
+        options: ['で', 'に', 'を', 'へ'],
+        answer: 'で',
+        explanation: 'Partikel で dipakai untuk menunjukkan sarana atau alat transportasi.'
+    },
+    {
+        level: 'N5',
+        question: '教室の中に学生（　）います。',
+        hint: 'Di dalam ruang kelas ada siswa.',
+        options: ['が', 'を', 'で', 'へ'],
+        answer: 'が',
+        explanation: 'Kata kerja keberadaan makhluk hidup (います) menggunakan が untuk menandai subjeknya.'
+    },
+    {
+        level: 'N5',
+        question: '昨日デパート（　）新しい靴を買いました。',
+        hint: 'Kemarin membeli sepatu baru di department store.',
+        options: ['で', 'に', 'が', 'と'],
+        answer: 'で',
+        explanation: 'Partikel で menunjukkan lokasi tempat terjadinya suatu kegiatan/aksi (membeli).'
+    },
+    {
+        level: 'N5',
+        question: '毎晩11時（　）寝ます。',
+        hint: 'Setiap malam tidur pada pukul 11.',
+        options: ['に', 'で', 'を', 'は'],
+        answer: 'に',
+        explanation: 'Partikel に diletakkan setelah keterangan waktu spesifik yang memakai angka (jam/tanggal).'
+    },
+    {
+        level: 'N5',
+        question: '日曜日、友達（　）映画を見ます。',
+        hint: 'Hari Minggu menonton film bersama teman.',
+        options: ['と', 'を', 'が', 'で'],
+        answer: 'と',
+        explanation: 'Partikel と setelah kata benda orang bermakna "bersama".'
+    },
+    {
+        level: 'N4',
+        question: 'お金がありませんから、水（　）買いませんでした。',
+        hint: 'Karena tidak punya uang, hanya membeli air.',
+        options: ['しか', 'だけ', 'ばかり', 'までに'],
+        answer: 'しか',
+        explanation: 'Predikat di akhir kalimat berbentuk negatif (買いませんでした), sehingga pasangan yang tepat adalah しか (hanya).'
+    },
+    {
+        level: 'N4',
+        question: '明日の午後5時（　）この書類を出してください。',
+        hint: 'Tolong serahkan dokumen ini paling lambat besok jam 5 sore.',
+        options: ['までに', 'まで', 'から', 'に'],
+        answer: 'までに',
+        explanation: 'Partikel までに menyatakan tenggat waktu maksimal (paling lambat) suatu aksi harus selesai.'
+    },
+    {
+        level: 'N4',
+        question: 'たくさん練習した（　）、試合に負けてしまいました。',
+        hint: 'Padahal sudah banyak berlatih, tetapi kalah dalam pertandingan.',
+        options: ['のに', 'ので', 'から', 'し'],
+        answer: 'のに',
+        explanation: 'Partikel のに menghubungkan dua hal yang bertentangan dengan harapan ("padahal").'
+    }
+];
+
+const sentenceArrangeBank = [
+    {
+        level: 'N5',
+        promptId: 'Saya setiap pagi minum kopi di kantin.',
+        patternHint: 'Topik (私は) + Waktu (毎朝) + Tempat (食堂で) + Objek (コーヒーを) + Kata Kerja (飲みます)',
+        tokens: ['私は', '毎朝', '食堂で', 'コーヒーを', '飲みます。'],
+        explanation: 'Lokasi aktivitas memakai で (食堂で), sedangkan objek yang diminum memakai を (コーヒーを).'
+    },
+    {
+        level: 'N5',
+        promptId: 'Besok saya akan pergi ke perpustakaan bersama teman.',
+        patternHint: 'Waktu (明日) + Topik (私は) + Rekan (友達と) + Tujuan (図書館へ) + Pergi (行きます)',
+        tokens: ['明日', '私は', '友達と', '図書館へ', '行きます。'],
+        explanation: 'Rekan aktivitas memakai と (友達と), dan arah tujuan perpindahan memakai へ (図書館へ).'
+    },
+    {
+        level: 'N5',
+        promptId: 'Di atas meja ada kamus bahasa Jepang.',
+        patternHint: 'Lokasi (机の上に) + Subjek Benda (日本語の辞書が) + Ada (あります)',
+        tokens: ['机の上に', '日本語の', '辞書が', 'あります。'],
+        explanation: 'Letak keberadaan benda memakai に (机の上に), dan benda yang ada ditandai dengan が (辞書が).'
+    },
+    {
+        level: 'N5',
+        promptId: 'Kemarin saya membeli apel di supermarket.',
+        patternHint: 'Waktu (昨日) + Topik (私は) + Tempat (スーパーで) + Objek (りんごを) + Membeli (買いました)',
+        tokens: ['昨日', '私は', 'スーパーで', 'りんごを', '買いました。'],
+        explanation: 'Tempat terjadinya aksi membeli memakai で, diikuti objek dengan を.'
+    },
+    {
+        level: 'N4',
+        promptId: 'Tolong kembalikan buku ini paling lambat hari Sabtu.',
+        patternHint: 'Batas Waktu (土曜日までに) + Objek (この本を) + Tolong Kembalikan (返してください)',
+        tokens: ['土曜日までに', 'この本を', '返して', 'ください。'],
+        explanation: 'Tenggat waktu maksimal memakai までに (土曜日までに), bukan まで.'
+    },
+    {
+        level: 'N4',
+        promptId: 'Karena sedang turun hujan, saya tidak keluar rumah.',
+        patternHint: 'Alasan (雨が降っているので、) + Akibat (出かけません)',
+        tokens: ['雨が', '降っているので、', '出かけません。'],
+        explanation: 'Subjek hujan memakai が (雨が), dan alasan halus dihubungkan dengan ので.'
+    },
+    {
+        level: 'N4',
+        promptId: 'Padahal sudah minum obat, tetapi masih demam.',
+        patternHint: 'Fakta (薬を飲んだのに、) + Kondisi Kontras (まだ熱があります)',
+        tokens: ['薬を', '飲んだのに、', 'まだ', '熱が', 'あります。'],
+        explanation: 'Kontras "padahal" memakai のに setelah bentuk lampau 飲んだ, dan kepemilikan gejala memakai が (熱が).'
+    },
+    {
+        level: 'N4',
+        promptId: 'Di dalam dompet hanya ada seribu yen.',
+        patternHint: 'Lokasi (財布の中に) + Jumlah Terbatas (千円しか) + Negatif (ありません)',
+        tokens: ['財布の中に', '千円しか', 'ありません。'],
+        explanation: 'Partikel しか (hanya) wajib berpasangan dengan bentuk negatif ありません di akhir kalimat.'
+    }
+];
+
+let pkPool = [], pkIdx = 0, pkScoreVal = 0, pkLocked = false;
+let psPool = [], psIdx = 0, psScoreVal = 0, psLocked = false;
+let psBankTokens = [], psSelectedTokens = [];
+
+function onPartikelFilterChange() {
+    renderPartikelList();
+    if (!document.getElementById('partikelViewKuis').classList.contains('hidden')) initPartikelQuiz();
+    if (!document.getElementById('partikelViewSusun').classList.contains('hidden')) initArrangeGame();
+}
+
+function switchPartikelSubTab(mode) {
+    const vMateri = document.getElementById('partikelViewMateri');
+    const vKuis = document.getElementById('partikelViewKuis');
+    const vSusun = document.getElementById('partikelViewSusun');
+
+    const bMateri = document.getElementById('subTabPartikelMateri');
+    const bKuis = document.getElementById('subTabPartikelKuis');
+    const bSusun = document.getElementById('subTabPartikelSusun');
+
+    const activeCls = 'py-2 px-2 rounded-lg text-xs font-bold theme-accent-bg shadow transition';
+    const idleCls = 'py-2 px-2 rounded-lg text-xs font-bold theme-text-muted hover:opacity-80 transition';
+
+    vMateri.classList.add('hidden');
+    vKuis.classList.add('hidden');
+    vSusun.classList.add('hidden');
+    bMateri.className = idleCls;
+    bKuis.className = idleCls;
+    bSusun.className = idleCls;
+
+    if (mode === 'materi') {
+        vMateri.classList.remove('hidden');
+        bMateri.className = activeCls;
+        renderPartikelList();
+    } else if (mode === 'kuis') {
+        vKuis.classList.remove('hidden');
+        bKuis.className = activeCls;
+        initPartikelQuiz();
+    } else {
+        vSusun.classList.remove('hidden');
+        bSusun.className = activeCls;
+        initArrangeGame();
+    }
+}
+
+function renderPartikelList() {
+    const container = document.getElementById('partikelCardsContainer');
+    if (!container) return;
+    const level = document.getElementById('partikelLevelFilter').value;
+    const keyword = (document.getElementById('partikelSearchInput')?.value || '').toLowerCase().trim();
+
+    const filtered = partikelDatabase.filter(item => {
+        if (level !== 'ALL' && item.level !== level) return false;
+        if (keyword) {
+            const hay = `${item.particle} ${item.fungsi} ${item.caraPakai} ${item.ex1.jp} ${item.ex1.id} ${item.ex2.jp} ${item.ex2.id}`.toLowerCase();
+            if (!hay.includes(keyword)) return false;
+        }
+        return true;
+    });
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="theme-card p-6 rounded-2xl text-center text-xs theme-text-muted">Partikel tidak ditemukan.</div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.map(item => {
+        const origIdx = partikelDatabase.indexOf(item);
+        return `
+            <div class="theme-card p-4 rounded-2xl shadow-sm">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-base sm:text-lg font-extrabold theme-accent-text jp-text">${item.particle}</span>
+                    <span class="text-[11px] font-bold theme-accent-soft px-2.5 py-0.5 rounded-full">${item.level}</span>
+                </div>
+                <p class="text-xs sm:text-sm font-semibold mb-1.5">${item.fungsi}</p>
+                <div class="theme-subcard p-2.5 rounded-xl text-xs theme-text-muted leading-relaxed mb-3">
+                    <strong class="theme-accent-text">📌 Cara Pakai:</strong> ${item.caraPakai}
+                </div>
+                <div class="space-y-2">
+                    <div class="theme-subcard p-2.5 rounded-xl flex justify-between items-center gap-2">
+                        <div>
+                            <p class="text-sm font-bold jp-text">${item.ex1.jp}</p>
+                            <p class="text-xs theme-text-muted">${item.ex1.id}</p>
+                        </div>
+                        <button onclick="speakText(partikelDatabase[${origIdx}].ex1.jp)" class="shrink-0 theme-accent-soft w-8 h-8 rounded-full flex items-center justify-center text-xs">🔊</button>
+                    </div>
+                    <div class="theme-subcard p-2.5 rounded-xl flex justify-between items-center gap-2">
+                        <div>
+                            <p class="text-sm font-bold jp-text">${item.ex2.jp}</p>
+                            <p class="text-xs theme-text-muted">${item.ex2.id}</p>
+                        </div>
+                        <button onclick="speakText(partikelDatabase[${origIdx}].ex2.jp)" class="shrink-0 theme-accent-soft w-8 h-8 rounded-full flex items-center justify-center text-xs">🔊</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// --- LOGIKA SUB-TAB 2: KUIS ISI PARTIKEL ---
+function initPartikelQuiz() {
+    const level = document.getElementById('partikelLevelFilter').value;
+    const filtered = partikelFillQuizBank.filter(q => level === 'ALL' || q.level === level);
+    pkPool = shuffle(filtered);
+    pkIdx = 0;
+    pkScoreVal = 0;
+    document.getElementById('pkScore').innerText = '0';
+    renderPartikelQuiz();
+}
+
+function renderPartikelQuiz() {
+    pkLocked = false;
+    const fb = document.getElementById('pkFeedback');
+    const nextBtn = document.getElementById('pkNextBtn');
+    const optBox = document.getElementById('pkOptions');
+    fb.classList.add('hidden');
+    nextBtn.classList.add('hidden');
+
+    if (pkIdx >= pkPool.length) {
+        document.getElementById('pkProgress').innerText = 'Selesai!';
+        document.getElementById('pkQuestion').innerText = `Skor Akhir: ${pkScoreVal} / ${pkPool.length}`;
+        document.getElementById('pkHint').innerText = 'Ketuk tombol di bawah untuk mengulang latihan.';
+        optBox.innerHTML = '';
+        nextBtn.innerText = '🔄 Ulangi Kuis Partikel';
+        nextBtn.onclick = initPartikelQuiz;
+        nextBtn.classList.remove('hidden');
+        return;
+    }
+
+    const q = pkPool[pkIdx];
+    document.getElementById('pkProgress').innerText = `Soal ${pkIdx + 1} / ${pkPool.length}`;
+    document.getElementById('pkLevelBadge').innerText = q.level;
+    document.getElementById('pkQuestion').innerText = q.question;
+    document.getElementById('pkHint').innerText = `Arti: "${q.hint}"`;
+
+    nextBtn.innerText = 'Soal Berikutnya ➡️';
+    nextBtn.onclick = nextPartikelQuiz;
+
+    const shuffledOpts = shuffle(q.options);
+    optBox.innerHTML = shuffledOpts.map(opt => `
+        <button onclick="answerPartikelQuiz('${opt}', this)" class="pk-opt-btn theme-card p-3.5 rounded-xl font-bold text-base jp-text hover:opacity-90 transition">
+            ${opt}
+        </button>
+    `).join('');
+}
+
+function answerPartikelQuiz(chosen, btnEl) {
+    if (pkLocked) return;
+    pkLocked = true;
+
+    const q = pkPool[pkIdx];
+    const fb = document.getElementById('pkFeedback');
+    document.querySelectorAll('.pk-opt-btn').forEach(b => {
+        b.disabled = true;
+        if (b.innerText.trim() === q.answer) {
+            b.classList.add('!border-emerald-500', '!bg-emerald-500/15', '!text-emerald-500');
+        }
+    });
+
+    if (chosen === q.answer) {
+        pkScoreVal++;
+        document.getElementById('pkScore').innerText = pkScoreVal;
+        fb.className = 'p-3.5 rounded-xl text-xs leading-relaxed mb-4 border border-emerald-500/30 bg-emerald-500/15 text-emerald-400';
+        fb.innerHTML = `<strong>✅ Tepat!</strong> ${q.explanation}`;
+    } else {
+        btnEl.classList.add('!border-red-500', '!bg-red-500/15', '!text-red-500');
+        fb.className = 'p-3.5 rounded-xl text-xs leading-relaxed mb-4 border border-red-500/30 bg-red-500/15 text-red-400';
+        fb.innerHTML = `<strong>❌ Kurang tepat (Jawaban: ${q.answer}).</strong><br>${q.explanation}`;
+    }
+
+    fb.classList.remove('hidden');
+    document.getElementById('pkNextBtn').classList.remove('hidden');
+    speakText(q.question.replace('（　）', q.answer));
+}
+
+function nextPartikelQuiz() {
+    pkIdx++;
+    renderPartikelQuiz();
+}
+
+// --- LOGIKA SUB-TAB 3: LATIHAN MENYUSUN KALIMAT ---
+function initArrangeGame() {
+    const level = document.getElementById('partikelLevelFilter').value;
+    const filtered = sentenceArrangeBank.filter(s => level === 'ALL' || s.level === level);
+    psPool = shuffle(filtered);
+    psIdx = 0;
+    psScoreVal = 0;
+    document.getElementById('psScore').innerText = '0';
+    renderArrangeSentence();
+}
+
+function renderArrangeSentence() {
+    psLocked = false;
+    const fb = document.getElementById('psFeedback');
+    const nextBtn = document.getElementById('psNextBtn');
+    const actionBtns = document.getElementById('psActionBtns');
+    const hintEl = document.getElementById('psPatternHint');
+
+    fb.classList.add('hidden');
+    nextBtn.classList.add('hidden');
+    hintEl.classList.add('hidden');
+    actionBtns.classList.remove('hidden');
+
+    if (psIdx >= psPool.length) {
+        document.getElementById('psProgress').innerText = 'Selesai!';
+        document.getElementById('psPromptId').innerText = `Latihan Menyusun Kalimat Selesai! Skor: ${psScoreVal} / ${psPool.length}`;
+        document.getElementById('psAnswerSlots').innerHTML = '';
+        document.getElementById('psWordBank').innerHTML = '';
+        actionBtns.classList.add('hidden');
+        nextBtn.innerText = '🔄 Ulangi Susun Kalimat';
+        nextBtn.onclick = initArrangeGame;
+        nextBtn.classList.remove('hidden');
+        return;
+    }
+
+    const item = psPool[psIdx];
+    document.getElementById('psProgress').innerText = `Kalimat ${psIdx + 1} / ${psPool.length}`;
+    document.getElementById('psLevelBadge').innerText = item.level;
+    document.getElementById('psPromptId').innerText = `"${item.promptId}"`;
+    hintEl.innerText = `Pola: ${item.patternHint}`;
+
+    nextBtn.innerText = 'Kalimat Berikutnya ➡️';
+    nextBtn.onclick = nextArrangeSentence;
+
+    psSelectedTokens = [];
+    psBankTokens = shuffle(item.tokens.map((text, idx) => ({ id: idx, text })));
+    renderArrangeTiles();
+}
+
+function renderArrangeTiles() {
+    const slotsEl = document.getElementById('psAnswerSlots');
+    const bankEl = document.getElementById('psWordBank');
+
+    if (psSelectedTokens.length === 0) {
+        slotsEl.innerHTML = `<span class="text-xs theme-text-muted italic">Ketuk blok kata di bawah untuk mulai menyusun...</span>`;
+    } else {
+        slotsEl.innerHTML = psSelectedTokens.map((tok, idx) => `
+            <button onclick="removeArrangeToken(${idx})" class="px-3 py-2 rounded-xl text-sm font-bold jp-text theme-accent-bg shadow-sm active:scale-95 transition">
+                ${tok.text}
+            </button>
+        `).join('');
+    }
+
+    bankEl.innerHTML = psBankTokens.map((tok, idx) => `
+        <button onclick="selectArrangeToken(${idx})" class="px-3 py-2 rounded-xl text-sm font-bold jp-text theme-subcard hover:opacity-85 active:scale-95 transition">
+            ${tok.text}
+        </button>
+    `).join('');
+}
+
+function selectArrangeToken(bankIdx) {
+    if (psLocked) return;
+    const [picked] = psBankTokens.splice(bankIdx, 1);
+    psSelectedTokens.push(picked);
+    renderArrangeTiles();
+}
+
+function removeArrangeToken(slotIdx) {
+    if (psLocked) return;
+    const [removed] = psSelectedTokens.splice(slotIdx, 1);
+    psBankTokens.push(removed);
+    renderArrangeTiles();
+}
+
+function resetCurrentArrange() {
+    if (psLocked) return;
+    psBankTokens = shuffle([...psBankTokens, ...psSelectedTokens]);
+    psSelectedTokens = [];
+    renderArrangeTiles();
+}
+
+function toggleArrangeHint() {
+    document.getElementById('psPatternHint').classList.toggle('hidden');
+}
+
+function checkArrangeSentence() {
+    if (psLocked || psSelectedTokens.length === 0) return;
+    psLocked = true;
+
+    const item = psPool[psIdx];
+    const userSentence = psSelectedTokens.map(t => t.text).join('');
+    const correctSentence = item.tokens.join('');
+    const fb = document.getElementById('psFeedback');
+
+    if (userSentence === correctSentence) {
+        psScoreVal++;
+        document.getElementById('psScore').innerText = psScoreVal;
+        fb.className = 'p-3.5 rounded-xl text-xs leading-relaxed mb-4 border border-emerald-500/30 bg-emerald-500/15 text-emerald-400';
+        fb.innerHTML = `<strong>✅ Susunan Benar!</strong><br><span class="jp-text text-sm font-bold">${correctSentence}</span><br>${item.explanation}`;
+    } else {
+        fb.className = 'p-3.5 rounded-xl text-xs leading-relaxed mb-4 border border-red-500/30 bg-red-500/15 text-red-400';
+        fb.innerHTML = `<strong>❌ Belum tepat. Susunan yang benar:</strong><br><span class="jp-text text-sm font-bold">${correctSentence}</span><br>${item.explanation}`;
+    }
+
+    fb.classList.remove('hidden');
+    document.getElementById('psActionBtns').classList.add('hidden');
+    document.getElementById('psNextBtn').classList.remove('hidden');
+    speakText(correctSentence);
+}
+
+function nextArrangeSentence() {
+    psIdx++;
+    renderArrangeSentence();
+}
+    
 // Init Awal
 initFlashcard();
 initBunpouDropdown();
