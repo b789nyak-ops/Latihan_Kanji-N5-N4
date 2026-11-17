@@ -3270,12 +3270,219 @@ function generateReadingQuestion(lengthPref, levelPref) {
     return { badge: `📰 Paragraf • ${chosen.level}`, pattern: chosen.pattern, ...chosen.build() };
 }
 
-function generateChoukaiItem(typePref) {
+    function generateChoukaiItem(typePref) {
     let actualType = typePref === 'ALL' ? pickRandom(['CONVERSATION', 'NEWS', 'ANNOUNCEMENT']) : typePref;
-    const places = getVocabByWordsAndCategory(['食堂', '会議室', '家', 'デパート', '図書館', '駅', '海', '山'], 'Tempat & Benda');
-    const foods = getVocabByWordsAndCategory(['コーヒー', '料理', 'お茶', '肉', '魚', '果物', 'パン'], 'Tempat & Benda');
-    const items = getVocabByWordsAndCategory(['本', '辞書', '鍵', '傘', '鞄', 'カメラ', '財布'], 'Tempat & Benda');
-    const p = pickRandom(places), f = pickRandom(foods), it = pickRandom(items);
+    
+    // Pool kosakata dinamis dari masterData
+    const places = getVocabByWordsAndCategory(['食堂', '会議室', 'デパート', '図書館', '駅', '海', '山', '銀行', '病院', '郵便局', '美術館', '公園'], 'Tempat & Benda');
+    const foods = getVocabByWordsAndCategory(['コーヒー', '料理', 'お茶', '肉', '魚', '果物', 'パン', '野菜', '卵', '牛乳'], 'Tempat & Benda');
+    const items = getVocabByWordsAndCategory(['本', '辞書', '鍵', '傘', '鞄', 'カメラ', '財布', '時計', '切符', 'パソコン', '携帯電話'], 'Tempat & Benda');
+    
+    const p = pickRandom(places);
+    const p2 = pickRandom(places.filter(x => x.kanji !== p.kanji)) || places[0];
+    const f = pickRandom(foods);
+    const it = pickRandom(items);
+    const times = [
+        { jp: '９時', rom: 'ku-ji', id: 'jam 9' },
+        { jp: '１０時半', rom: 'juu-ji han', id: 'jam 10:30' },
+        { jp: '２時', rom: 'ni-ji', id: 'jam 2' },
+        { jp: '４時半', rom: 'yo-ji han', id: 'jam 4:30' },
+        { jp: '６時', rom: 'roku-ji', id: 'jam 6' }
+    ];
+    const t = pickRandom(times);
+
+    if (actualType === 'CONVERSATION') {
+        const convTemplates = [
+            {
+                badge: '💬 Percakapan • N5 (Ajakan & Rencana)',
+                q: `Apa yang akan dilakukan pria dan wanita setelah ini?`,
+                lines: [
+                    { speaker: '男', text: `もう昼ご飯を食べましたか。`, romaji: 'Mou hirugohan o tabemashita ka.', id: 'Pria: Apakah sudah makan siang?', pitch: 0.9 },
+                    { speaker: '女', text: `いいえ、まだです。これから${p.kanji}の近くで${f.kanji}を食べます。`, romaji: `Iie, mada desu. Kore kara ${p.romaji} no chikaku de ${f.romaji} o tabemasu.`, id: `Wanita: Belum. Sebentar lagi saya akan makan ${f.meaning.toLowerCase()} di dekat ${p.meaning.toLowerCase()}.`, pitch: 1.15 },
+                    { speaker: '男', text: `じゃあ、私も一緒に行ってもいいですか。`, romaji: 'Jaa, watashi mo issho ni itte mo ii desu ka.', id: 'Pria: Kalau begitu, bolehkah saya ikut pergi bersama?', pitch: 0.9 },
+                    { speaker: '女', text: `ええ、もちろん！行きましょう。`, romaji: 'Ee, mochiron! Ikimashou.', id: 'Wanita: Ya, tentu saja! Ayo pergi.', pitch: 1.15 }
+                ],
+                correct: `Pergi makan ${f.meaning.toLowerCase()} di dekat ${p.meaning.toLowerCase()} bersama`,
+                wrong: [
+                    `Membeli ${it.meaning.toLowerCase()} baru di ${p2.meaning.toLowerCase()}`,
+                    `Pulang ke rumah karena sudah selesai makan`,
+                    `Menunggu teman di depan ${p2.meaning.toLowerCase()}`
+                ]
+            },
+            {
+                badge: '💬 Percakapan • N4 (Barang Tertinggal)',
+                q: `Di mana barang milik wanita itu tertinggal?`,
+                lines: [
+                    { speaker: '女', text: `すみません、さっき${p.kanji}で${it.kanji}を忘れてしまいました。`, romaji: `Sumimasen, sakki ${p.romaji} de ${it.romaji} o wasurete shimaimashita.`, id: `Wanita: Permisi, tadi saya kelupaan ${it.meaning.toLowerCase()} di ${p.meaning.toLowerCase()}.`, pitch: 1.15 },
+                    { speaker: '男', text: `そうですか。どんな${it.kanji}ですか。`, romaji: `Sou desu ka. Donna ${it.romaji} desu ka.`, id: `Pria: Begitu ya. ${it.meaning} yang seperti apa?`, pitch: 0.9 },
+                    { speaker: '女', text: `黒くて小さい${it.kanji}です。`, romaji: `Kurokute chiisai ${it.romaji} desu.`, id: `Wanita: ${it.meaning} yang hitam dan kecil.`, pitch: 1.15 },
+                    { speaker: '男', text: `わかりました。すぐ探してみます。`, romaji: 'Wakarimashita. Sugu sagashite mimasu.', id: 'Pria: Baiklah. Saya akan segera coba mencarinya.', pitch: 0.9 }
+                ],
+                correct: `Di ${p.meaning.toLowerCase()}`,
+                wrong: [`Di ${p2.meaning.toLowerCase()}`, `Di dalam kereta listrik`, `Di ruang rapat kantor`]
+            },
+            {
+                badge: '💬 Percakapan • N4 (Janji Pertemuan)',
+                q: `Jam berapa dan di mana mereka akan bertemu besok?`,
+                lines: [
+                    { speaker: '男', text: `明日、何時にどこで会いましょうか。`, romaji: 'Ashita, nan-ji ni doko de aimashou ka.', id: 'Pria: Besok, jam berapa dan di mana kita bertemu?', pitch: 0.9 },
+                    { speaker: '女', text: `${t.jp}に${p.kanji}の前はどうですか。`, romaji: `${t.rom} ni ${p.romaji} no mae wa dou desu ka.`, id: `Wanita: Bagaimana kalau ${t.id} di depan ${p.meaning.toLowerCase()}?`, pitch: 1.15 },
+                    { speaker: '男', text: `${p.kanji}の前は人が多いですから、${p2.kanji}の中にしませんか。`, romaji: `${p.romaji} no mae wa hito ga ooi desu kara, ${p2.romaji} no naka ni shimasen ka.`, id: `Pria: Karena di depan ${p.meaning.toLowerCase()} banyak orang, bagaimana kalau di dalam ${p2.meaning.toLowerCase()} saja?`, pitch: 0.9 },
+                    { speaker: '女', text: `そうですね。じゃあ、そうしましょう。`, romaji: 'Sou desu ne. Jaa, sou shimashou.', id: 'Wanita: Benar juga ya. Kalau begitu, ayo begitu saja.', pitch: 1.15 }
+                ],
+                correct: `${t.id} di dalam ${p2.meaning.toLowerCase()}`,
+                wrong: [
+                    `${t.id} di depan ${p.meaning.toLowerCase()}`,
+                    `Jam 8 pagi di depan stasiun`,
+                    `${t.id} di sebelah ${p.meaning.toLowerCase()}`
+                ]
+            },
+            {
+                badge: '💬 Percakapan • N4 (Alasan Tidak Bisa Hadir)',
+                q: `Mengapa pria tersebut tidak bisa ikut pesta hari ini?`,
+                lines: [
+                    { speaker: '女', text: `今日のパーティー、何時ごろ来られますか。`, romaji: 'Kyou no paatii, nan-ji goro koraremasu ka.', id: 'Wanita: Pesta hari ini, kira-kira jam berapa kamu bisa datang?', pitch: 1.15 },
+                    { speaker: '男', text: `すみません、今日はちょっと行けなくなりました。`, romaji: 'Sumimasen, kyou wa chotto ikenaku narimashita.', id: 'Pria: Maaf, hari ini saya jadi tidak bisa pergi.', pitch: 0.9 },
+                    { speaker: '女', text: `えっ、どうしてですか。残業ですか。`, romaji: 'E, doushite desu ka. Zangyou desu ka.', id: 'Wanita: Eh, kenapa? Lembur ya?', pitch: 1.15 },
+                    { speaker: '男', text: `いいえ、朝から頭が痛くて、これから${p.kanji}へ行かなければならないんです。`, romaji: `Iie, asa kara atama ga itakute, kore kara ${p.romaji} e ikanakereba naranai n desu.`, id: `Pria: Bukan, sejak pagi kepala saya sakit, dan sebentar lagi saya harus pergi ke ${p.meaning.toLowerCase()}.`, pitch: 0.9 }
+                ],
+                correct: `Karena sakit kepala dan harus pergi ke ${p.meaning.toLowerCase()}`,
+                wrong: [
+                    `Karena harus kerja lembur sampai malam`,
+                    `Karena lupa membeli hadiah untuk pesta`,
+                    `Karena kereta mengalami keterlambatan`
+                ]
+            }
+        ];
+        return pickRandom(convTemplates);
+    }
+
+    if (actualType === 'NEWS') {
+        const newsTemplates = [
+            {
+                badge: '📺 Berita Singkat • N4 (Cuaca)',
+                q: `Bagaimana perkiraan cuaca besok menurut berita tersebut?`,
+                lines: [
+                    { speaker: 'アナウンサー', text: `明日の天気予報をお知らせします。`, romaji: 'Ashita no tenkiyohou o oshirase shimasu.', id: 'Penyiar: Kami sampaikan prakiraan cuaca untuk besok.', pitch: 1.0 },
+                    { speaker: 'アナウンサー', text: `午前中はよく晴れますが、午後から急に雨が降るでしょう。`, romaji: 'Gozenchuu wa yoku haremasu ga, gogo kara kyuu ni ame ga furu deshou.', id: 'Penyiar: Pagi hari akan cerah, tetapi mulai sore diperkirakan akan tiba-tiba turun hujan.', pitch: 1.0 },
+                    { speaker: 'アナウンサー', text: `出かける時は、必ず傘を持って行ってください。`, romaji: 'Dekakeru toki wa, kanarazu kasa o motte itte kudasai.', id: 'Penyiar: Saat keluar rumah, pastikan membawa payung.', pitch: 1.0 }
+                ],
+                correct: `Pagi hari cerah, namun sore hari akan turun hujan`,
+                wrong: [
+                    `Sepanjang hari akan turun salju lebat`,
+                    `Cerah dari pagi hingga malam hari`,
+                    `Akan terjadi angin topan besar sejak pagi`
+                ]
+            },
+            {
+                badge: '📺 Berita Singkat • N4 (Transportasi)',
+                q: `Mengapa kereta jalur Sakura berhenti beroperasi sementara?`,
+                lines: [
+                    { speaker: 'アナウンサー', text: `交通情報をお伝えします。`, romaji: 'Koutsuu jouhou o otsutae shimasu.', id: 'Penyiar: Kami sampaikan informasi lalu lintas.', pitch: 1.0 },
+                    { speaker: 'アナウンサー', text: `強い風の影響で、現在さくら線は運転を止めています。`, romaji: 'Tsuyoi kaze no eikyou de, genzai Sakura-sen wa unten o tomete imasu.', id: 'Penyiar: Akibat pengaruh angin kencang, saat ini jalur Sakura menghentikan operasionalnya.', pitch: 1.0 },
+                    { speaker: 'アナウンサー', text: `お急ぎの方は、バスや地下鉄をご利用ください。`, romaji: 'Oisogi no kata wa, basu ya chikatetsu o goriyou kudasai.', id: 'Penyiar: Bagi yang terburu-buru, silakan menggunakan bus atau kereta bawah tanah.', pitch: 1.0 }
+                ],
+                correct: `Karena pengaruh angin kencang`,
+                wrong: [
+                    `Karena terjadi kecelakaan di perlintasan`,
+                    `Karena sedang ada perbaikan rel kereta`,
+                    `Karena hujan salju yang sangat lebat`
+                ]
+            },
+            {
+                badge: '📺 Berita Singkat • N4 (Acara Budaya)',
+                q: `Apa yang bisa dinikmati pengunjung di festival akhir pekan ini?`,
+                lines: [
+                    { speaker: 'アナウンサー', text: `今週末、市の${p.kanji}で国際交流祭が開かれます。`, romaji: `Konshuumatsu, shi no ${p.romaji} de kokusai kouryuu-sai ga hirakaremasu.`, id: `Penyiar: Akhir pekan ini, festival pertukaran internasional akan diadakan di ${p.meaning.toLowerCase()} kota.`, pitch: 1.0 },
+                    { speaker: 'アナウンサー', text: `会場では、世界各国の美味しい${f.kanji}を食べることができます。`, romaji: `Kaijou de wa, sekai kakkoku no oishii ${f.romaji} o taberu koto ga dekimasu.`, id: `Penyiar: Di lokasi acara, pengunjung bisa makan ${f.meaning.toLowerCase()} yang lezat dari berbagai negara.`, pitch: 1.0 },
+                    { speaker: 'アナウンサー', text: `入場は無料ですので、ぜひご家族でお越しください。`, romaji: 'Nyuujou wa muryou desu node, zehi gokazoku de okoshi kudasai.', id: 'Penyiar: Tiket masuk gratis, jadi silakan datang bersama keluarga.', pitch: 1.0 }
+                ],
+                correct: `Makan ${f.meaning.toLowerCase()} dari berbagai negara dengan tiket masuk gratis`,
+                wrong: [
+                    `Membeli tiket konser musik dengan harga diskon`,
+                    `Menonton pertandingan olahraga internasional`,
+                    `Mengikuti lomba lari maraton keliling kota`
+                ]
+            },
+            {
+                badge: '📺 Berita Singkat • N4 (Layanan Publik)',
+                q: `Kapan fasilitas tersebut akan ditutup sementara?`,
+                lines: [
+                    { speaker: 'アナウンサー', text: `町の${p.kanji}からのお知らせです。`, romaji: `Machi no ${p.romaji} kara no oshirase desu.`, id: `Penyiar: Pengumuman dari ${p.meaning.toLowerCase()} kota.`, pitch: 1.0 },
+                    { speaker: 'アナウンサー', text: `来週の月曜日から水曜日まで、工事のためお休みになります。`, romaji: 'Raishuu no getsuyoubi kara suiyoubi made, kouji no tame oyasumi ni narimasu.', id: 'Penyiar: Mulai hari Senin hingga Rabu minggu depan akan tutup karena ada pekerjaan konstruksi.', pitch: 1.0 },
+                    { speaker: 'アナウンサー', text: `木曜日の朝${t.jp}から通常通り利用できます。`, romaji: `Mokuyoubi no asa ${t.rom} kara tsuujoudoori riyou dekimasu.`, id: `Penyiar: Dapat digunakan kembali seperti biasa mulai hari Kamis pagi ${t.id}.`, pitch: 1.0 }
+                ],
+                correct: `Dari hari Senin sampai Rabu minggu depan`,
+                wrong: [
+                    `Setiap hari Sabtu dan Minggu bulan ini`,
+                    `Hanya pada hari Kamis pagi saja`,
+                    `Selama satu bulan penuh karena renovasi`
+                ]
+            }
+        ];
+        return pickRandom(newsTemplates);
+    }
+
+    // ANNOUNCEMENT
+    const annTemplates = [
+        {
+            badge: '📢 Pengumuman • N4 (Pendaftaran Acara)',
+            q: `Apa yang harus dibawa oleh peserta pada hari acara berlangsung?`,
+            lines: [
+                { speaker: '係員', text: `皆さんにお知らせいたします。`, romaji: 'Minasan ni oshirase itashimasu.', id: 'Petugas: Diberitahukan kepada semuanya.', pitch: 1.05 },
+                { speaker: '係員', text: `金曜日までに受付で申し込んでください。`, romaji: 'Kinyoubi made ni uketsuke de moushikonde kudasai.', id: 'Petugas: Silakan mendaftar di resepsionis paling lambat hari Jumat.', pitch: 1.05 },
+                { speaker: '係員', text: `当日はノートと鉛筆を忘れないで持って来てください。`, romaji: 'Toujitsu wa nooto to enpitsu o wasurenaide motte kite kudasai.', id: 'Petugas: Pada hari-H, jangan lupa membawa buku catatan dan pensil.', pitch: 1.05 }
+            ],
+            correct: `Buku catatan dan pensil`,
+            wrong: [`Kamus elektronik dan kamera`, `Makanan dan minuman ringan`, `Kartu nama dan paspor`]
+        },
+        {
+            badge: '📢 Pengumuman • N4 (Perubahan Ruangan)',
+            q: `Di mana kelas bahasa Jepang akan diadakan hari ini?`,
+            lines: [
+                { speaker: '先生', text: `学生の皆さん、今日の日本語のクラスについてお知らせします。`, romaji: 'Gakusei no minasan, kyou no Nihongo no kurasu ni tsuite oshirase shimasu.', id: 'Guru: Para siswa sekalian, ada pengumuman mengenai kelas bahasa Jepang hari ini.', pitch: 1.1 },
+                { speaker: '先生', text: `エアコンが故障しているため、いつもの教室は使えません。`, romaji: 'Eakon ga koshou shite iru tame, itsumo no kyoushitsu wa tsukaemasen.', id: 'Guru: Karena AC sedang rusak, ruang kelas yang biasanya tidak dapat digunakan.', pitch: 1.1 },
+                { speaker: '先生', text: `今日は３階の${p.kanji}で行いますので、間違えないでください。`, romaji: `Kyou wa san-kai no ${p.romaji} de okonaimasu node, machigaenaide kudasai.`, id: `Guru: Hari ini kelas diadakan di ${p.meaning.toLowerCase()} lantai 3, jadi jangan sampai salah.`, pitch: 1.1 }
+            ],
+            correct: `Di ${p.meaning.toLowerCase()} lantai 3`,
+            wrong: [
+                `Di ruang kelas seperti biasanya`,
+                `Di ${p2.meaning.toLowerCase()} lantai 1`,
+                `Kelas dibatalkan karena AC rusak`
+            ]
+        },
+        {
+            badge: '📢 Pengumuman • N4 (Barang Temuan)',
+            q: `Di mana pemilik barang bisa mengambil kembali barangnya?`,
+            lines: [
+                { speaker: '店員', text: `お客様にお知らせいたします。`, romaji: 'Okyakusama ni oshirase itashimasu.', id: 'Staf Toko: Diberitahukan kepada para pelanggan.', pitch: 1.15 },
+                { speaker: '店員', text: `先ほど、２階の${p.kanji}の近くで${it.kanji}の落とし物が見つかりました。`, romaji: `Sakihodo, ni-kai no ${p.romaji} no chikaku de ${it.romaji} no otoshimono ga mitsukarimashita.`, id: `Staf Toko: Baru saja ditemukan ${it.meaning.toLowerCase()} yang terjatuh di dekat ${p.meaning.toLowerCase()} lantai 2.`, pitch: 1.15 },
+                { speaker: '店員', text: `お心当たりの方は、１階のインフォメーションまでお越しください。`, romaji: 'Okokoroatari no kata wa, ikkai no infomeeshon made okoshi kudasai.', id: 'Staf Toko: Bagi yang merasa memilikinya, silakan datang ke pusat informasi di lantai 1.', pitch: 1.15 }
+            ],
+            correct: `Di pusat informasi lantai 1`,
+            wrong: [
+                `Di dekat ${p.meaning.toLowerCase()} lantai 2`,
+                `Di kasir pintu keluar lantai 3`,
+                `Di pos keamanan area parkir`
+            ]
+        },
+        {
+            badge: '📢 Pengumuman • N5 (Jam Tutup Toko)',
+            q: `Jam berapa toko ini akan tutup hari ini?`,
+            lines: [
+                { speaker: '店員', text: `本日はご来店いただき、誠にありがとうございます。`, romaji: 'Honjitsu wa goraiten itadaki, makoto ni arigatou gozaimasu.', id: 'Staf Toko: Terima kasih banyak atas kunjungan Anda hari ini.', pitch: 1.15 },
+                { speaker: '店員', text: `まもなく閉店の時間となります。`, romaji: 'Mamonaku heiten no jikan to narimasu.', id: 'Staf Toko: Sebentar lagi sudah tiba waktu tutup toko.', pitch: 1.15 },
+                { speaker: '店員', text: `本日は${t.jp}をもちまして営業を終了させていただきます。`, romaji: `Honjitsu wa ${t.rom} o mochimashite eigyou o shuuryou sasete itadakimasu.`, id: `Staf Toko: Hari ini operasional toko akan berakhir pada ${t.id}.`, pitch: 1.15 }
+            ],
+            correct: `Pada ${t.id}`,
+            wrong: [
+                `Satu jam lagi dari sekarang`,
+                `Pada jam 10 malam`,
+                `Toko buka selama 24 jam`
+            ]
+        }
+    ];
+    return pickRandom(annTemplates);
 }
 
 // --- LOGIKA UI MEMBACA ---
