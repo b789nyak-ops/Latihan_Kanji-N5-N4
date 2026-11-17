@@ -3904,8 +3904,9 @@ function toggleMemFromList(kanji) {
     renderList();
 }
 
-<script>
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbyXMHvgamTAZMn5AVZsQcmdmEqdi02nb22RLuWhOc95ubJ4m-frixKMvG1SF_yQoEarFw/exec'; // Ganti dengan URL Web App dari Apps Script
+
+   <script>
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbyXMHvgamTAZMn5AVZsQcmdmEqdi02nb22RLuWhOc95ubJ4m-frixKMvG1SF_yQoEarFw/exec';
 
   function kirimDataPengunjung(nama, asal) {
     const formData = new FormData();
@@ -3926,11 +3927,6 @@ function toggleMemFromList(kanji) {
     });
   }
 
-  // Contoh pemanggilan saat form disubmit atau halaman dimuat:
-  // kirimDataPengunjung('Budi', 'Jakarta');
-</script>
-    
-    
 // Init Awal
 initFlashcard();
 initBunpouDropdown();
