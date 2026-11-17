@@ -2671,18 +2671,16 @@ function populateCategoryDropdowns() {
 populateCategoryDropdowns();
 updateProgressUI();
 
-// --- TEXT TO SPEECH (CLOUDFLARE EDGE NEURAL + FALLBACK BROWSER) ---
-const EDGE_TTS_WORKER_URL = "https://masterjapan.b789nyak.workers.dev";
-let currentTtsAudio = null;
+// --- TEXT TO SPEECH (STABIL PRE-FETCH + FALLBACK) ---
+const TTS_WORKER_URL = "https://masterjapan.b789nyak.workers.dev";
+const sharedAudioPlayer = new Audio();
 let ttsSequenceCancelled = false;
 
 function stopSpeech() {
     ttsSequenceCancelled = true;
-    if (currentTtsAudio) {
-        currentTtsAudio.pause();
-        currentTtsAudio.currentTime = 0;
-        currentTtsAudio = null;
-    }
+    sharedAudioPlayer.pause();
+    sharedAudioPlayer.removeAttribute('src');
+    sharedAudioPlayer.load();
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
     }
@@ -2690,21 +2688,27 @@ function stopSpeech() {
     if (statusEl) statusEl.innerText = 'Audio dihentikan. Klik untuk putar ulang';
 }
 
-function playBrowserFallback(cleanText, rate = 0.85, pitch = 1.0, onEnd = null) {
-    if (!('speechSynthesis' in window)) {
-        if (onEnd) onEnd();
-        return;
-    }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = 'ja-JP';
-    utterance.rate = rate;
-    utterance.pitch = pitch;
-    if (onEnd) {
-        utterance.onend = onEnd;
-        utterance.onerror = onEnd;
-    }
-    window.speechSynthesis.speak(utterance);
+function playBrowserFallbackPromise(cleanText, rate = 0.85, pitch = 1.0) {
+    return new Promise((resolve) => {
+        if (ttsSequenceCancelled || !('speechSynthesis' in window)) return resolve();
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'ja-JP';
+        utterance.rate = rate;
+        utterance.pitch = pitch;
+        utterance.onend = () => resolve();
+        utterance.onerror = () => resolve();
+        window.speechSynthesis.speak(utterance);
+    });
+}
+
+async function fetchTtsBlobUrl(text, rate = 0.85) {
+    const speed = rate < 0.85 ? '0.8' : '1.0';
+    const url = `${TTS_WORKER_URL}/?text=${encodeURIComponent(text)}&speed=${speed}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Worker HTTP ' + res.status);
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
 }
 
 async function speakText(text, rate = 0.85, pitch = 1.0) {
@@ -2713,19 +2717,18 @@ async function speakText(text, rate = 0.85, pitch = 1.0) {
     const cleanText = text.replace(/〜|~/g, '').split('（')[0].trim();
     if (!cleanText) return;
 
-    // Pilih suara pria (Keita) jika pitch < 1.0, atau wanita (Nanami) untuk default
-    const voice = pitch < 0.98 ? 'ja-JP-KeitaNeural' : 'ja-JP-NanamiNeural';
-    const ratePercent = Math.round((rate - 1.0) * 100);
-    const rateStr = (ratePercent >= 0 ? '+' : '') + ratePercent + '%';
-
     try {
-        const audioUrl = `${EDGE_TTS_WORKER_URL}/?text=${encodeURIComponent(cleanText)}&voice=${voice}&rate=${encodeURIComponent(rateStr)}`;
-        const audio = new Audio(audioUrl);
-        currentTtsAudio = audio;
-        await audio.play();
+        const blobUrl = await fetchTtsBlobUrl(cleanText, rate);
+        if (ttsSequenceCancelled) {
+            URL.revokeObjectURL(blobUrl);
+            return;
+        }
+        sharedAudioPlayer.src = blobUrl;
+        sharedAudioPlayer.playbackRate = rate >= 0.85 ? rate : 1.0;
+        sharedAudioPlayer.onended = () => URL.revokeObjectURL(blobUrl);
+        await sharedAudioPlayer.play();
     } catch (err) {
-        // Otomatis pindah ke suara bawaan browser jika sedang offline / gagal
-        playBrowserFallback(cleanText, rate, pitch);
+        await playBrowserFallbackPromise(cleanText, rate, pitch);
     }
 }
 
@@ -2734,33 +2737,54 @@ async function speakSequence(lines, rate = 0.85, onStart, onEnd) {
     ttsSequenceCancelled = false;
     if (onStart) onStart();
 
-    const ratePercent = Math.round((rate - 1.0) * 100);
-    const rateStr = (ratePercent >= 0 ? '+' : '') + ratePercent + '%';
+    // 1. Unduh semua audio dialog terlebih dahulu agar tidak ada jeda/putus di tengah
+    const preparedBlobs = await Promise.all(
+        lines.map(async (line) => {
+            try {
+                return await fetchTtsBlobUrl(line.text, rate);
+            } catch {
+                return null;
+            }
+        })
+    );
 
+    // 2. Putar satu per satu secara tuntas menggunakan 1 Audio Player yang sama
     for (let i = 0; i < lines.length; i++) {
-        if (ttsSequenceCancelled) return;
+        if (ttsSequenceCancelled) break;
         const line = lines[i];
-        
-        // Deteksi pembicara: 男 (Pria) memakai Keita, lainnya memakai Nanami
-        const isMale = line.speaker === '男' || (line.pitch && line.pitch < 0.98);
-        const voice = isMale ? 'ja-JP-KeitaNeural' : 'ja-JP-NanamiNeural';
-        const audioUrl = `${EDGE_TTS_WORKER_URL}/?text=${encodeURIComponent(line.text)}&voice=${voice}&rate=${encodeURIComponent(rateStr)}`;
+        const blobUrl = preparedBlobs[i];
 
-        await new Promise((resolve) => {
-            if (ttsSequenceCancelled) return resolve();
-            const audio = new Audio(audioUrl);
-            currentTtsAudio = audio;
+        if (blobUrl) {
+            await new Promise((resolve) => {
+                if (ttsSequenceCancelled) {
+                    URL.revokeObjectURL(blobUrl);
+                    return resolve();
+                }
+                sharedAudioPlayer.src = blobUrl;
+                // Bedakan nada pria (sedikit lebih rendah) vs wanita lewat playbackRate halus
+                const isMale = line.speaker === '男' || (line.pitch && line.pitch < 0.98);
+                sharedAudioPlayer.playbackRate = isMale ? Math.max(0.82, rate - 0.05) : rate;
 
-            audio.onended = () => setTimeout(resolve, 350);
-            audio.onerror = () => {
-                // Fallback ke browser jika 1 baris gagal dimuat
-                playBrowserFallback(line.text, rate, line.pitch || 1.0, () => setTimeout(resolve, 350));
-            };
-
-            audio.play().catch(() => {
-                playBrowserFallback(line.text, rate, line.pitch || 1.0, () => setTimeout(resolve, 350));
+                const finishLine = () => {
+                    URL.revokeObjectURL(blobUrl);
+                    setTimeout(resolve, 400);
+                };
+                sharedAudioPlayer.onended = finishLine;
+                sharedAudioPlayer.onerror = async () => {
+                    URL.revokeObjectURL(blobUrl);
+                    await playBrowserFallbackPromise(line.text, rate, line.pitch || 1.0);
+                    setTimeout(resolve, 400);
+                };
+                sharedAudioPlayer.play().catch(async () => {
+                    URL.revokeObjectURL(blobUrl);
+                    await playBrowserFallbackPromise(line.text, rate, line.pitch || 1.0);
+                    setTimeout(resolve, 400);
+                });
             });
-        });
+        } else {
+            await playBrowserFallbackPromise(line.text, rate, line.pitch || 1.0);
+            if (!ttsSequenceCancelled) await new Promise(r => setTimeout(r, 400));
+        }
     }
 
     if (!ttsSequenceCancelled && onEnd) onEnd();
