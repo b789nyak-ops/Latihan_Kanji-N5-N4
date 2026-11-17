@@ -3904,6 +3904,33 @@ function toggleMemFromList(kanji) {
     renderList();
 }
 
+<script>
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbyXMHvgamTAZMn5AVZsQcmdmEqdi02nb22RLuWhOc95ubJ4m-frixKMvG1SF_yQoEarFw/exec'; // Ganti dengan URL Web App dari Apps Script
+
+  function kirimDataPengunjung(nama, asal) {
+    const formData = new FormData();
+    formData.append('nama', nama);
+    formData.append('asal', asal);
+    formData.append('perangkat', navigator.userAgent);
+
+    fetch(scriptURL, { 
+      method: 'POST', 
+      body: formData,
+      mode: 'no-cors'
+    })
+    .then(() => {
+      console.log('Data berhasil dikirim ke Google Sheets');
+    })
+    .catch(error => {
+      console.error('Gagal mengirim data:', error);
+    });
+  }
+
+  // Contoh pemanggilan saat form disubmit atau halaman dimuat:
+  // kirimDataPengunjung('Budi', 'Jakarta');
+</script>
+    
+    
 // Init Awal
 initFlashcard();
 initBunpouDropdown();
