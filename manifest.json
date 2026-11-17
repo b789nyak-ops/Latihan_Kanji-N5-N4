@@ -1,0 +1,15 @@
+{
+  "name": "MJ Nihongo N5-N4",
+  "short_name": "MJ Nihongo",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1a1b26",
+  "theme_color": "#1a1b26",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/197/197604.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
