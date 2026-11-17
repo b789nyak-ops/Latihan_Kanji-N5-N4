@@ -2671,42 +2671,99 @@ function populateCategoryDropdowns() {
 populateCategoryDropdowns();
 updateProgressUI();
 
-// --- TEXT TO SPEECH ---
-function speakText(text, rate = 0.85, pitch = 1.0) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const cleanText = text.replace(/～|~/g, '').split('/')[0].trim();
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.lang = 'ja-JP';
-        utterance.rate = rate;
-        utterance.pitch = pitch;
-        window.speechSynthesis.speak(utterance);
-    }
-}
+// --- TEXT TO SPEECH (CLOUDFLARE EDGE NEURAL + FALLBACK BROWSER) ---
+const EDGE_TTS_WORKER_URL = "https://masterjapan.b789nyak.workers.dev";
+let currentTtsAudio = null;
+let ttsSequenceCancelled = false;
 
 function stopSpeech() {
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    ttsSequenceCancelled = true;
+    if (currentTtsAudio) {
+        currentTtsAudio.pause();
+        currentTtsAudio.currentTime = 0;
+        currentTtsAudio = null;
+    }
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
     const statusEl = document.getElementById('choukaiAudioStatus');
     if (statusEl) statusEl.innerText = 'Audio dihentikan. Klik untuk putar ulang';
 }
 
-function speakSequence(lines, rate = 0.85, onStart, onEnd) {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    if (onStart) onStart();
-    let idx = 0;
-    function nextLine() {
-        if (idx >= lines.length) { if (onEnd) onEnd(); return; }
-        const line = lines[idx];
-        const utt = new SpeechSynthesisUtterance(line.text);
-        utt.lang = 'ja-JP';
-        utt.rate = rate;
-        utt.pitch = line.pitch || 1.0;
-        utt.onend = () => { idx++; setTimeout(nextLine, 350); };
-        utt.onerror = () => { idx++; nextLine(); };
-        window.speechSynthesis.speak(utt);
+function playBrowserFallback(cleanText, rate = 0.85, pitch = 1.0, onEnd = null) {
+    if (!('speechSynthesis' in window)) {
+        if (onEnd) onEnd();
+        return;
     }
-    nextLine();
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = 'ja-JP';
+    utterance.rate = rate;
+    utterance.pitch = pitch;
+    if (onEnd) {
+        utterance.onend = onEnd;
+        utterance.onerror = onEnd;
+    }
+    window.speechSynthesis.speak(utterance);
+}
+
+async function speakText(text, rate = 0.85, pitch = 1.0) {
+    stopSpeech();
+    ttsSequenceCancelled = false;
+    const cleanText = text.replace(/〜|~/g, '').split('（')[0].trim();
+    if (!cleanText) return;
+
+    // Pilih suara pria (Keita) jika pitch < 1.0, atau wanita (Nanami) untuk default
+    const voice = pitch < 0.98 ? 'ja-JP-KeitaNeural' : 'ja-JP-NanamiNeural';
+    const ratePercent = Math.round((rate - 1.0) * 100);
+    const rateStr = (ratePercent >= 0 ? '+' : '') + ratePercent + '%';
+
+    try {
+        const audioUrl = `${EDGE_TTS_WORKER_URL}/?text=${encodeURIComponent(cleanText)}&voice=${voice}&rate=${encodeURIComponent(rateStr)}`;
+        const audio = new Audio(audioUrl);
+        currentTtsAudio = audio;
+        await audio.play();
+    } catch (err) {
+        // Otomatis pindah ke suara bawaan browser jika sedang offline / gagal
+        playBrowserFallback(cleanText, rate, pitch);
+    }
+}
+
+async function speakSequence(lines, rate = 0.85, onStart, onEnd) {
+    stopSpeech();
+    ttsSequenceCancelled = false;
+    if (onStart) onStart();
+
+    const ratePercent = Math.round((rate - 1.0) * 100);
+    const rateStr = (ratePercent >= 0 ? '+' : '') + ratePercent + '%';
+
+    for (let i = 0; i < lines.length; i++) {
+        if (ttsSequenceCancelled) return;
+        const line = lines[i];
+        
+        // Deteksi pembicara: 男 (Pria) memakai Keita, lainnya memakai Nanami
+        const isMale = line.speaker === '男' || (line.pitch && line.pitch < 0.98);
+        const voice = isMale ? 'ja-JP-KeitaNeural' : 'ja-JP-NanamiNeural';
+        const audioUrl = `${EDGE_TTS_WORKER_URL}/?text=${encodeURIComponent(line.text)}&voice=${voice}&rate=${encodeURIComponent(rateStr)}`;
+
+        await new Promise((resolve) => {
+            if (ttsSequenceCancelled) return resolve();
+            const audio = new Audio(audioUrl);
+            currentTtsAudio = audio;
+
+            audio.onended = () => setTimeout(resolve, 350);
+            audio.onerror = () => {
+                // Fallback ke browser jika 1 baris gagal dimuat
+                playBrowserFallback(line.text, rate, line.pitch || 1.0, () => setTimeout(resolve, 350));
+            };
+
+            audio.play().catch(() => {
+                playBrowserFallback(line.text, rate, line.pitch || 1.0, () => setTimeout(resolve, 350));
+            });
+        });
+    }
+
+    if (!ttsSequenceCancelled && onEnd) onEnd();
 }
 
 function shuffle(array) {
