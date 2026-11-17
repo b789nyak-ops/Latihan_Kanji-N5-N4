@@ -3904,28 +3904,56 @@ function toggleMemFromList(kanji) {
     renderList();
 }
 
+// === LOG PENGUNJUNG GOOGLE SHEETS ===
+const VISITOR_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEERqT-FZFEo3XqgdjACalyP-_Md5zq4RdsAPtMNbsia5aBsPMqo1f6PcHJ9t2Qk2oQg/exec";
 
-   <script>
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbyXMHvgamTAZMn5AVZsQcmdmEqdi02nb22RLuWhOc95ubJ4m-frixKMvG1SF_yQoEarFw/exec';
-
-  function kirimDataPengunjung(nama, asal) {
-    const formData = new FormData();
-    formData.append('nama', nama);
-    formData.append('asal', asal);
-    formData.append('perangkat', navigator.userAgent);
-
-    fetch(scriptURL, { 
-      method: 'POST', 
-      body: formData,
-      mode: 'no-cors'
-    })
-    .then(() => {
-      console.log('Data berhasil dikirim ke Google Sheets');
-    })
-    .catch(error => {
-      console.error('Gagal mengirim data:', error);
-    });
+window.addEventListener("DOMContentLoaded", () => {
+  if (!localStorage.getItem("mj_visitor_logged")) {
+    const modal = document.getElementById("visitorModal");
+    if (modal) modal.classList.remove("hidden");
   }
+});
+
+function detectDevice() {
+  const ua = navigator.userAgent;
+  if (/android/i.test(ua)) return "Android";
+  if (/iPad|iPhone|iPod/.test(ua)) return "iOS";
+  if (/Windows/i.test(ua)) return "Windows";
+  if (/Mac/i.test(ua)) return "Mac";
+  return "Lainnya";
+}
+
+async function submitVisitorForm(event) {
+  event.preventDefault();
+  const nama = document.getElementById("visitorNameInput").value.trim();
+  const asal = document.getElementById("visitorOriginInput").value.trim();
+  const btn = document.getElementById("visitorSubmitBtn");
+
+  if (!nama || !asal) return;
+
+  btn.disabled = true;
+  btn.textContent = "Menyimpan...";
+
+  try {
+    await fetch(VISITOR_SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        nama: nama,
+        asal: asal,
+        perangkat: detectDevice()
+      })
+    });
+    localStorage.setItem("mj_visitor_logged", "true");
+  } catch (e) {
+    console.error("Gagal mencatat pengunjung:", e);
+  } finally {
+    document.getElementById("visitorModal").classList.add("hidden");
+    btn.disabled = false;
+    btn.textContent = "Mulai Belajar";
+  }
+}
 
 // Init Awal
 initFlashcard();
