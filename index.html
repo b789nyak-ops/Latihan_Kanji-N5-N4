@@ -2776,9 +2776,9 @@ function generateReadingQuestion(lengthPref, levelPref) {
                 level: 'N5',
                 pattern: 'Bab 6: Waktu + Tempat + で + Objek + を + Kata Kerja (-masu)',
                 build: () => ({
-                    jp: `私は${t.kanji}、${p.kanji}で${obj.kanji}を${v.kanji}。`,
-                    romaji: `Watashi wa ${t.romaji}, ${p.romaji} de ${obj.romaji} o ${v.romaji}.`,
-                    id: `Saya ${t.meaning.toLowerCase()} ${v.meaning.toLowerCase()} ${obj.meaning.toLowerCase()} di ${p.meaning.toLowerCase()}.`,
+                    jp: `私は${t.kanji}で、${p.kanji}に${obj.kanji}を${v.kanji}。`,
+                    romaji: `Watashi wa ${t.romaji}de, ${p.romaji} ni ${obj.romaji} o ${v.romaji}.`,
+                    id: `Saya ${t.meaning.toLowerCase()} ${p.meaning.toLowerCase()} ${obj.meaning.toLowerCase()} di ${v.meaning.toLowerCase()}.`,
                     q: `Apa yang dilakukan "Saya" pada kalimat di atas?`,
                     correct: `${v.meaning} ${obj.meaning.toLowerCase()} di ${p.meaning.toLowerCase()}`,
                     wrong: [`Membeli ${f.meaning.toLowerCase()} di stasiun`, `Tidur dan beristirahat di rumah`, `Menunggu teman di depan kantor pos`]
