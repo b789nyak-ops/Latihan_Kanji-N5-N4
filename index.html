@@ -2759,31 +2759,262 @@ function conjugateMasu(masuJp, masuRom, targetForm) {
     return [masuJp, masuRom];
 }
 
+
+// =========================================================================
+// 4. GENERATOR MEMBACA (DOKKAI) & CHOUKAI OTOMATIS (4 KAMUS PASANGAN LENGKAP)
+// =========================================================================
+function getVocabByIdsAndCategory(ids, expectedCategory) {
+    return masterData.filter(item => ids.includes(item.id) && item.category === expectedCategory);
+}
+
+// -------------------------------------------------------------------------
+// PASANGAN 1: KATA KERJA TRANSITIF + OBJEK YANG LOGIS ([Objek] を [Kata Kerja])
+// -------------------------------------------------------------------------
+const validVerbObjectPairs = [
+    // Makan, Minum & Konsumsi
+    { verbId: '110', objIds: ['118', '154', '157', '2033', '2034', '2035', '2036', '2037', '2038'] }, // 食べます -> cokelat, nasi, masakan, daging, ikan, sayur, buah, roti, telur
+    { verbId: '111', objIds: ['119', '148', '2031', '2032', '2060'] }, // 飲みます -> kopi, wine, air, teh, obat
+    { verbId: '112', objIds: ['149'] }, // 吸います -> rokok
+    { verbId: '269', objIds: ['2033', '2034', '2035', '2037'] }, // 焼きます -> daging, ikan, sayur, roti
+
+    // Melihat, Mendengar, Membaca & Menulis
+    { verbId: '113', objIds: ['111', '156', '2053', '2055', '2057', '2064', '2068'] }, // 見ます -> TV, sakura, gunung, laut, bunga, foto, kembang api
+    { verbId: '114', objIds: ['112', '162'] }, // 聞きます -> radio, pendapat
+    { verbId: '115', objIds: ['96', '97', '98', '99', '100', '2063'] }, // 読みます -> buku, kamus, majalah, koran, catatan, surat
+    { verbId: '116', objIds: ['100', '101', '102', '164', '2063'] }, // 書きます -> catatan, agenda, kartu nama, rencana, surat
+    { verbId: '118', objIds: ['156', '2053', '2054', '2055', '2057', '2064'] }, // 撮ります -> sakura, gunung, sungai, laut, bunga, foto
+
+    // Beli, Jual, Bayar, Pinjam & Kirim
+    { verbId: '117', objIds: ['96', '97', '98', '99', '104', '105', '108', '109', '110', '113', '115', '118', '119', '120', '146', '147', '161', '163', '2036', '2037', '2052', '2060'] }, // 買います
+    { verbId: '222', objIds: ['96', '108', '109', '113', '115', '161', '2035', '2036', '2037', '2052'] }, // 売ります
+    { verbId: '142', objIds: ['2062'] }, // 払います -> uang
+    { verbId: '124', objIds: ['96', '97', '104', '105', '109', '113', '161', '2052', '2062'] }, // 貸します -> meminjamkan
+    { verbId: '125', objIds: ['96', '97', '104', '105', '109', '113', '161', '2052', '2062'] }, // 借ります -> meminjam
+    { verbId: '121', objIds: ['120', '2062', '2063'] }, // 送ります -> oleh-oleh, uang, surat
+    { verbId: '122', objIds: ['118', '120', '147', '2057'] }, // あげます -> cokelat, oleh-oleh, dasi, bunga
+    { verbId: '123', objIds: ['118', '120', '147', '2057', '2063'] }, // もらいます -> cokelat, oleh-oleh, dasi, bunga, surat
+    { verbId: '270', objIds: ['96', '102', '107', '120', '2063'] }, // 渡します -> menyerahkan
+    { verbId: '322', objIds: ['120', '2063'] }, // 届けます -> mengantarkan
+
+    // Buka, Tutup, Nyalakan, Matikan & Operasikan Alat
+    { verbId: '22', objIds: ['53', '2039', '2040'] }, // 開けます -> gerbang, jendela, pintu
+    { verbId: '24', objIds: ['53', '2039', '2040'] }, // 閉めます -> gerbang, jendela, pintu
+    { verbId: '25', objIds: ['96', '97', '100', '109', '114'] }, // 閉じます -> buku, kamus, catatan, payung, komputer
+    { verbId: '138', objIds: ['2040'] }, // 押します -> pintu
+    { verbId: '208', objIds: ['117', '2040'] }, // 引きます -> kursi, pintu
+    { verbId: '184', objIds: ['97', '103', '104', '105', '107', '113', '114', '140', '141', '142', '143', '2052'] }, // 使います
+    { verbId: '235', objIds: ['115', '161', '2050', '2051'] }, // 運転します -> menyetir mobil, bus, taksi
+
+    // Perbaiki, Cuci, Bersihkan & Rapikan
+    { verbId: '213', objIds: ['108', '111', '113', '114', '161', '2052'] }, // 直します -> memperbaiki
+    { verbId: '147', objIds: ['146', '155', '161', '2035', '2036'] }, // 洗います -> sepatu, tangan, mobil, sayur, buah
+    { verbId: '233', objIds: ['147'] }, // 洗濯します -> dasi / pakaian
+    { verbId: '234', objIds: ['131', '132', '133', '136', '137', '145'] }, // 掃除します -> membersihkan ruangan
+    { verbId: '912', objIds: ['96', '116', '136'] }, // 片づけます -> membereskan buku, meja, kamar
+    { verbId: '193', objIds: ['96', '107', '110', '163', '2062'] }, // 入れます -> memasukkan ke tas/dompet
+    { verbId: '135', objIds: ['102', '103', '2063'] }, // 出します -> mengeluarkan / mengirim surat
+
+    // Cari, Temukan, Lupa, Hilang & Pakai
+    { verbId: '241', objIds: ['107', '108', '163', '2062'] }, // 探します -> mencari kunci, jam, dompet, uang
+    { verbId: '18', objIds: ['107', '163', '2062'] }, // 見つけます -> menemukan kunci, dompet, uang
+    { verbId: '140', objIds: ['107', '109', '110', '143', '163'] }, // 忘れます -> lupa kunci, payung, tas, telepon, dompet
+    { verbId: '141', objIds: ['107', '108', '163', '2062'] }, // なくします -> kehilangan
+    { verbId: '28', objIds: ['107', '163', '2062'] }, // 拾います -> memungut
+    { verbId: '143', objIds: ['146'] }, // 脱ぎます -> melepas sepatu
+    { verbId: '202', objIds: ['146'] }, // 履きます -> memakai sepatu
+    { verbId: '249', objIds: ['158'] }, // 飼います -> memelihara anjing
+    { verbId: '168', objIds: ['2056', '2057'] }, // 植えます -> menanam pohon, bunga
+    { verbId: '31', objIds: ['2057', '2064'] }, // 飾ります -> menghias/memajang bunga, foto
+    { verbId: '901', objIds: ['97', '164', '2061'] }, // 調べます -> memeriksa kamus, rencana, penyakit
+    { verbId: '174', objIds: ['121', '122'] }, // 予習します -> persiapan belajar bahasa Inggris/Jepang
+    { verbId: '175', objIds: ['121', '122'] }  // 復習します -> mengulang pelajaran
+];
+
+// -------------------------------------------------------------------------
+// PASANGAN 2: KATA KERJA PERPINDAHAN + TEMPAT TUJUAN ([Tempat] へ [Kata Kerja])
+// -------------------------------------------------------------------------
+const validMovePlacePairs = [
+    { verbId: '107', placeIds: ['58', '61', '63', '64', '65', '66', '86', '87', '131', '132', '133', '144', '145', '153', '2041', '2042', '2043', '2044', '2045', '2053', '2055'] }, // 行きます (pergi)
+    { verbId: '108', placeIds: ['86', '87', '132', '133', '144', '145', '153', '2044', '2045'] }, // 来ます (datang)
+    { verbId: '109', placeIds: ['92', '144', '145', '153'] }, // 帰ります (pulang ke negara/perusahaan/rumah/sekolah)
+    { verbId: '225', placeIds: ['86', '87', '144', '153', '2042', '2044'] }, // 通います (pulang pergi rutin)
+    { verbId: '136', placeIds: ['131', '132', '133', '136', '137', '140', '2041', '2044'] }, // 入ります (masuk ke ruangan/lift/gedung)
+    { verbId: '137', placeIds: ['136', '144', '145', '153', '2045'] }, // 出ます (keluar dari kamar/perusahaan/rumah/stasiun)
+    { verbId: '190', placeIds: ['115', '140', '161', '2046', '2047', '2048', '2049', '2050', '2051', '2052'] }, // 乗ります (naik kendaraan/lift)
+    { verbId: '189', placeIds: ['115', '140', '161', '2047', '2048', '2049', '2050', '2051'] } // 降ります (turun dari kendaraan/lift)
+];
+
+// -------------------------------------------------------------------------
+// PASANGAN 3: KATA KERJA INTRANSITIF / KEADAAN + SUBJEK ALAMI ([Subjek] が [Kata Kerja])
+// -------------------------------------------------------------------------
+const validIntransitivePairs = [
+    { verbId: '151', subjIds: ['53', '2039', '2040'] }, // 開きます -> gerbang, jendela, pintu terbuka
+    { verbId: '152', subjIds: ['53', '2039', '2040'] }, // 閉まります -> gerbang, jendela, pintu tertutup
+    { verbId: '153', subjIds: ['88'] }, // つきます -> lampu/listrik menyala
+    { verbId: '154', subjIds: ['88'] }, // 消えます -> lampu/listrik padam
+    { verbId: '155', subjIds: ['108', '111', '112', '113', '114', '115', '140', '143', '161', '2052'] }, // 壊れます -> jam, TV, radio, kamera, PC, mobil, lift, telepon, sepeda rusak
+    { verbId: '156', subjIds: ['70', '2039'] }, // 割れます -> cermin, jendela pecah
+    { verbId: '157', subjIds: ['104', '109', '2056'] }, // 折れます -> pensil, payung, pohon patah
+    { verbId: '159', subjIds: ['110', '146', '147', '161', '2039'] }, // 汚れます -> tas, sepatu, dasi, mobil, jendela menjadi kotor
+    { verbId: '161', subjIds: ['108', '140', '161', '2047', '2050'] }, // 止まります -> jam, lift, mobil, kereta, bus berhenti
+    { verbId: '47', subjIds: ['2058', '2059'] }, // 降ります -> hujan, salju turun
+    { verbId: '319', subjIds: ['156', '2057'] }, // 咲きます -> sakura, bunga mekar
+    { verbId: '295', subjIds: ['71', '2061', '3010'] }, // 治ります -> luka bakar, penyakit, cedera sembuh
+    { verbId: '19', subjIds: ['107', '163', '2062'] } // 見つかります -> kunci, dompet, uang ditemukan
+];
+
+// -------------------------------------------------------------------------
+// PASANGAN 4: KATA BENDA + KATA SIFAT YANG LOGIS ([Benda] は [Kata Sifat] です)
+// -------------------------------------------------------------------------
+const validNounAdjPairs = [
+    // Tempat / Bangunan (kirei, shizuka, nigiyaka, yuumei, benri, fuben, hiroi, semai, atarashii, furui, tooi, chikai)
+    {
+        nounIds: ['63', '64', '65', '86', '87', '131', '132', '133', '136', '144', '145', '153', '2041', '2044', '2045'],
+        adjIds: ['931', '932', '933', '934', '950', '951', '968', '969', '970', '971', '978', '979', '980', '981', '985', '986', '1019', '1020']
+    },
+    // Makanan & Minuman (oishii, amai, karai, nigai, suppai, atsui, tsumetai, takai, yasui)
+    {
+        nounIds: ['118', '119', '148', '154', '157', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038'],
+        adjIds: ['938', '940', '943', '944', '947', '958', '959', '1008', '1009']
+    },
+    // Benda Elektronik & Sehari-hari (atarashii, furui, takai, yasui, benri, omoi, karui, joubu)
+    {
+        nounIds: ['96', '97', '108', '109', '110', '111', '113', '114', '115', '143', '146', '161', '163', '2052'],
+        adjIds: ['931', '932', '933', '934', '935', '943', '944', '960', '961', '985', '986', '987', '994', '1004']
+    },
+    // Bahasa, Pelajaran & Pekerjaan (muzukashii, yasashii, omoshiroi, tanoshii, taisetsu, hitsuyou, taihen)
+    {
+        nounIds: ['121', '122', '164'],
+        adjIds: ['941', '942', '946', '949', '992', '993', '994', '1001', '1017']
+    }
+];
+
+function getValidActionPair() {
+    const pair = pickRandom(validVerbObjectPairs);
+    const verbObj = masterData.find(item => item.id === pair.verbId && item.category === 'Kata Kerja');
+    const validObjs = masterData.filter(item => pair.objIds.includes(item.id) && item.category === 'Tempat & Benda');
+    return { v: verbObj, obj: pickRandom(validObjs) };
+}
+
+function getValidMovePair() {
+    const pair = pickRandom(validMovePlacePairs);
+    const verbObj = masterData.find(item => item.id === pair.verbId && item.category === 'Kata Kerja');
+    const validPlaces = masterData.filter(item => pair.placeIds.includes(item.id) && item.category === 'Tempat & Benda');
+    return { v: verbObj, place: pickRandom(validPlaces) };
+}
+
+function getValidIntransitivePair() {
+    const pair = pickRandom(validIntransitivePairs);
+    const verbObj = masterData.find(item => item.id === pair.verbId && item.category === 'Kata Kerja');
+    const validSubjs = masterData.filter(item => pair.subjIds.includes(item.id) && (item.category === 'Tempat & Benda' || item.category === 'Bencana & Darurat'));
+    return { v: verbObj, subj: pickRandom(validSubjs) };
+}
+
+function getValidNounAdjPair() {
+    const group = pickRandom(validNounAdjPairs);
+    const nouns = masterData.filter(item => group.nounIds.includes(item.id) && item.category === 'Tempat & Benda');
+    const adjs = masterData.filter(item => group.adjIds.includes(item.id) && item.category === 'Sifat & Kondisi');
+    return { noun: pickRandom(nouns), adj: pickRandom(adjs) };
+}
+
+function formatAdjectivePredicate(adjItem) {
+    const rawJp = adjItem.kanji.replace(/\s*\(na\)/gi, '').trim();
+    const rawRom = adjItem.romaji.replace(/\s*\(na\)/gi, '').trim();
+    return { jp: `${rawJp}です`, rom: `${rawRom} desu` };
+}
+
 function generateReadingQuestion(lengthPref, levelPref) {
     let actualLength = lengthPref === 'MIXED' ? pickRandom(['SHORT', 'LONG', 'PARAGRAPH']) : lengthPref;
-    const places = getVocabByIds(['86', '87', '131', '132', '133', '144', '145', '153', '2041', '2042', '2043', '2044', '2045']);
-    const times = getVocabByIds(['1', '4', '8', '9', '18', '19', '20', '25', '26', '42', '43', '44', '61']);
-    const foods = getVocabByIds(['118', '119', '154', '157', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038']);
-    const objects = getVocabByIds(['96', '97', '98', '99', '104', '107', '108', '109', '110', '113', '115', '143', '146', '161', '163', '2052', '2063', '2064']);
-    const transitiveVerbs = getVocabByIds(['110', '111', '113', '115', '116', '117', '118', '120', '121', '147', '174', '175', '184', '213', '233', '234', '241', '901']);
-    const adjNa = getVocabByIds(['978', '979', '980', '981', '982', '983', '984', '985', '992', '994', '1002', '1029', '1030']);
 
-    const t = pickRandom(times), p = pickRandom(places), f = pickRandom(foods), obj = pickRandom(objects), v = pickRandom(transitiveVerbs), an = pickRandom(adjNa);
+    const places = getVocabByIdsAndCategory(['86', '87', '131', '132', '133', '144', '145', '153', '2041', '2042', '2043', '2044', '2045'], 'Tempat & Benda');
+    const times = getVocabByIdsAndCategory(['1', '4', '8', '9', '18', '19', '20', '25', '26', '42', '43', '44', '61'], 'Waktu');
+    const foods = getVocabByIdsAndCategory(['118', '119', '154', '157', '2031', '2032', '2033', '2034', '2035', '2036', '2037', '2038'], 'Tempat & Benda');
+
+    const t = pickRandom(times);
+    const p = pickRandom(places);
+    const f = pickRandom(foods);
+
+    // Ambil 1 contoh valid dari masing-masing ke-4 kamus pasangan
+    const { v, obj } = getValidActionPair();
+    const { v: vMove, place: destPlace } = getValidMovePair();
+    const { v: vIntr, subj: intrSubj } = getValidIntransitivePair();
+    const { noun: adjNoun, adj: adjItem } = getValidNounAdjPair();
+    const adjPred = formatAdjectivePredicate(adjItem);
 
     if (actualLength === 'SHORT') {
         const shortTemplates = [
+            // Pola 1: Menggunakan Pasangan 1 (Transitif + Objek)
             {
                 level: 'N5',
                 pattern: 'Bab 6: Waktu + Tempat + で + Objek + を + Kata Kerja (-masu)',
                 build: () => ({
-                    jp: `私は${t.kanji}で、${p.kanji}に${obj.kanji}を${v.kanji}。`,
-                    romaji: `Watashi wa ${t.romaji}de, ${p.romaji} ni ${obj.romaji} o ${v.romaji}.`,
-                    id: `Saya ${t.meaning.toLowerCase()} ${p.meaning.toLowerCase()} ${obj.meaning.toLowerCase()} di ${v.meaning.toLowerCase()}.`,
+                    jp: `私は${t.kanji}、${p.kanji}で${obj.kanji}を${v.kanji}。`,
+                    romaji: `Watashi wa ${t.romaji}, ${p.romaji} de ${obj.romaji} o ${v.romaji}.`,
+                    id: `Saya ${t.meaning.toLowerCase()} ${v.meaning.toLowerCase()} ${obj.meaning.toLowerCase()} di ${p.meaning.toLowerCase()}.`,
                     q: `Apa yang dilakukan "Saya" pada kalimat di atas?`,
                     correct: `${v.meaning} ${obj.meaning.toLowerCase()} di ${p.meaning.toLowerCase()}`,
-                    wrong: [`Membeli ${f.meaning.toLowerCase()} di stasiun`, `Tidur dan beristirahat di rumah`, `Menunggu teman di depan kantor pos`]
+                    wrong: [
+                        `Membeli ${f.meaning.toLowerCase()} di stasiun`,
+                        `Tidur dan beristirahat di rumah`,
+                        `Menunggu teman di depan kantor pos`
+                    ]
                 })
             },
+            // Pola 2: Menggunakan Pasangan 2 (Kata Kerja Perpindahan + Tempat Tujuan)
+            {
+                level: 'N5',
+                pattern: 'Bab 5 & 13: Waktu + Tempat + へ / に + Kata Kerja Perpindahan',
+                build: () => ({
+                    jp: `私は${t.kanji}、友達と一緒に${destPlace.kanji}へ${vMove.kanji}。`,
+                    romaji: `Watashi wa ${t.romaji}, tomodachi to issho ni ${destPlace.romaji} e ${vMove.romaji}.`,
+                    id: `Saya ${t.meaning.toLowerCase()} ${vMove.meaning.toLowerCase()} ke/dari ${destPlace.meaning.toLowerCase()} bersama teman.`,
+                    q: `Ke mana atau tempat apa yang dituju bersama teman pada kalimat di atas?`,
+                    correct: `${destPlace.meaning} (${vMove.meaning.toLowerCase()})`,
+                    wrong: [
+                        `Kantor pos (mengirim surat)`,
+                        `Rumah sakit (menjenguk dokter)`,
+                        `Perpustakaan (meminjam kamus)`
+                    ]
+                })
+            },
+            // Pola 3: Menggunakan Pasangan 3 (Kata Kerja Intransitif + Subjek Keadaan)
+            {
+                level: 'N4',
+                pattern: 'Bab 29: Subjek + が + Kata Kerja Intransitif (-te います / -ました)',
+                build: () => {
+                    const [teJp, teRom] = conjugateMasu(vIntr.kanji, vIntr.romaji, 'te');
+                    return {
+                        jp: `見てください！あそこの${intrSubj.kanji}が${teJp}いますよ。`,
+                        romaji: `Mite kudasai! Asoko no ${intrSubj.romaji} ga ${teRom} imasu yo.`,
+                        id: `Lihatlah! ${intrSubj.meaning} di sebelah sana dalam keadaan ${vIntr.meaning.toLowerCase()}.`,
+                        q: `Bagaimana keadaan "${intrSubj.meaning}" berdasarkan kalimat di atas?`,
+                        correct: `Sedang ${vIntr.meaning.toLowerCase()}`,
+                        wrong: [
+                            `Baru saja dibeli di department store`,
+                            `Sudah disimpan di dalam tas hitam`,
+                            `Tidak boleh disentuh oleh siapa pun`
+                        ]
+                    };
+                }
+            },
+            // Pola 4: Menggunakan Pasangan 4 (Kata Benda + Kata Sifat-i / Kata Sifat-na)
+            {
+                level: 'N5',
+                pattern: 'Bab 8: Kata Benda + は + とても + Kata Sifat (-i / -na) です',
+                build: () => ({
+                    jp: `この${adjNoun.kanji}はとても${adjPred.jp}。`,
+                    romaji: `Kono ${adjNoun.romaji} wa totemo ${adjPred.rom}.`,
+                    id: `${adjNoun.meaning} ini sangat ${adjItem.meaning.toLowerCase()}.`,
+                    q: `Bagaimana sifat atau kondisi "${adjNoun.meaning}" tersebut?`,
+                    correct: `Sangat ${adjItem.meaning.toLowerCase()}`,
+                    wrong: [
+                        `Sangat membosankan dan kuno`,
+                        `Sudah hilang sejak kemarin sore`,
+                        `Tidak ada di dalam ruangan ini`
+                    ]
+                })
+            },
+            // Pola 5: Bentuk Sedang Berlangsung (-te imasu) dengan Pasangan 1
             {
                 level: 'N5',
                 pattern: 'Bab 14: Kata Kerja (-te) + います (Sedang berlangsung)',
@@ -2799,18 +3030,7 @@ function generateReadingQuestion(lengthPref, levelPref) {
                     };
                 }
             },
-            {
-                level: 'N5',
-                pattern: 'Bab 16: Kata Sifat-i (-kute) + Kata Sifat-na です',
-                build: () => ({
-                    jp: `あの${p.kanji}は新しくて、とても${an.kanji.replace(' (na)','')}です。`,
-                    romaji: `Ano ${p.romaji} wa atarashikute, totemo ${an.romaji.replace(' (na)','')} desu.`,
-                    id: `${p.meaning} itu baru dan sangat ${an.meaning.toLowerCase()}.`,
-                    q: `Bagaimana kondisi "${p.meaning}" tersebut?`,
-                    correct: `Baru dan sangat ${an.meaning.toLowerCase()}`,
-                    wrong: [`Kuno dan sangat kotor`, `Jauh dan tidak praktis`, `Sempit dan gelap`]
-                })
-            },
+            // Pola 6: Pengalaman (-ta koto ga arimasu) dengan Pasangan 1
             {
                 level: 'N4',
                 pattern: 'Bab 19: Kata Kerja (-ta) + ことがあります (Pengalaman)',
@@ -2826,6 +3046,7 @@ function generateReadingQuestion(lengthPref, levelPref) {
                     };
                 }
             },
+            // Pola 7: Keharusan (-nakereba narimasen) dengan Pasangan 1
             {
                 level: 'N4',
                 pattern: 'Bab 17: Kata Kerja (-nai) + なければなりません (Keharusan)',
@@ -2897,6 +3118,21 @@ function generateReadingQuestion(lengthPref, levelPref) {
                     correct: `Mendengarkan musik Jepang sambil membersihkan kamar`,
                     wrong: [`Menonton televisi sambil makan malam`, `Tidur sambil menyalakan lampu kamar`, `Membaca koran sambil berjalan kaki`]
                 })
+            },
+            {
+                level: 'N4',
+                pattern: 'Bab 39: Sebab Akibat ～ので、～ (Karena alasan sopan)',
+                build: () => {
+                    const [teJp, teRom] = conjugateMasu(vIntr.kanji, vIntr.romaji, 'te');
+                    return {
+                        jp: `${intrSubj.kanji}が${teJp}いるので、今すぐ修理の人を呼ばなければなりません。`,
+                        romaji: `${intrSubj.romaji} ga ${teRom} iru node, ima sugu shuuri no hito o yobanakereba narimasen.`,
+                        id: `Karena ${intrSubj.meaning.toLowerCase()} dalam keadaan ${vIntr.meaning.toLowerCase()}, sekarang juga harus memanggil petugas perbaikan.`,
+                        q: `Mengapa petugas perbaikan harus segera dipanggil?`,
+                        correct: `Karena ${intrSubj.meaning.toLowerCase()} sedang ${vIntr.meaning.toLowerCase()}`,
+                        wrong: [`Karena akan diadakan pesta di kantor`, `Karena cuaca hari ini sangat cerah`, `Karena semua karyawan sudah pulang`]
+                    };
+                }
             }
         ];
         let pool = longTemplates.filter(tpl => levelPref === 'ALL' || tpl.level === levelPref);
@@ -2951,10 +3187,11 @@ function generateReadingQuestion(lengthPref, levelPref) {
 
 function generateChoukaiItem(typePref) {
     let actualType = typePref === 'ALL' ? pickRandom(['CONVERSATION', 'NEWS', 'ANNOUNCEMENT']) : typePref;
-    const places = getVocabByIds(['131', '133', '145', '2041', '2044', '2045', '2055', '2053']);
-    const foods = getVocabByIds(['119', '157', '2032', '2033', '2034', '2036', '2037']);
-    const items = getVocabByIds(['96', '97', '107', '109', '110', '113', '163']);
+    const places = getVocabByIdsAndCategory(['131', '133', '145', '2041', '2044', '2045', '2055', '2053'], 'Tempat & Benda');
+    const foods = getVocabByIdsAndCategory(['119', '157', '2032', '2033', '2034', '2036', '2037'], 'Tempat & Benda');
+    const items = getVocabByIdsAndCategory(['96', '97', '107', '109', '110', '113', '163'], 'Tempat & Benda');
     const p = pickRandom(places), f = pickRandom(foods), it = pickRandom(items);
+
 
     if (actualType === 'CONVERSATION') {
         const convList = [
