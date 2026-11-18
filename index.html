@@ -1091,53 +1091,125 @@
     </main>
 
 <script>
-// =========================================================================
-// 0. KONFIGURASI GOOGLE SHEETS WEB APP URL (TEMPELKAN LINK-MU DI SINI NANTI)
-// =========================================================================
-const GOOGLE_SHEET_WEBHOOK_URL = ""; // Contoh: "https://script.google.com/macros/s/AKfycb.../exec"
+
+// ==========================================
+// 0. KONFIGURASI GOOGLE SHEETS WEB APP URL & PELACAK DURASI
+// ==========================================
+const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyrzgDv2EwX2tQ60brKN1p_Dtzg5NdHK7QDgq9CDk0R10xHfWcclQABvd_NE6QGnKECIQ/exec";
+const mjSessionId = "MJ-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7);
+let sessionStartTime = Date.now();
+let totalActiveSeconds = 0;
+
+function detectDeviceLabel() {
+  const ua = navigator.userAgent;
+  if (/android/i.test(ua)) return "Android";
+  if (/iPad|iPhone|iPod/.test(ua)) return "iOS";
+  if (/Windows/i.test(ua)) return "Windows";
+  if (/Mac/i.test(ua)) return "Mac";
+  return "Lainnya";
+}
+
+function formatStudyDuration(seconds) {
+  if (seconds < 60) return seconds + " detik";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (mins < 60) return mins + " menit " + secs + " detik";
+  const hrs = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  return hrs + " jam " + remMins + " menit";
+}
+
+function logNewSessionToSheet(nama, asal) {
+  if (!GOOGLE_SHEET_WEBHOOK_URL) return;
+  fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify({
+      type: "start",
+      sessionId: mjSessionId,
+      nama: nama,
+      asal: asal,
+      perangkat: detectDeviceLabel()
+    })
+  }).catch(err => console.warn("Gagal mengirim log ke Google Sheets:", err));
+}
+
+function sendSessionDuration() {
+  if (!GOOGLE_SHEET_WEBHOOK_URL) return;
+  const now = Date.now();
+  const elapsed = Math.floor((now - sessionStartTime) / 1000);
+  if (elapsed > 0) {
+    totalActiveSeconds += elapsed;
+    sessionStartTime = now;
+  }
+
+  if (totalActiveSeconds < 2) return;
+
+  const payload = JSON.stringify({
+    type: "duration",
+    sessionId: mjSessionId,
+    durationSeconds: totalActiveSeconds,
+    durationText: formatStudyDuration(totalActiveSeconds)
+  });
+
+  if (navigator.sendBeacon) {
+    const blob = new Blob([payload], { type: "text/plain;charset=utf-8" });
+    navigator.sendBeacon(GOOGLE_SHEET_WEBHOOK_URL, blob);
+  } else {
+    fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: payload
+    });
+  }
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    sendSessionDuration();
+  } else if (document.visibilityState === "visible") {
+    sessionStartTime = Date.now();
+  }
+});
+
+window.addEventListener("pagehide", sendSessionDuration);
 
 function initVisitorTracking() {
-    const savedVisitor = JSON.parse(localStorage.getItem('mjVisitorProfile') || 'null');
-    if (savedVisitor && savedVisitor.nama) {
-        const greetEl = document.getElementById('headerGreeting');
-        if (greetEl) greetEl.innerText = `Ganbatte, ${savedVisitor.nama} (${savedVisitor.asal})!`;
-    } else if (GOOGLE_SHEET_WEBHOOK_URL) {
-        // Munculkan pop-up hanya jika URL Google Sheets sudah diisi dan pengunjung belum pernah isi
-        document.getElementById('visitorModal').classList.remove('hidden');
-    }
+  const savedVisitor = JSON.parse(localStorage.getItem('mjVisitorProfile') || 'null');
+  if (savedVisitor && savedVisitor.nama) {
+    const greetEl = document.getElementById('headerGreeting');
+    if (greetEl) greetEl.innerText = `Ganbatte, ${savedVisitor.nama} (${savedVisitor.asal})!`;
+    logNewSessionToSheet(savedVisitor.nama, savedVisitor.asal);
+  } else if (GOOGLE_SHEET_WEBHOOK_URL) {
+    const modal = document.getElementById('visitorModal');
+    if (modal) modal.classList.remove('hidden');
+  }
 }
 
 async function submitVisitorForm(e) {
-    e.preventDefault();
-    const nama = document.getElementById('visitorNameInput').value.trim();
-    const asal = document.getElementById('visitorOriginInput').value.trim();
-    if (!nama || !asal) return;
+  e.preventDefault();
+  const nama = document.getElementById('visitorNameInput').value.trim();
+  const asal = document.getElementById('visitorOriginInput').value.trim();
+  if (!nama || !asal) return;
 
-    const btn = document.getElementById('visitorSubmitBtn');
-    btn.disabled = true;
-    btn.innerText = '⏳ Menyimpan...';
+  const btn = document.getElementById('visitorSubmitBtn');
+  btn.disabled = true;
+  btn.innerText = "⏳ Menyimpan...";
 
-    const perangkat = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'HP / Mobile' : 'Laptop / Desktop';
-    localStorage.setItem('mjVisitorProfile', JSON.stringify({ nama, asal }));
+  localStorage.setItem('mjVisitorProfile', JSON.stringify({ nama, asal }));
 
-    const greetEl = document.getElementById('headerGreeting');
-    if (greetEl) greetEl.innerText = `Ganbatte, ${nama} (${asal})!`;
+  const greetEl = document.getElementById('headerGreeting');
+  if (greetEl) greetEl.innerText = `Ganbatte, ${nama} (${asal})!`;
 
-    if (GOOGLE_SHEET_WEBHOOK_URL) {
-        try {
-            await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nama, asal, perangkat })
-            });
-        } catch (err) {
-            console.warn('Gagal mengirim log ke Google Sheets:', err);
-        }
-    }
+  logNewSessionToSheet(nama, asal);
 
-    document.getElementById('visitorModal').classList.add('hidden');
+  const modal = document.getElementById('visitorModal');
+  if (modal) modal.classList.add('hidden');
+  btn.disabled = false;
+  btn.innerText = "Mulai Belajar";
 }
+
+window.addEventListener("DOMContentLoaded", initVisitorTracking);
 
 // =========================================================================
 // 1. MANAJEMEN TEMA JEPANG/TOKYO & LOGO "MJ"
@@ -4487,57 +4559,6 @@ function toggleMemFromList(kanji) {
     else memorizedKanji.push(kanji);
     saveProgress();
     renderList();
-}
-
-// === LOG PENGUNJUNG GOOGLE SHEETS ===
-const VISITOR_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEERqT-FZFEo3XqgdjACalyP-_Md5zq4RdsAPtMNbsia5aBsPMqo1f6PcHJ9t2Qk2oQg/exec";
-
-window.addEventListener("DOMContentLoaded", () => {
-  if (!localStorage.getItem("mj_visitor_logged")) {
-    const modal = document.getElementById("visitorModal");
-    if (modal) modal.classList.remove("hidden");
-  }
-});
-
-function detectDevice() {
-  const ua = navigator.userAgent;
-  if (/android/i.test(ua)) return "Android";
-  if (/iPad|iPhone|iPod/.test(ua)) return "iOS";
-  if (/Windows/i.test(ua)) return "Windows";
-  if (/Mac/i.test(ua)) return "Mac";
-  return "Lainnya";
-}
-
-async function submitVisitorForm(event) {
-  event.preventDefault();
-  const nama = document.getElementById("visitorNameInput").value.trim();
-  const asal = document.getElementById("visitorOriginInput").value.trim();
-  const btn = document.getElementById("visitorSubmitBtn");
-
-  if (!nama || !asal) return;
-
-  btn.disabled = true;
-  btn.textContent = "Menyimpan...";
-
-  try {
-    await fetch(VISITOR_SCRIPT_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        nama: nama,
-        asal: asal,
-        perangkat: detectDevice()
-      })
-    });
-    localStorage.setItem("mj_visitor_logged", "true");
-  } catch (e) {
-    console.error("Gagal mencatat pengunjung:", e);
-  } finally {
-    document.getElementById("visitorModal").classList.add("hidden");
-    btn.disabled = false;
-    btn.textContent = "Mulai Belajar";
-  }
 }
 
 // =========================================================================
