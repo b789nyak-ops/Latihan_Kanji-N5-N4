@@ -5950,45 +5950,143 @@ renderBunpouTables();
     }
   }
 
+    // ==========================================
+  // 2. MESIN ILUSTRASI VEKTOR SVG MODERN (SELARAS 8 KATEGORI MASTER JAPAN)
   // ==========================================
-  // 2. MESIN ILUSTRASI OTOMATIS SESUAI KOSAKATA
-  // ==========================================
-  const VOCAB_VISUAL_RULES = [
-    { keys: ['makan', 'nasi', 'roti', 'daging', 'ikan', 'sayur', 'buah', 'apel', 'telur', 'kue', 'masak', 'lapar', 'restoran'], icon: '🍱', bg: 'from-orange-500/20 to-amber-500/20 border-orange-400/30', tag: 'Makanan & Kuliner' },
-    { keys: ['minum', 'air', 'teh', 'kopi', 'susu', 'jus', 'bir', 'haus'], icon: '🍵', bg: 'from-emerald-500/20 to-teal-500/20 border-emerald-400/30', tag: 'Minuman' },
-    { keys: ['waktu', 'jam', 'menit', 'detik', 'hari', 'minggu', 'bulan', 'tahun', 'besok', 'kemarin', 'sekarang', 'pagi', 'siang', 'malam', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'], icon: '⏰', bg: 'from-sky-500/20 to-blue-500/20 border-sky-400/30', tag: 'Waktu & Kalender' },
-    { keys: ['kereta', 'stasiun', 'mobil', 'bus', 'sepeda', 'pesawat', 'bandara', 'jalan', 'tiket', 'pergi', 'datang', 'pulang', 'naik', 'turun', 'taksi', 'kapal'], icon: '🚅', bg: 'from-indigo-500/20 to-cyan-500/20 border-indigo-400/30', tag: 'Transportasi & Perjalanan' },
-    { keys: ['sekolah', 'universitas', 'belajar', 'buku', 'kamus', 'pensil', 'pulpen', 'kertas', 'kelas', 'ujian', 'guru', 'siswa', 'mahasiswa', 'bahasa', 'huruf', 'kanji', 'membaca', 'menulis'], icon: '📚', bg: 'from-violet-500/20 to-purple-500/20 border-violet-400/30', tag: 'Pendidikan & Belajar' },
-    { keys: ['keluarga', 'ayah', 'ibu', 'kakak', 'adik', 'anak', 'orang', 'teman', 'suami', 'istri', 'bayi', 'kakek', 'nenek', 'laki-laki', 'perempuan'], icon: '👨‍👩‍👧‍👦', bg: 'from-pink-500/20 to-rose-500/20 border-pink-400/30', tag: 'Orang & Keluarga' },
-    { keys: ['rumah', 'kamar', 'pintu', 'jendela', 'meja', 'kursi', 'kasur', 'dapur', 'toilet', 'mandi', 'tidur', 'bangun', 'tinggal', 'apartemen'], icon: '🏡', bg: 'from-amber-500/20 to-yellow-500/20 border-amber-400/30', tag: 'Rumah & Kehidupan' },
-    { keys: ['kerja', 'kantor', 'perusahaan', 'pegawai', 'dokter', 'polisi', 'rapat', 'gaji', 'sibuk', 'istirahat', 'libur'], icon: '💼', bg: 'from-slate-500/20 to-zinc-500/20 border-slate-400/30', tag: 'Pekerjaan & Profesi' },
-    { keys: ['beli', 'jual', 'uang', 'harga', 'murah', 'mahal', 'toko', 'pasar', 'supermarket', 'baju', 'sepatu', 'tas', 'topi'], icon: '🛍️', bg: 'from-fuchsia-500/20 to-pink-500/20 border-fuchsia-400/30', tag: 'Belanja & Benda' },
-    { keys: ['gunung', 'laut', 'sungai', 'hujan', 'salju', 'angin', 'langit', 'matahari', 'bunga', 'pohon', 'cuaca', 'panas', 'dingin', 'musim'], icon: '🗻', bg: 'from-teal-500/20 to-emerald-500/20 border-teal-400/30', tag: 'Alam & Cuaca' },
-    { keys: ['kucing', 'anjing', 'burung', 'hewan', 'binatang', 'sapi', 'kuda'], icon: '🐈', bg: 'from-orange-500/20 to-yellow-500/20 border-orange-400/30', tag: 'Hewan' },
-    { keys: ['sakit', 'obat', 'rumah sakit', 'kepala', 'perut', 'mata', 'tangan', 'kaki', 'mulut', 'telinga', 'sehat', 'demam'], icon: '🩺', bg: 'from-red-500/20 to-rose-500/20 border-red-400/30', tag: 'Kesehatan & Tubuh' },
-    { keys: ['merah', 'biru', 'kuning', 'hijau', 'hitam', 'putih', 'warna'], icon: '🎨', bg: 'from-rose-500/20 to-indigo-500/20 border-rose-400/30', tag: 'Warna' },
-    { keys: ['satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'seratus', 'seribu', 'angka', 'nomor'], icon: '🔢', bg: 'from-blue-500/20 to-sky-500/20 border-blue-400/30', tag: 'Angka & Hitungan' },
-    { keys: ['dilarang', 'peraturan', 'aturan', 'boleh', 'harus', 'bahaya', 'hati-hati', 'masuk', 'keluar', 'parkir', 'merokok'], icon: '⚠️', bg: 'from-yellow-500/20 to-red-500/20 border-yellow-400/30', tag: 'Aturan & Rambu' }
+  const SVG_ARTWORKS = {
+    waktu: `
+      <svg viewBox="0 0 64 64" class="w-12 h-12 shrink-0">
+        <rect x="8" y="8" width="48" height="48" rx="14" fill="#3b82f6" fill-opacity="0.16"/>
+        <circle cx="32" cy="32" r="15" fill="#60a5fa" fill-opacity="0.3" stroke="#2563eb" stroke-width="2.5"/>
+        <path d="M32 23v9l6 4" stroke="#2563eb" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`,
+    peraturan: `
+      <svg viewBox="0 0 64 64" class="w-12 h-12 shrink-0">
+        <rect x="8" y="8" width="48" height="48" rx="14" fill="#ef4444" fill-opacity="0.16"/>
+        <circle cx="32" cy="32" r="14" fill="#f87171" fill-opacity="0.25" stroke="#dc2626" stroke-width="2.6"/>
+        <path d="M22 22l20 20" stroke="#dc2626" stroke-width="2.8" stroke-linecap="round"/>
+      </svg>`,
+    kataKerja: `
+      <svg viewBox="0 0 64 64" class="w-12 h-12 shrink-0">
+        <rect x="8" y="8" width="48" height="48" rx="14" fill="#0ea5e9" fill-opacity="0.16"/>
+        <path d="M22 22l12 10-12 10V22z" fill="#38bdf8" fill-opacity="0.45" stroke="#0284c7" stroke-width="2.4" stroke-linejoin="round"/>
+        <path d="M38 22v20" stroke="#0284c7" stroke-width="3" stroke-linecap="round"/>
+      </svg>`,
+    tempatBenda: `
+      <svg viewBox="0 0 64 64" class="w-12 h-12 shrink-0">
+        <rect x="8" y="8" width="48" height="48" rx="14" fill="#f59e0b" fill-opacity="0.16"/>
+        <path d="M18 31l14-12 14 12v16H18V31z" fill="#fbbf24" fill-opacity="0.35" stroke="#d97706" stroke-width="2.5" stroke-linejoin="round"/>
+        <rect x="28" y="36" width="8" height="11" rx="1.5" fill="#d97706"/>
+      </svg>`,
+    acaraUpacara: `
+      <svg viewBox="0 0 64 64" class="w-12 h-12 shrink-0">
+        <rect x="8" y="8" width="48" height="48" rx="14" fill="#ec4899" fill-opacity="0.16"/>
+        <path d="M22 44l6-18 10 10-16 8z" fill="#f472b6" fill-opacity="0.45" stroke="#db2777" stroke-width="2.4" stroke-linejoin="round"/>
+        <circle cx="38" cy="22" r="2.5" fill="#db2777"/><circle cx="44" cy="28" r="2" fill="#f472b6"/><circle cx="32" cy="18" r="2" fill="#f472b6"/>
+      </svg>`,
+    sifatKondisi: `
+      <svg viewBox="0 0 64 64" class="w-12 h-12 shrink-0">
+        <rect x="8" y="8" width="48" height="48" rx="14" fill="#8b5cf6" fill-opacity="0.16"/>
+        <path d="M32 17l4.2 8.6 9.5 1.4-6.9 6.7 1.6 9.5L32 38.7l-8.4 4.5 1.6-9.5-6.9-6.7 9.5-1.4L32 17z" fill="#a78bfa" fill-opacity="0.4" stroke="#7c3aed" stroke-width="2.4" stroke-linejoin="round"/>
+      </svg>`,
+    partikel: `
+      <svg viewBox="0 0 64 64" class="w-12 h-12 shrink-0">
+        <rect x="8" y="8" width="48" height="48" rx="14" fill="#10b981" fill-opacity="0.16"/>
+        <circle cx="24" cy="32" r="6" fill="#34d399" fill-opacity="0.45" stroke="#059669" stroke-width="2.4"/>
+        <circle cx="40" cy="32" r="6" fill="#34d399" fill-opacity="0.45" stroke="#059669" stroke-width="2.4"/>
+        <path d="M30 32h4" stroke="#059669" stroke-width="2.8" stroke-linecap="round"/>
+      </svg>`,
+    bencanaDarurat: `
+      <svg viewBox="0 0 64 64" class="w-12 h-12 shrink-0">
+        <rect x="8" y="8" width="48" height="48" rx="14" fill="#f97316" fill-opacity="0.18"/>
+        <path d="M32 17l16 28H16L32 17z" fill="#fb923c" fill-opacity="0.4" stroke="#ea580c" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M32 27v8M32 40h.01" stroke="#ea580c" stroke-width="3" stroke-linecap="round"/>
+      </svg>`,
+    ibadah: `
+      <svg viewBox="0 0 64 64" class="w-12 h-12 shrink-0">
+        <rect x="8" y="8" width="48" height="48" rx="14" fill="#f59e0b" fill-opacity="0.16"/>
+        <path d="M32 14v8M28 18h8" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+        <path d="M20 30l12-8 12 8v18H20V30z" fill="#fbbf24" fill-opacity="0.35" stroke="#f59e0b" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M28 48v-8a4 4 0 018 0v8" fill="#f59e0b"/>
+      </svg>`,
+    tidur: `
+      <svg viewBox="0 0 64 64" class="w-12 h-12 shrink-0">
+        <rect x="8" y="8" width="48" height="48" rx="14" fill="#6366f1" fill-opacity="0.16"/>
+        <path d="M36 18a14 14 0 1010 22 11 11 0 01-10-22z" fill="#818cf8" fill-opacity="0.45" stroke="#4f46e5" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M40 16h6l-6 6h6" stroke="#4f46e5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`,
+    makanan: `
+      <svg viewBox="0 0 64 64" class="w-12 h-12 shrink-0">
+        <rect x="8" y="8" width="48" height="48" rx="14" fill="#f97316" fill-opacity="0.16"/>
+        <path d="M18 32h28a14 14 0 01-28 0z" fill="#fb923c" fill-opacity="0.45" stroke="#ea580c" stroke-width="2.5"/>
+        <path d="M24 26c0-3 2-4 2-7M32 26c0-3 2-4 2-7M40 26c0-3 2-4 2-7" stroke="#ea580c" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M24 46h16" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>`,
+    transportasi: `
+      <svg viewBox="0 0 64 64" class="w-12 h-12 shrink-0">
+        <rect x="8" y="8" width="48" height="48" rx="14" fill="#06b6d4" fill-opacity="0.16"/>
+        <rect x="20" y="18" width="24" height="17" rx="5" fill="#22d3ee" fill-opacity="0.35" stroke="#0891b2" stroke-width="2.5"/>
+        <circle cx="25" cy="36" r="3" fill="#0891b2"/><circle cx="39" cy="36" r="3" fill="#0891b2"/>
+        <path d="M17 44h30" stroke="#0891b2" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>`,
+    belajar: `
+      <svg viewBox="0 0 64 64" class="w-12 h-12 shrink-0">
+        <rect x="8" y="8" width="48" height="48" rx="14" fill="#a855f7" fill-opacity="0.16"/>
+        <path d="M18 20c5-2 10-1 14 2 4-3 9-4 14-2v24c-5-2-10-1-14 2-4-3-9-4-14-2V20z" fill="#c084fc" fill-opacity="0.35" stroke="#9333ea" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M32 22v24" stroke="#9333ea" stroke-width="2.2"/>
+      </svg>`
+  };
+
+  // 1. Peta spesifik berdasarkan arti kata (prioritas utama agar ilustrasi lebih hidup)
+  const SPECIFIC_MEANING_ART = [
+    { keys: ['gereja', 'masjid', 'kuil', 'ibadah', 'berdoa'], art: 'ibadah', bg: 'from-amber-500/15 to-orange-500/15 border-amber-400/30' },
+    { keys: ['tidur', 'tertidur', 'mengantuk', 'mimpi', 'istirahat', 'bangun'], art: 'tidur', bg: 'from-indigo-500/15 to-purple-500/15 border-indigo-400/30' },
+    { keys: ['makan', 'makanan', 'minum', 'minuman', 'nasi', 'roti', 'daging', 'ikan', 'sayur', 'buah', 'air', 'teh', 'kopi', 'susu', 'restoran'], art: 'makanan', bg: 'from-orange-500/15 to-amber-500/15 border-orange-400/30' },
+    { keys: ['menyeberang', 'kereta', 'stasiun', 'mobil', 'bus', 'sepeda', 'pesawat', 'bandara', 'jalan', 'tiket', 'pergi', 'datang', 'pulang', 'naik', 'turun', 'taksi', 'kapal'], art: 'transportasi', bg: 'from-cyan-500/15 to-sky-500/15 border-cyan-400/30' },
+    { keys: ['sekolah', 'universitas', 'belajar', 'buku', 'kamus', 'pensil', 'pulpen', 'kelas', 'ujian', 'guru', 'siswa', 'mahasiswa', 'bahasa', 'huruf', 'kanji', 'membaca', 'menulis'], art: 'belajar', bg: 'from-purple-500/15 to-fuchsia-500/15 border-purple-400/30' }
+  ];
+
+  // 2. Peta pasti untuk seluruh 8 kategori resmi di Master Japan
+  const EXACT_CATEGORY_ART = [
+    { match: 'waktu', art: 'waktu', bg: 'from-blue-500/15 to-indigo-500/15 border-blue-400/30' },
+    { match: 'peraturan', art: 'peraturan', bg: 'from-red-500/15 to-rose-500/15 border-red-400/30' },
+    { match: 'kata kerja', art: 'kataKerja', bg: 'from-sky-500/15 to-cyan-500/15 border-sky-400/30' },
+    { match: 'tempat & benda', art: 'tempatBenda', bg: 'from-amber-500/15 to-yellow-500/15 border-amber-400/30' },
+    { match: 'acara & upacara', art: 'acaraUpacara', bg: 'from-pink-500/15 to-rose-500/15 border-pink-400/30' },
+    { match: 'sifat & kondisi', art: 'sifatKondisi', bg: 'from-violet-500/15 to-purple-500/15 border-violet-400/30' },
+    { match: 'partikel & keterangan', art: 'partikel', bg: 'from-emerald-500/15 to-teal-500/15 border-emerald-400/30' },
+    { match: 'bencana & darurat', art: 'bencanaDarurat', bg: 'from-orange-500/15 to-red-500/15 border-orange-400/30' }
   ];
 
   function getVocabIllustrationHTML(meaningText = '', categoryText = '', kanjiText = '') {
-    const combined = (meaningText + ' ' + categoryText).toLowerCase();
-    let matched = VOCAB_VISUAL_RULES.find(rule => rule.keys.some(k => combined.includes(k)));
+    const cleanMeaning = meaningText.toLowerCase();
+    const cleanCat = categoryText.toLowerCase();
 
-    if (!matched) {
-      matched = {
-        icon: '🇯🇵',
-        bg: 'from-sky-500/15 to-indigo-500/15 border-sky-400/25',
-        tag: categoryText || 'Kosakata Jepang'
-      };
-    }
+    // Cek apakah ada ilustrasi spesifik berdasarkan makna kata (misal: Gereja, Tertidur, Menyeberang, Makan)
+    const specific = SPECIFIC_MEANING_ART.find(rule =>
+      rule.keys.some(k => new RegExp('\\b' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i').test(cleanMeaning))
+    );
+
+    // Jika tidak, gunakan ilustrasi dari 8 kategori asli Master Japan
+    const catMatched = EXACT_CATEGORY_ART.find(c => cleanCat.includes(c.match));
+
+    const chosenArt = specific
+      ? SVG_ARTWORKS[specific.art]
+      : (catMatched ? SVG_ARTWORKS[catMatched.art] : SVG_ARTWORKS.kataKerja);
+
+    const chosenBg = specific
+      ? specific.bg
+      : (catMatched ? catMatched.bg : 'from-sky-500/15 to-indigo-500/15 border-sky-400/25');
+
+    // Label selalu memakai nama kategori resmi dari database agar 100% akurat
+    const cardTag = categoryText || 'Kosakata Jepang';
 
     return `
-      <div class="vocab-illus-card inline-flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-gradient-to-r ${matched.bg} border my-2 mx-auto">
-        <span class="text-3xl leading-none select-none drop-shadow-sm">${matched.icon}</span>
+      <div class="vocab-illus-card inline-flex items-center gap-3.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r ${chosenBg} border my-2.5 mx-auto shadow-sm">
+        ${chosenArt}
         <div class="text-left">
-          <div class="text-[10px] font-bold uppercase tracking-wider opacity-75">${matched.tag}</div>
-          <div class="text-xs font-extrabold">${kanjiText ? kanjiText + ' • ' : ''}${meaningText}</div>
+          <div class="text-[10px] font-extrabold uppercase tracking-wider opacity-75">${cardTag}</div>
+          <div class="text-xs font-bold leading-snug mt-0.5">${kanjiText ? kanjiText + ' • ' : ''}${meaningText}</div>
         </div>
       </div>
     `;
