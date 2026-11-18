@@ -167,34 +167,34 @@
 </head>
 <body class="pb-24">
 
-<!-- 1. LAYAR PEMBUKA (LOGO MJ + EFEK VISUAL + TEKS MASTER JAPAN MENGALIR) -->
-<div id="customSplashScreen" style="position:fixed; inset:0; z-index:99999; background:radial-gradient(circle at 50% 45%, #232936 0%, #14171d 70%, #0d0f13 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; transition:opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1); will-change:opacity;">
+<!-- 1. LAYAR PEMBUKA (LOGO FADE-IN HALUS -> DISUSUL TEKS MASTER JAPAN MENGALIR) -->
+<div id="customSplashScreen" style="position:fixed; inset:0; z-index:99999; background:radial-gradient(circle at 50% 45%, #232936 0%, #14171d 70%, #0d0f13 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; transition:opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1); will-change:opacity;">
   
   <!-- Partikel Kelopak / Cahaya Melayang -->
   <div class="mj-particles" aria-hidden="true">
-    <span style="--x:18%; --d:0s; --s:8px;"></span>
-    <span style="--x:35%; --d:0.4s; --s:6px;"></span>
-    <span style="--x:65%; --d:0.2s; --s:9px;"></span>
-    <span style="--x:82%; --d:0.6s; --s:7px;"></span>
-    <span style="--x:50%; --d:0.8s; --s:5px;"></span>
+    <span style="--x:18%; --d:0.6s; --s:8px;"></span>
+    <span style="--x:35%; --d:1.0s; --s:6px;"></span>
+    <span style="--x:65%; --d:0.8s; --s:9px;"></span>
+    <span style="--x:82%; --d:1.2s; --s:7px;"></span>
+    <span style="--x:50%; --d:1.4s; --s:5px;"></span>
   </div>
 
-  <!-- Wadah Logo + Aura Cahaya & Cincin Berdenyut -->
+  <!-- Wadah Logo (Masuk Memudar Halus Terlebih Dahulu) -->
   <div class="mj-logo-stage">
     <div class="mj-ambient-glow"></div>
     <div class="mj-pulse-ring"></div>
     <img src="./logo.png" alt="Master Japan Logo" class="mj-splash-logo">
   </div>
 
-  <!-- Teks Master Japan Mengalir + Kilau Cahaya -->
+  <!-- Teks Master Japan (Baru Mengalir Setelah Logo Selesai Muncul) -->
   <h1 class="mj-reveal-text" aria-label="Master Japan" style="margin-top:26px;">
     <span style="--i:0">M</span><span style="--i:1">a</span><span style="--i:2">s</span><span style="--i:3">t</span><span style="--i:4">e</span><span style="--i:5">r</span><span class="mj-space"></span><span style="--i:6">J</span><span style="--i:7">a</span><span style="--i:8">p</span><span style="--i:9">a</span><span style="--i:10">n</span>
   </h1>
 </div>
 
 <!-- 2. POPUP SETELAH TERBUKA -->
-<div id="welcomeAppPopup" style="position:fixed; inset:0; z-index:99998; background:rgba(10,12,16,0.85); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:20px; opacity:0; transition:opacity 0.4s ease;">
-  <div id="welcomeCardBox" style="background:linear-gradient(160deg, #1e222b 0%, #14171d 100%); border:1px solid rgba(255,255,255,0.12); border-radius:24px; max-width:360px; width:100%; padding:28px 24px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.6); color:#f8fafc; transform:translateY(12px) scale(0.97); transition:transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);">
+<div id="welcomeAppPopup" style="position:fixed; inset:0; z-index:99998; background:rgba(10,12,16,0.85); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:20px; opacity:0; transition:opacity 0.45s ease;">
+  <div id="welcomeCardBox" style="background:linear-gradient(160deg, #1e222b 0%, #14171d 100%); border:1px solid rgba(255,255,255,0.12); border-radius:24px; max-width:360px; width:100%; padding:28px 24px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.6); color:#f8fafc; transform:translateY(14px) scale(0.97); transition:transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);">
     
     <!-- Logo + Judul Master Japan -->
     <img src="./logo.png" alt="Master Japan" style="width:88px; height:88px; object-fit:contain; margin:0 auto 12px; border-radius:20px; filter:drop-shadow(0 0 16px rgba(251,146,60,0.4));">
@@ -219,7 +219,7 @@
 </div>
 
 <style>
-  /* Panggung Logo & Aura Cahaya */
+  /* Panggung Logo & Fade-In Halus (0s - 1.2s) */
   .mj-logo-stage {
     position: relative;
     width: 180px;
@@ -227,6 +227,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    opacity: 0;
+    transform: scale(0.92);
+    animation: logoFadeInSmooth 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
   .mj-ambient-glow {
@@ -235,7 +238,7 @@
     border-radius: 50%;
     background: conic-gradient(from 0deg, rgba(56,189,248,0.35), rgba(251,146,60,0.35), rgba(56,189,248,0.35));
     filter: blur(24px);
-    animation: spinGlow 4s linear infinite;
+    animation: spinGlow 5s linear infinite;
   }
 
   .mj-pulse-ring {
@@ -243,7 +246,7 @@
     inset: -6px;
     border-radius: 42px;
     border: 1.5px solid rgba(56,189,248,0.45);
-    animation: ringExpand 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    animation: ringExpand 2.4s cubic-bezier(0.22, 1, 0.36, 1) 1.0s infinite;
   }
 
   .mj-splash-logo {
@@ -266,10 +269,10 @@
     border-radius: 60% 40% 60% 40%;
     background: linear-gradient(135deg, rgba(56,189,248,0.6), rgba(251,146,60,0.6));
     opacity: 0;
-    animation: floatPetal 2.6s ease-out var(--d) infinite;
+    animation: floatPetal 3s ease-out var(--d) infinite;
   }
 
-  /* Animasi Huruf Mengalir Kiri ke Kanan */
+  /* Animasi Huruf Mengalir Kiri ke Kanan (Mulai di detik ke-1.15 setelah logo selesai muncul) */
   .mj-reveal-text {
     position: relative;
     display: flex;
@@ -288,9 +291,9 @@
     -webkit-text-fill-color: transparent;
     opacity: 0;
     filter: blur(6px);
-    transform: translateX(-8px) scale(0.95);
-    animation: letterFlowIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    animation-delay: calc(var(--i) * 0.06s);
+    transform: translateX(-10px) scale(0.95);
+    animation: letterFlowIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: calc(1.15s + (var(--i) * 0.08s));
   }
 
   .mj-reveal-text .mj-space {
@@ -299,6 +302,17 @@
     opacity: 1;
     filter: none;
     transform: none;
+  }
+
+  @keyframes logoFadeInSmooth {
+    0% {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 
   @keyframes spinGlow {
@@ -322,7 +336,7 @@
     0% {
       opacity: 0;
       filter: blur(6px);
-      transform: translateX(-8px) scale(0.95);
+      transform: translateX(-10px) scale(0.95);
     }
     100% {
       opacity: 1;
@@ -350,7 +364,10 @@
 
     sessionStorage.setItem('mj_intro_shown', 'true');
 
-    // Durasi 2.4 detik agar aura logo, partikel, dan aliran huruf Master Japan dinikmati penuh
+    // Total durasi 3.8 detik:
+    // 0.0s - 1.2s : Logo MJ memudar masuk dengan halus
+    // 1.15s - 2.6s: Tulisan "Master Japan" mengalir huruf demi huruf
+    // 2.6s - 3.8s : Jeda nyaman dibaca sebelum transisi mulus ke popup
     setTimeout(() => {
       if (popup) {
         popup.style.display = 'flex';
@@ -363,9 +380,9 @@
 
         setTimeout(() => {
           if (splash) splash.style.display = 'none';
-        }, 500);
+        }, 600);
       });
-    }, 2400);
+    }, 3800);
   });
 
   function closeWelcomePopup() {
