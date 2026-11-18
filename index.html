@@ -1012,29 +1012,41 @@
             </div>
         </section>
 
-      <!-- ==================== TAB 8: KONJUGASI KATA KERJA LENGKAP ==================== -->
-      <section id="tab-konjugasi" class="tab-content space-y-4">
-            <div class="theme-card p-5 rounded-2xl shadow-sm">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <!-- ==================== TAB 8: KONJUGASI KATA KERJA LENGKAP ==================== -->
+        <section id="tab-konjugasi" class="tab-content space-y-4">
+            <div class="theme-card p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
             <div>
-                <h2 class="text-lg sm:text-xl font-extrabold">⚙️ Konjugasi Kata Kerja Lengkap</h2>
-                <p class="text-xs theme-text-muted">14 bentuk perubahan lengkap (Golongan I, II, & III) + Latihan Mandiri</p>
+                <h2 class="text-lg sm:text-xl font-extrabold">⚙️ Konjugasi Kata Kerja</h2>
+                <p class="text-xs theme-text-muted">Pilih tab bentuk perubahan untuk melihat daftar & berlatih</p>
             </div>
             <div class="flex gap-1.5 bg-black/20 p-1 rounded-xl border theme-border">
-                <button id="btnModeTabelKonj" onclick="switchKonjMode('tabel')" class="px-3 py-1.5 rounded-lg text-xs font-bold theme-accent-bg transition">📋 Tabel Lengkap</button>
+                <button id="btnModeTabelKonj" onclick="switchKonjMode('tabel')" class="px-3 py-1.5 rounded-lg text-xs font-bold theme-accent-bg transition">📋 Daftar Bentuk</button>
                 <button id="btnModeLatihanKonj" onclick="switchKonjMode('latihan')" class="px-3 py-1.5 rounded-lg text-xs font-bold theme-text-muted transition">🎯 Latihan</button>
             </div>
         </div>
 
-        <!-- MODE 1: TABEL KONJUGASI OTOMATIS -->
-        <div id="konjViewTabel" class="space-y-4">
-            <div>
-                <label class="block text-xs font-semibold theme-text-muted mb-1.5">Pilih Kata Kerja dari Database:</label>
-                <select id="konjVerbSelect" onchange="renderVerbConjugationTable()" class="w-full theme-input p-3 rounded-xl outline-none text-sm font-bold jp-text"></select>
+        <!-- MODE 1: DAFTAR PER BENTUK (TAB TERPISAH) -->
+        <div id="konjViewTabel" class="space-y-3">
+            <!-- Bar Tab 14 Bentuk Konjugasi (Bisa digeser horizontal) -->
+            <div id="konjFormTabs" class="flex gap-1.5 overflow-x-auto pb-1.5 no-scrollbar"></div>
+
+            <!-- Filter Golongan & Pencarian Kata -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <input id="konjSearchInput" oninput="renderActiveFormList()" type="text" placeholder="🔍 Cari kata kerja (Jepang / Arti)..." class="w-full theme-input px-3 py-2.5 rounded-xl outline-none text-xs">
+                <select id="konjGroupFilter" onchange="renderActiveFormList()" class="w-full theme-input px-3 py-2.5 rounded-xl outline-none text-xs font-semibold">
+                    <option value="ALL">Semua Golongan (I, II, & III)</option>
+                    <option value="Golongan I">Golongan I (Godan)</option>
+                    <option value="Golongan II">Golongan II (Ichidan)</option>
+                    <option value="Golongan III">Golongan III (Suru / Kuru)</option>
+                </select>
             </div>
 
-            <div id="konjVerbHeader" class="theme-subcard p-4 rounded-xl flex items-center justify-between gap-3"></div>
-            <div id="konjTableGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+            <!-- Info Rumus Bentuk Aktif -->
+            <div id="konjActiveFormBanner" class="theme-subcard p-3.5 rounded-xl border theme-border"></div>
+
+            <!-- Daftar Kata Kerja Khusus Bentuk Tab yang Dipilih -->
+            <div id="konjSingleFormList" class="divide-y theme-border theme-subcard rounded-xl overflow-hidden max-h-[58vh] overflow-y-auto"></div>
         </div>
 
         <!-- MODE 2: LATIHAN PERUBAHAN KATA KERJA -->
@@ -1049,7 +1061,7 @@
             <button id="konjNextQuizBtn" onclick="nextKonjQuiz()" class="hidden w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md">Soal Berikutnya ➡️</button>
         </div>
     </div>
-</section>
+</section> 
         
     </main>
     
@@ -6211,7 +6223,8 @@ function jumpToFeature(hubName, tabId) {
       setTimeout(() => { popup.style.display = 'none'; }, 400);
     }
   }
-    // =========================================================================
+
+// =========================================================================
 // 1. SISTEM FURIGANA MANUAL GLOBAL (MENYALA / MATI UNTUK SEMUA KANJI)
 // =========================================================================
 let isFuriganaVisible = localStorage.getItem('mj_furigana_on') !== 'false';
@@ -6228,13 +6241,16 @@ function toggleGlobalFurigana() {
   applyFuriganaState();
 }
 
-// Helper universal: mengubah teks Kanji + bacaan Hiragana menjadi <ruby> otomatis
+function getItemReading(item) {
+  if (!item) return '';
+  return (item.hiragana || item.kana || item.reading || item.yomi || '').trim();
+}
+
 function formatKanjiWithFurigana(kanjiText, readingText) {
   if (!kanjiText) return '';
   if (!readingText || kanjiText === readingText || !/[\u4e00-\u9faf]/.test(kanjiText)) {
     return kanjiText;
   }
-  // Pisahkan akhiran okurigana yang sama di akhir (misal: 食べます & たべます -> <ruby>食<rt>た</rt></ruby>べます)
   let i = 1;
   while (
     i <= kanjiText.length &&
@@ -6251,43 +6267,81 @@ function formatKanjiWithFurigana(kanjiText, readingText) {
   return `<ruby>${kStem}<rt>${rStem}</rt></ruby>${okurigana}`;
 }
 
-// Otomatis membungkus Kanji di Daftar Kosakata, Flashcard, dan Kuis dengan <ruby>
 function enhanceAllKanjiWithRuby() {
   if (typeof masterData === 'undefined') return;
+  const kanjiEntries = [];
   const kanjiMap = new Map();
+
   masterData.forEach(item => {
-    if (item.kanji && item.reading && item.kanji !== item.reading) {
-      kanjiMap.set(item.kanji.trim(), formatKanjiWithFurigana(item.kanji.trim(), item.reading.trim()));
+    const k = (item.kanji || '').trim();
+    const h = getItemReading(item);
+    if (k && h && k !== h && /[\u4e00-\u9faf]/.test(k)) {
+      const rubyHtml = formatKanjiWithFurigana(k, h);
+      kanjiMap.set(k, rubyHtml);
+      kanjiEntries.push([k, rubyHtml]);
     }
   });
+  kanjiEntries.sort((a, b) => b[0].length - a[0].length);
 
-  // Terapkan langsung pada elemen teks Kanji utama di Kuis & Flashcard saat dirender
+  function injectRuby(el) {
+    if (!el || el.querySelector('ruby')) return;
+    const raw = el.textContent.trim();
+    if (!raw || !/[\u4e00-\u9faf]/.test(raw)) return;
+    if (kanjiMap.has(raw)) {
+      el.innerHTML = kanjiMap.get(raw);
+      return;
+    }
+    let html = raw;
+    let changed = false;
+    for (const [k, rubyHtml] of kanjiEntries) {
+      if (html.includes(k)) {
+        html = html.split(k).join(rubyHtml);
+        changed = true;
+      }
+    }
+    if (changed) el.innerHTML = html;
+  }
+
+  function scanVisibleKanji() {
+    const selectors = [
+      '#quizKanji', '#fcFront', '#fcKanji', '#writeKanji', '#writeTargetKanji',
+      '#vocabList .jp-text', '#vocabList .text-xl', '#vocabList .text-2xl',
+      '#tab-partikel .jp-text', '#tab-menulis .jp-text',
+      '#bunpouTbody1 .jp-text', '#bunpouTbody2 .jp-text'
+    ];
+    document.querySelectorAll(selectors.join(',')).forEach(injectRuby);
+  }
+
+  let timer = null;
   const observer = new MutationObserver(() => {
-    ['quizKanji', 'fcFront', 'fcKanji'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el && !el.querySelector('ruby')) {
-        const raw = el.innerText.trim();
-        if (kanjiMap.has(raw)) el.innerHTML = kanjiMap.get(raw);
-      }
-    });
-
-    // Terapkan juga ke daftar kosakata (#vocabList) dan tabel bunpou
-    document.querySelectorAll('#vocabList .jp-text, #bunpouTbody1 .jp-text, #bunpouTbody2 .jp-text').forEach(el => {
-      if (el.querySelector('ruby')) return;
-      const raw = el.innerText.trim();
-      if (kanjiMap.has(raw)) {
-        el.innerHTML = kanjiMap.get(raw);
-      }
-    });
+    clearTimeout(timer);
+    timer = setTimeout(scanVisibleKanji, 40);
   });
-
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
   applyFuriganaState();
+  scanVisibleKanji();
 }
 
 // =========================================================================
-// 2. MESIN KONJUGASI KATA KERJA JEPANG 100% LENGKAP (14 BENTUK)
+// 2. MESIN KONJUGASI 14 BENTUK DENGAN TAB TERPISAH PER BENTUK
 // =========================================================================
+const KONJ_FORM_TABS = [
+  { idx: 0, short: 'Bentuk Kamus', title: '1. Bentuk Kamus (辞書形 / Jisho-kei)', desc: 'Bentuk dasar kata kerja di kamus / percakapan kasual.' },
+  { idx: 1, short: 'Bentuk ~masu', title: '2. Bentuk Sopan (ます形 / Masu-kei)', desc: 'Bentuk sopan standar untuk percakapan sehari-hari.' },
+  { idx: 2, short: 'Bentuk ~nai', title: '3. Bentuk Negatif (ない形 / Nai-kei)', desc: 'Menyatakan "tidak melakukan" (kasual / pola ~naide kudasai).' },
+  { idx: 3, short: 'Bentuk ~ta', title: '4. Bentuk Lampau (た形 / Ta-kei)', desc: 'Menyatakan kegiatan lampau / pengalaman (~ta koto ga arimasu).' },
+  { idx: 4, short: 'Bentuk ~nakatta', title: '5. Lampau Negatif (なかった形)', desc: 'Menyatakan "tidak melakukan" di masa lampau.' },
+  { idx: 5, short: 'Bentuk ~te', title: '6. Bentuk Sambung (て形 / Te-kei)', desc: 'Untuk meminta tolong (~te kudasai), sedang berlangsung (~te imasu), & urutan kegiatan.' },
+  { idx: 6, short: 'Potensial (Bisa)', title: '7. Bentuk Potensial (可能形 / Kanou-kei)', desc: 'Menyatakan kemampuan / "bisa melakukan".' },
+  { idx: 7, short: 'Ajakan (~you)', title: '8. Bentuk Ajakan (意向形 / Ikou-kei)', desc: 'Mengajak kasual ("Ayo...") atau pola rencana (~you to omotte imasu).' },
+  { idx: 8, short: 'Perintah', title: '9. Bentuk Perintah (命令形 / Meirei-kei)', desc: 'Instruksi tegas / rambu darurat.' },
+  { idx: 9, short: 'Larangan (~na)', title: '10. Bentuk Larangan (禁止形 / Kinshi-kei)', desc: 'Melarang keras ("Jangan...!") dengan menambahkan な pada bentuk kamus.' },
+  { idx: 10, short: 'Syarat (~ba)', title: '11. Pengandaian (ば形 / Ba-kei)', desc: 'Menyatakan syarat ("Jika / Kalau...").' },
+  { idx: 11, short: 'Jika (~tara)', title: '12. Pengandaian (たら形 / Tara-kei)', desc: 'Menyatakan "Jika / Setelah..." (bentuk ~ta + ら).' },
+  { idx: 12, short: 'Pasif (~rareru)', title: '13. Bentuk Pasif (受身形 / Ukemi-kei)', desc: 'Menyatakan kalimat pasif ("Di-...").' },
+  { idx: 13, short: 'Kausatif (~saseru)', title: '14. Bentuk Kausatif (使役形 / Shieki-kei)', desc: 'Menyatakan "Menyuruh / Mengizinkan seseorang melakukan".' }
+];
+
 const GODAN_MAP = {
   'い': { a: 'わ', i: 'い', u: 'う', e: 'え', o: 'おう', te: 'って', ta: 'った' },
   'き': { a: 'か', i: 'き', u: 'く', e: 'け', o: 'こう', te: 'いて', ta: 'いた' },
@@ -6300,7 +6354,6 @@ const GODAN_MAP = {
   'り': { a: 'ら', i: 'り', u: 'る', e: 'れ', o: 'ろう', te: 'って', ta: 'った' }
 };
 
-// Daftar kata kerja Golongan II (Ichidan) yang berakhiran ~imasu / ~emasu khusus
 const ICHIDAN_I_STEMS = new Set([
   '起きます', 'おきます', '見ます', 'みます', '浴びます', 'あびます', '借ります', 'かります',
   'います', '居ます', 'できます', '出来ます', '降ります', 'おります', '過ぎます', 'すぎます',
@@ -6316,116 +6369,80 @@ function conjugateJapaneseVerb(masuKanji, masuReading) {
   const stemR = (masuReading && masuReading.endsWith('ます')) ? masuReading.slice(0, -2) : stemK;
   const lastR = stemR.slice(-1);
 
-  // Deteksi Golongan III (Suru & Kuru)
-  if (stemR.endsWith('し') && (stemK === 'し' || stemK.length >= 2 && !GODAN_MAP[lastR])) {
-    // Cek khusus kata kerja Godan berakhiran ~shimasu (seperti 話します, 出します, 押します, 貸します, 消します, 返します, 直します, なくします, 移します, 探します)
-    const godanShi = ['話', '出', '押', '貸', '消', '返', '直', 'なく', '移', '探', '落', '壊', '汚', '沸か', '冷ま', '起こ'];
-    const isGodanShi = godanShi.some(prefix => stemK.endsWith(prefix + 'し') || stemK === prefix + 'し');
-    if (!isGodanShi && (stemK === 'し' || stemK.endsWith('します'.slice(0, -2)) && !isGodanShi)) {
+  // Golongan III: Suru
+  if (stemR.endsWith('し') && (stemK === 'し' || (stemK.length >= 2 && !GODAN_MAP[lastR]))) {
+    const pureGodanShi = ['はなし','だし','おし','かし','けし','かえし','なおし','なくし','うつし','さがし','おとし','こわし','よごし','わかし','さまし','おこし','まわし','ひっこし'];
+    const godanKanjiShi = ['話し','出し','押し','貸し','消し','返し','直し','なくし','移し','探し','落とし','壊し','汚し','沸かし','冷まし','起こし','回し','引っ越し'];
+    if (!pureGodanShi.includes(stemR) && !godanKanjiShi.includes(stemK)) {
       const baseK = stemK.slice(0, -1);
       const baseR = stemR.slice(0, -1);
-      if (baseK.length > 0 || stemK === 'し') {
-        // Pastikan bukan godan berakhiran 'shi'
-        const pureGodanShi = ['はなし','だし','おし','かし','けし','かえし','なおし','なくし','うつし','さがし','おとし','こわし','よごし','わかし','さまし','おこし','まわし','ひっこし'];
-        if (!pureGodanShi.includes(stemR)) {
-          return buildFormList('Golongan III (不規則 / Suru)', [
-            ['1. Bentuk Kamus (辞書形)', baseK + 'する', baseR + 'する'],
-            ['2. Bentuk Sopan (ます形)', baseK + 'します', baseR + 'します'],
-            ['3. Bentuk Negatif (ない形)', baseK + 'しない', baseR + 'しない'],
-            ['4. Bentuk Lampau (た形)', baseK + 'した', baseR + 'した'],
-            ['5. Lampau Negatif (なかった)', baseK + 'しなかった', baseR + 'しなかった'],
-            ['6. Bentuk Sambung (て形)', baseK + 'して', baseR + 'して'],
-            ['7. Bentuk Potensial (可能形)', baseK + 'できる', baseR + 'できる'],
-            ['8. Bentuk Ajakan (意向形)', baseK + 'しよう', baseR + 'しよう'],
-            ['9. Bentuk Perintah (命令形)', baseK + 'しろ', baseR + 'しろ'],
-            ['10. Bentuk Larangan (禁止形)', baseK + 'するな', baseR + 'するな'],
-            ['11. Pengandaian (ば形)', baseK + 'すれば', baseR + 'すれば'],
-            ['12. Pengandaian (たら形)', baseK + 'したら', baseR + 'したら'],
-            ['13. Bentuk Pasif (受身形)', baseK + 'される', baseR + 'される'],
-            ['14. Bentuk Kausatif (使役形)', baseK + 'させる', baseR + 'させる']
-          ]);
-        }
-      }
+      return buildFormList('Golongan III (Suru)', [
+        [baseK + 'する', baseR + 'する'],
+        [baseK + 'します', baseR + 'します'],
+        [baseK + 'しない', baseR + 'しない'],
+        [baseK + 'した', baseR + 'した'],
+        [baseK + 'しなかった', baseR + 'しなかった'],
+        [baseK + 'して', baseR + 'して'],
+        [baseK + 'できる', baseR + 'できる'],
+        [baseK + 'しよう', baseR + 'しよう'],
+        [baseK + 'しろ', baseR + 'しろ'],
+        [baseK + 'するな', baseR + 'するな'],
+        [baseK + 'すれば', baseR + 'すれば'],
+        [baseK + 'したら', baseR + 'したら'],
+        [baseK + 'される', baseR + 'される'],
+        [baseK + 'させる', baseR + 'させる']
+      ]);
     }
   }
 
-  // Khusus 来ます (kuru)
+  // Golongan III: Kuru
   if (masuKanji === '来ます' || masuReading === 'きます') {
     const k = masuKanji === '来ます' ? '来' : 'き';
-    return buildFormList('Golongan III (不規則 / Kuru)', [
-      ['1. Bentuk Kamus (辞書形)', k + 'る', 'くる'],
-      ['2. Bentuk Sopan (ます形)', k + 'ます', 'きます'],
-      ['3. Bentuk Negatif (ない形)', k + 'ない', 'こない'],
-      ['4. Bentuk Lampau (た形)', k + 'た', 'きた'],
-      ['5. Lampau Negatif (なかった)', k + 'なかった', 'こなかった'],
-      ['6. Bentuk Sambung (て形)', k + 'て', 'きて'],
-      ['7. Bentuk Potensial (可能形)', k + 'られる', 'こられる'],
-      ['8. Bentuk Ajakan (意向形)', k + 'よう', 'こよう'],
-      ['9. Bentuk Perintah (命令形)', k + 'い', 'こい'],
-      ['10. Bentuk Larangan (禁止形)', k + 'るな', 'くるな'],
-      ['11. Pengandaian (ば形)', k + 'れば', 'くれば'],
-      ['12. Pengandaian (たら形)', k + 'たら', 'きたら'],
-      ['13. Bentuk Pasif (受身形)', k + 'られる', 'こられる'],
-      ['14. Bentuk Kausatif (使役形)', k + 'させる', 'こさせる']
+    return buildFormList('Golongan III (Kuru)', [
+      [k + 'る', 'くる'], [k + 'ます', 'きます'], [k + 'ない', 'こない'],
+      [k + 'た', 'きた'], [k + 'なかった', 'こなかった'], [k + 'て', 'きて'],
+      [k + 'られる', 'こられる'], [k + 'よう', 'こよう'], [k + 'い', 'こい'],
+      [k + 'るな', 'くるな'], [k + 'れば', 'くれば'], [k + 'たら', 'きたら'],
+      [k + 'られる', 'こられる'], [k + 'させる', 'こさせる']
     ]);
   }
 
-  // Deteksi Golongan II (Ichidan): berakhiran bunyi 'e' atau masuk daftar khusus Ichidan
-  const isIchidan = E_ROW_KANA.has(lastR) || ICHIDAN_I_STEMS.has(masuKanji) || ICHIDAN_I_STEMS.has(masuReading);
-
-  if (isIchidan) {
-    return buildFormList('Golongan II (一段動詞)', [
-      ['1. Bentuk Kamus (辞書形)', stemK + 'る', stemR + 'る'],
-      ['2. Bentuk Sopan (ます形)', stemK + 'ます', stemR + 'ます'],
-      ['3. Bentuk Negatif (ない形)', stemK + 'ない', stemR + 'ない'],
-      ['4. Bentuk Lampau (た形)', stemK + 'た', stemR + 'た'],
-      ['5. Lampau Negatif (なかった)', stemK + 'なかった', stemR + 'なかった'],
-      ['6. Bentuk Sambung (て形)', stemK + 'て', stemR + 'て'],
-      ['7. Bentuk Potensial (可能形)', stemK + 'られる', stemR + 'られる'],
-      ['8. Bentuk Ajakan (意向形)', stemK + 'よう', stemR + 'よう'],
-      ['9. Bentuk Perintah (命令形)', stemK + 'ろ', stemR + 'ろ'],
-      ['10. Bentuk Larangan (禁止形)', stemK + 'るな', stemR + 'るな'],
-      ['11. Pengandaian (ば形)', stemK + 'れば', stemR + 'れば'],
-      ['12. Pengandaian (たら形)', stemK + 'たら', stemR + 'たら'],
-      ['13. Bentuk Pasif (受身形)', stemK + 'られる', stemR + 'られる'],
-      ['14. Bentuk Kausatif (使役形)', stemK + 'させる', stemR + 'させる']
+  // Golongan II: Ichidan
+  if (E_ROW_KANA.has(lastR) || ICHIDAN_I_STEMS.has(masuKanji) || ICHIDAN_I_STEMS.has(masuReading)) {
+    return buildFormList('Golongan II (Ichidan)', [
+      [stemK + 'る', stemR + 'る'], [stemK + 'ます', stemR + 'ます'], [stemK + 'ない', stemR + 'ない'],
+      [stemK + 'た', stemR + 'た'], [stemK + 'なかった', stemR + 'なかった'], [stemK + 'て', stemR + 'て'],
+      [stemK + 'られる', stemR + 'られる'], [stemK + 'よう', stemR + 'よう'], [stemK + 'ろ', stemR + 'ろ'],
+      [stemK + 'るな', stemR + 'るな'], [stemK + 'れば', stemR + 'れば'], [stemK + 'たら', stemR + 'たら'],
+      [stemK + 'られる', stemR + 'られる'], [stemK + 'させる', stemR + 'させる']
     ]);
   }
 
-  // Golongan I (Godan)
+  // Golongan I: Godan
   const g = GODAN_MAP[lastR];
   if (!g) return null;
-
   const rootK = stemK.slice(0, -1);
   const rootR = stemR.slice(0, -1);
-  // Pengecualian khusus 行きます -> 行って / 行った
   const isIku = (masuKanji === '行きます' || masuReading === 'いきます');
   const teEnd = isIku ? 'って' : g.te;
   const taEnd = isIku ? 'った' : g.ta;
 
-  return buildFormList('Golongan I (五段動詞)', [
-    ['1. Bentuk Kamus (辞書形)', rootK + g.u, rootR + g.u],
-    ['2. Bentuk Sopan (ます形)', rootK + g.i + 'ます', rootR + g.i + 'ます'],
-    ['3. Bentuk Negatif (ない形)', rootK + g.a + 'ない', rootR + g.a + 'ない'],
-    ['4. Bentuk Lampau (た形)', rootK + taEnd, rootR + taEnd],
-    ['5. Lampau Negatif (なかった)', rootK + g.a + 'なかった', rootR + g.a + 'なかった'],
-    ['6. Bentuk Sambung (て形)', rootK + teEnd, rootR + teEnd],
-    ['7. Bentuk Potensial (可能形)', rootK + g.e + 'る', rootR + g.e + 'る'],
-    ['8. Bentuk Ajakan (意向形)', rootK + g.o, rootR + g.o],
-    ['9. Bentuk Perintah (命令形)', rootK + g.e, rootR + g.e],
-    ['10. Bentuk Larangan (禁止形)', rootK + g.u + 'な', rootR + g.u + 'な'],
-    ['11. Pengandaian (ば形)', rootK + g.e + 'ば', rootR + g.e + 'ば'],
-    ['12. Pengandaian (たら形)', rootK + taEnd + 'ら', rootR + taEnd + 'ら'],
-    ['13. Bentuk Pasif (受身形)', rootK + g.a + 'れる', rootR + g.a + 'れる'],
-    ['14. Bentuk Kausatif (使役形)', rootK + g.a + 'せる', rootR + g.a + 'せる']
+  return buildFormList('Golongan I (Godan)', [
+    [rootK + g.u, rootR + g.u], [rootK + g.i + 'ます', rootR + g.i + 'ます'],
+    [rootK + g.a + 'ない', rootR + g.a + 'ない'], [rootK + taEnd, rootR + taEnd],
+    [rootK + g.a + 'なかった', rootR + g.a + 'なかった'], [rootK + teEnd, rootR + teEnd],
+    [rootK + g.e + 'る', rootR + g.e + 'る'], [rootK + g.o, rootR + g.o],
+    [rootK + g.e, rootR + g.e], [rootK + g.u + 'な', rootR + g.u + 'な'],
+    [rootK + g.e + 'ば', rootR + g.e + 'ば'], [rootK + taEnd + 'ら', rootR + taEnd + 'ら'],
+    [rootK + g.a + 'れる', rootR + g.a + 'れる'], [rootK + g.a + 'せる', rootR + g.a + 'せる']
   ]);
 }
 
 function buildFormList(groupLabel, rows) {
   return {
     group: groupLabel,
-    forms: rows.map(([label, kanji, reading]) => ({
-      label,
+    forms: rows.map(([kanji, reading], i) => ({
+      label: KONJ_FORM_TABS[i].title,
       kanji,
       reading,
       html: formatKanjiWithFurigana(kanji, reading)
@@ -6433,48 +6450,92 @@ function buildFormList(groupLabel, rows) {
   };
 }
 
-let verbListCache = [];
-let currentKonjQuizAnswer = null;
+let verbConjugationCache = [];
+let activeKonjFormIdx = 0; // Default membuka Tab 0 (Bentuk Kamus)
 
 function initConjugationTab() {
   if (typeof masterData === 'undefined') return;
-  if (verbListCache.length === 0) {
-    verbListCache = masterData.filter(x => x.category === 'Kata Kerja' && x.kanji && x.kanji.endsWith('ます'));
+  if (verbConjugationCache.length === 0) {
+    verbConjugationCache = masterData
+      .filter(x => x.category === 'Kata Kerja' && x.kanji && x.kanji.endsWith('ます'))
+      .map(v => {
+        const read = getItemReading(v);
+        const conj = conjugateJapaneseVerb(v.kanji.trim(), read);
+        return conj ? { raw: v, read, conj } : null;
+      })
+      .filter(Boolean);
   }
-  const sel = document.getElementById('konjVerbSelect');
-  if (sel && sel.options.length === 0) {
-    sel.innerHTML = verbListCache.map((v, idx) =>
-      `<option value="${idx}">${v.kanji} (${v.reading || ''}) — ${v.meaning}</option>`
-    ).join('');
-  }
-  renderVerbConjugationTable();
+  renderKonjFormTabs();
+  renderActiveFormList();
 }
 
-function renderVerbConjugationTable() {
-  const sel = document.getElementById('konjVerbSelect');
-  if (!sel || verbListCache.length === 0) return;
-  const verb = verbListCache[parseInt(sel.value) || 0];
-  const result = conjugateJapaneseVerb(verb.kanji, verb.reading);
-  if (!result) return;
+function renderKonjFormTabs() {
+  const bar = document.getElementById('konjFormTabs');
+  if (!bar) return;
+  bar.innerHTML = KONJ_FORM_TABS.map(t => {
+    const active = t.idx === activeKonjFormIdx;
+    return `<button onclick="selectKonjFormTab(${t.idx})" class="whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+      active ? 'theme-accent-bg border-transparent shadow-sm' : 'theme-subcard theme-border theme-text-muted hover:opacity-90'
+    }">${t.short}</button>`;
+  }).join('');
+}
 
-  document.getElementById('konjVerbHeader').innerHTML = `
-    <div>
-      <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full theme-accent-soft">${result.group}</span>
-      <div class="text-2xl font-extrabold jp-text mt-1">${formatKanjiWithFurigana(verb.kanji, verb.reading)}</div>
-      <div class="text-xs theme-text-muted">${verb.meaning}</div>
-    </div>
-    <button onclick="speakText('${verb.kanji}')" class="px-3.5 py-2 rounded-xl theme-accent-bg text-xs font-bold shadow">🔊 Dengar</button>
-  `;
+function selectKonjFormTab(idx) {
+  activeKonjFormIdx = idx;
+  renderKonjFormTabs();
+  renderActiveFormList();
+}
 
-  document.getElementById('konjTableGrid').innerHTML = result.forms.map(f => `
-    <div onclick="speakText('${f.kanji}')" class="theme-subcard p-3 rounded-xl flex items-center justify-between gap-2 cursor-pointer hover:opacity-90 transition border theme-border">
-      <div>
-        <div class="text-[11px] font-bold theme-text-muted">${f.label}</div>
-        <div class="text-lg font-extrabold jp-text mt-0.5">${f.html}</div>
+function renderActiveFormList() {
+  if (verbConjugationCache.length === 0) return;
+  const meta = KONJ_FORM_TABS[activeKonjFormIdx];
+  const banner = document.getElementById('konjActiveFormBanner');
+  if (banner) {
+    banner.innerHTML = `
+      <div class="text-sm font-extrabold">${meta.title}</div>
+      <div class="text-xs theme-text-muted mt-0.5">${meta.desc}</div>
+    `;
+  }
+
+  const query = (document.getElementById('konjSearchInput')?.value || '').toLowerCase().trim();
+  const grpFilter = document.getElementById('konjGroupFilter')?.value || 'ALL';
+
+  const filtered = verbConjugationCache.filter(item => {
+    if (grpFilter !== 'ALL' && !item.conj.group.startsWith(grpFilter)) return false;
+    if (!query) return true;
+    const f = item.conj.forms[activeKonjFormIdx];
+    return (
+      item.raw.kanji.toLowerCase().includes(query) ||
+      (item.raw.meaning || '').toLowerCase().includes(query) ||
+      (item.raw.romaji || '').toLowerCase().includes(query) ||
+      f.kanji.toLowerCase().includes(query)
+    );
+  });
+
+  const listEl = document.getElementById('konjSingleFormList');
+  if (!listEl) return;
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div class="p-6 text-center text-xs theme-text-muted">Tidak ada kata kerja yang cocok dengan pencarian.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(item => {
+    const f = item.conj.forms[activeKonjFormIdx];
+    const baseSub = item.raw.romaji ? `${item.raw.kanji} (${item.raw.romaji})` : item.raw.kanji;
+    return `
+      <div onclick="speakText('${f.kanji}')" class="p-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-white/5 transition">
+        <div class="min-w-0">
+          <div class="text-lg sm:text-xl font-extrabold jp-text">${f.html}</div>
+          <div class="text-xs theme-text-muted truncate">${item.raw.meaning} • <span class="opacity-80">Asal: ${baseSub}</span></div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full theme-accent-soft">${item.conj.group.replace('Golongan ', 'Gol. ')}</span>
+          <span class="w-8 h-8 rounded-full theme-accent-bg flex items-center justify-center text-xs shadow">🔊</span>
+        </div>
       </div>
-      <span class="text-xs opacity-60">🔊</span>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function switchKonjMode(mode) {
@@ -6491,23 +6552,18 @@ function switchKonjMode(mode) {
 }
 
 function nextKonjQuiz() {
-  if (verbListCache.length === 0) initConjugationTab();
-  const verb = verbListCache[Math.floor(Math.random() * verbListCache.length)];
-  const conj = conjugateJapaneseVerb(verb.kanji, verb.reading);
-  if (!conj) return;
-
-  // Pilih target bentuk acak (selain bentuk sopan ~masu)
-  const candidates = conj.forms.filter((_, i) => i !== 1);
+  if (verbConjugationCache.length === 0) initConjugationTab();
+  if (verbConjugationCache.length === 0) return;
+  const item = verbConjugationCache[Math.floor(Math.random() * verbConjugationCache.length)];
+  const candidates = item.conj.forms.filter((_, i) => i !== 1);
   const target = candidates[Math.floor(Math.random() * candidates.length)];
-  currentKonjQuizAnswer = target.kanji;
 
   document.getElementById('konjQuizBadge').innerText = `Ubah ke: ${target.label}`;
-  document.getElementById('konjQuizPrompt').innerHTML = formatKanjiWithFurigana(verb.kanji, verb.reading);
-  document.getElementById('konjQuizMeaning').innerText = `${verb.meaning} • ${conj.group}`;
+  document.getElementById('konjQuizPrompt').innerHTML = formatKanjiWithFurigana(item.raw.kanji, item.read);
+  document.getElementById('konjQuizMeaning').innerText = `${item.raw.meaning} • ${item.conj.group}`;
   document.getElementById('konjQuizFeedback').innerText = '';
   document.getElementById('konjNextQuizBtn').classList.add('hidden');
 
-  // Buat 3 pengecoh dari bentuk lain kata kerja yang sama
   const distractors = shuffle(candidates.filter(c => c.kanji !== target.kanji)).slice(0, 3);
   const options = shuffle([target, ...distractors]);
 
@@ -6523,10 +6579,8 @@ function nextKonjQuiz() {
 }
 
 function checkKonjQuizAnswer(btn, chosen, correct) {
-  const allBtns = document.querySelectorAll('#konjQuizOptions button');
-  allBtns.forEach(b => b.disabled = true);
+  document.querySelectorAll('#konjQuizOptions button').forEach(b => b.disabled = true);
   speakText(correct);
-
   const fb = document.getElementById('konjQuizFeedback');
   if (chosen === correct) {
     if (typeof playQuizSound === 'function') playQuizSound('correct');
@@ -6542,9 +6596,12 @@ function checkKonjQuizAnswer(btn, chosen, correct) {
   document.getElementById('konjNextQuizBtn').classList.remove('hidden');
 }
 
-// Aktifkan pemantau Furigana saat halaman siap
-window.addEventListener('DOMContentLoaded', enhanceAllKanjiWithRuby);
-
+// Langsung inisialisasi saat halaman dimuat agar tidak perlu klik tab sebelah dulu
+window.addEventListener('DOMContentLoaded', () => {
+  enhanceAllKanjiWithRuby();
+  initConjugationTab();
+});
+      
 </script>
     
 </body>
