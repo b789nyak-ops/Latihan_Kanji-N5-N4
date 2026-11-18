@@ -163,7 +163,12 @@
         [data-theme="kyoto"] .motif-kyoto { display: block; }
         [data-theme="sakura"] .motif-sakura { display: block; }
         [data-theme="fuji"] .motif-fuji { display: block; }
+       /* Kontrol Global Tampilan Furigana */
+        body.hide-furigana ruby rt { display: none !important; }
+        ruby rt { font-size: 0.55em; font-weight: 600; color: var(--accent); user-select: none; }
+   
     </style>
+
 </head>
 <body class="pb-24">
 
@@ -546,7 +551,11 @@
 
             <!-- Kontrol Kanan: Pengubah Tema & Progres -->
             <div class="flex flex-col items-end gap-1">
-                <select id="themeSelector" onchange="changeTheme(this.value)" aria-label="Pilih Tema" class="bg-black/30 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full border border-white/25 outline-none backdrop-blur-sm cursor-pointer">
+         <button id="globalFuriganaBtn" onclick="toggleGlobalFurigana()" class="bg-black/30 hover:bg-black/45 text-white text-[11px] font-bold px-2.5 py-1 rounded-full border border-white/25 backdrop-blur-sm transition flex items-center gap-1">
+             <span>あ</span>
+             <span id="furiganaStatusText">Furigana: ON</span>
+         </button>
+                  <select id="themeSelector" onchange="changeTheme(this.value)" aria-label="Pilih Tema" class="bg-black/30 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full border border-white/25 outline-none backdrop-blur-sm cursor-pointer">
                     <option value="tokyo" class="text-slate-900">🌃 Tokyo Night</option>
                     <option value="kyoto" class="text-slate-900">⛩️ Kyoto Torii</option>
                     <option value="sakura" class="text-slate-900">🌸 Tokyo Sakura</option>
@@ -557,6 +566,7 @@
                 </div>
             </div>
         </div>
+  
     </header>
 
     <!-- NAVIGATION HUB MODERN DENGAN IKON SVG ANIMASI -->
@@ -5865,11 +5875,11 @@ renderBunpouTables();
       { id: 'tab-membaca', label: 'Membaca (Dokkai)' },
       { id: 'tab-choukai', label: 'Mendengar (Choukai)' }
     ],
-    pustaka: [
-      { id: 'tab-daftar', label: 'Daftar Kosakata' },
-      { id: 'tab-bunpou', label: 'Tata Bahasa (Bunpou)' }
-    ]
-  };
+      pustaka: [
+    { id: 'tab-daftar', label: 'Daftar Kosakata' },
+    { id: 'tab-bunpou', label: 'Tata Bahasa (Bunpou)' },
+    { id: 'tab-konjugasi', label: 'Konjugasi Kata Kerja' }
+  ]
 
   function openModernHub(hubName, specificTabId = null) {
     // 1. Sorot tombol navigasi utama
@@ -5907,9 +5917,12 @@ renderBunpouTables();
     if (targetTab && typeof switchTab === 'function') {
       switchTab(targetTab);
     }
-      if (targetTab === 'tab-daftar' && typeof renderList === 'function') {
-  renderList();
+    if (targetTab === 'tab-daftar' && typeof renderList === 'function') {
+      renderList();
     }
+    if (targetTab === 'tab-konjugasi' && typeof initConjugationTab === 'function') {
+      initConjugationTab();
+     }
   }
 
   function selectSubTab(tabId) {
@@ -5920,8 +5933,11 @@ renderBunpouTables();
     if (typeof switchTab === 'function') {
       switchTab(tabId);
     }
-      if (tabId === 'tab-daftar' && typeof renderList === 'function') {
-  renderList();
+    if (tabId === 'tab-daftar' && typeof renderList === 'function') {
+      renderList();
+    }
+    if (tabId === 'tab-konjugasi' && typeof initConjugationTab === 'function') {
+      initConjugationTab();
     }
   }
 
