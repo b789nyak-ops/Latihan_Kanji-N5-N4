@@ -4521,29 +4521,37 @@ function renderQuizQuestion() {
 }
 
 function checkAnswer(btnElement, chosen, correct, kanji) {
-    if (isAnswering) return;
-    isAnswering = true;
-    const feedback = document.getElementById('quizFeedback');
-    speakText(kanji);
+  if (isAnswering) return;
+  isAnswering = true;
+  const feedback = document.getElementById('quizFeedback');
+  const currentItem = quizData[currentQuizIdx] || {};
+  const illusHTML = typeof getVocabIllustrationHTML === 'function'
+    ? getVocabIllustrationHTML(correct, currentItem.category || '', kanji)
+    : '';
 
-    if (chosen === correct) {
-        correctAnswers++;
-        btnElement.classList.add('!border-emerald-500', '!bg-emerald-500/15', '!text-emerald-500');
-        feedback.innerText = "✅ Benar!";
-        feedback.className = "text-lg font-bold text-emerald-500 mt-2";
-    } else {
-        wrongAnswers++;
-        btnElement.classList.add('!border-red-500', '!bg-red-500/15', '!text-red-500');
-        feedback.innerText = `❌ Salah! Jawaban: ${correct}`;
-        feedback.className = "text-lg font-bold text-red-500 mt-2";
-    }
+  speakText(kanji);
 
-    setTimeout(() => {
-        currentQuizIdx++;
-        if (currentQuizIdx < quizData.length) renderQuizQuestion();
-        else showQuizResult();
-    }, 1500);
+  if (chosen === correct) {
+    correctAnswers++;
+    if (typeof playQuizSound === 'function') playQuizSound('correct');
+    btnElement.classList.add('!border-emerald-500', '!bg-emerald-500/15', '!text-emerald-500');
+    feedback.className = "text-lg font-bold text-emerald-500 mt-2 flex flex-col items-center";
+    feedback.innerHTML = `<div>✅ Benar!</div>${illusHTML}`;
+  } else {
+    wrongAnswers++;
+    if (typeof playQuizSound === 'function') playQuizSound('wrong');
+    btnElement.classList.add('!border-red-500', '!bg-red-500/15', '!text-red-500');
+    feedback.className = "text-lg font-bold text-red-500 mt-2 flex flex-col items-center";
+    feedback.innerHTML = `<div>❌ Salah! Jawaban: ${correct}</div>${illusHTML}`;
+  }
+
+  setTimeout(() => {
+    currentQuizIdx++;
+    if (currentQuizIdx < quizData.length) renderQuizQuestion();
+    else showQuizResult();
+  }, 2200);
 }
+
 
 function showQuizResult() {
     document.getElementById('quizPlay').classList.add('hidden');
@@ -4600,7 +4608,7 @@ function renderList() {
     listContainer.innerHTML = '';
 
     let filtered = masterData.filter(item => {
-        let matchCat = (catFilter === 'ALL' || item.category === catFilter);
+        let matchCat = (!catFilter || catFilter === 'ALL' || catFilter.startsWith('Semua') || item.category === catFilter);
         let isMem = memorizedKanji.includes(item.kanji);
         let matchStat = true;
         if (statusFilter === 'hafal') matchStat = isMem;
@@ -5848,6 +5856,9 @@ renderBunpouTables();
     if (targetTab && typeof switchTab === 'function') {
       switchTab(targetTab);
     }
+      if (targetTab === 'tab-daftar' && typeof renderList === 'function') {
+  renderList();
+    }
   }
 
   function selectSubTab(tabId) {
@@ -5857,6 +5868,9 @@ renderBunpouTables();
 
     if (typeof switchTab === 'function') {
       switchTab(tabId);
+    }
+      if (tabId === 'tab-daftar' && typeof renderList === 'function') {
+  renderList();
     }
   }
 
@@ -5869,6 +5883,117 @@ renderBunpouTables();
     openModernHub('beranda');
   });
 </script>    
+
+<style>
+  @keyframes popIllustration {
+    0% { opacity: 0; transform: scale(0.75) translateY(6px); }
+    70% { transform: scale(1.06) translateY(-2px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .vocab-illus-card {
+    animation: popIllustration 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+</style>
+
+<script>
+  // ==========================================
+  // 1. EFEK SUARA JAWABAN BENAR & SALAH (WEB AUDIO API)
+  // ==========================================
+  function playQuizSound(type) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') ctx.resume();
+
+      const now = ctx.currentTime;
+
+      if (type === 'correct') {
+        // Nada cerah naik: C5 (523.25Hz) -> G5 (783.99Hz)
+        const notes = [523.25, 783.99];
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.11);
+
+          gain.gain.setValueAtTime(0.001, now + idx * 0.11);
+          gain.gain.exponentialRampToValueAtTime(0.22, now + idx * 0.11 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.11 + 0.32);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + idx * 0.11);
+          osc.stop(now + idx * 0.11 + 0.34);
+        });
+      } else {
+        // Nada salah rendah lembut: E3 (164.81Hz) -> C3 (130.81Hz)
+        const notes = [164.81, 130.81];
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.14);
+
+          gain.gain.setValueAtTime(0.001, now + idx * 0.14);
+          gain.gain.exponentialRampToValueAtTime(0.2, now + idx * 0.14 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.14 + 0.28);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + idx * 0.14);
+          osc.stop(now + idx * 0.14 + 0.3);
+        });
+      }
+    } catch (e) {
+      console.warn('Audio kuis tidak didukung:', e);
+    }
+  }
+
+  // ==========================================
+  // 2. MESIN ILUSTRASI OTOMATIS SESUAI KOSAKATA
+  // ==========================================
+  const VOCAB_VISUAL_RULES = [
+    { keys: ['makan', 'nasi', 'roti', 'daging', 'ikan', 'sayur', 'buah', 'apel', 'telur', 'kue', 'masak', 'lapar', 'restoran'], icon: '🍱', bg: 'from-orange-500/20 to-amber-500/20 border-orange-400/30', tag: 'Makanan & Kuliner' },
+    { keys: ['minum', 'air', 'teh', 'kopi', 'susu', 'jus', 'bir', 'haus'], icon: '🍵', bg: 'from-emerald-500/20 to-teal-500/20 border-emerald-400/30', tag: 'Minuman' },
+    { keys: ['waktu', 'jam', 'menit', 'detik', 'hari', 'minggu', 'bulan', 'tahun', 'besok', 'kemarin', 'sekarang', 'pagi', 'siang', 'malam', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'], icon: '⏰', bg: 'from-sky-500/20 to-blue-500/20 border-sky-400/30', tag: 'Waktu & Kalender' },
+    { keys: ['kereta', 'stasiun', 'mobil', 'bus', 'sepeda', 'pesawat', 'bandara', 'jalan', 'tiket', 'pergi', 'datang', 'pulang', 'naik', 'turun', 'taksi', 'kapal'], icon: '🚅', bg: 'from-indigo-500/20 to-cyan-500/20 border-indigo-400/30', tag: 'Transportasi & Perjalanan' },
+    { keys: ['sekolah', 'universitas', 'belajar', 'buku', 'kamus', 'pensil', 'pulpen', 'kertas', 'kelas', 'ujian', 'guru', 'siswa', 'mahasiswa', 'bahasa', 'huruf', 'kanji', 'membaca', 'menulis'], icon: '📚', bg: 'from-violet-500/20 to-purple-500/20 border-violet-400/30', tag: 'Pendidikan & Belajar' },
+    { keys: ['keluarga', 'ayah', 'ibu', 'kakak', 'adik', 'anak', 'orang', 'teman', 'suami', 'istri', 'bayi', 'kakek', 'nenek', 'laki-laki', 'perempuan'], icon: '👨‍👩‍👧‍👦', bg: 'from-pink-500/20 to-rose-500/20 border-pink-400/30', tag: 'Orang & Keluarga' },
+    { keys: ['rumah', 'kamar', 'pintu', 'jendela', 'meja', 'kursi', 'kasur', 'dapur', 'toilet', 'mandi', 'tidur', 'bangun', 'tinggal', 'apartemen'], icon: '🏡', bg: 'from-amber-500/20 to-yellow-500/20 border-amber-400/30', tag: 'Rumah & Kehidupan' },
+    { keys: ['kerja', 'kantor', 'perusahaan', 'pegawai', 'dokter', 'polisi', 'rapat', 'gaji', 'sibuk', 'istirahat', 'libur'], icon: '💼', bg: 'from-slate-500/20 to-zinc-500/20 border-slate-400/30', tag: 'Pekerjaan & Profesi' },
+    { keys: ['beli', 'jual', 'uang', 'harga', 'murah', 'mahal', 'toko', 'pasar', 'supermarket', 'baju', 'sepatu', 'tas', 'topi'], icon: '🛍️', bg: 'from-fuchsia-500/20 to-pink-500/20 border-fuchsia-400/30', tag: 'Belanja & Benda' },
+    { keys: ['gunung', 'laut', 'sungai', 'hujan', 'salju', 'angin', 'langit', 'matahari', 'bunga', 'pohon', 'cuaca', 'panas', 'dingin', 'musim'], icon: '🗻', bg: 'from-teal-500/20 to-emerald-500/20 border-teal-400/30', tag: 'Alam & Cuaca' },
+    { keys: ['kucing', 'anjing', 'burung', 'hewan', 'binatang', 'sapi', 'kuda'], icon: '🐈', bg: 'from-orange-500/20 to-yellow-500/20 border-orange-400/30', tag: 'Hewan' },
+    { keys: ['sakit', 'obat', 'rumah sakit', 'kepala', 'perut', 'mata', 'tangan', 'kaki', 'mulut', 'telinga', 'sehat', 'demam'], icon: '🩺', bg: 'from-red-500/20 to-rose-500/20 border-red-400/30', tag: 'Kesehatan & Tubuh' },
+    { keys: ['merah', 'biru', 'kuning', 'hijau', 'hitam', 'putih', 'warna'], icon: '🎨', bg: 'from-rose-500/20 to-indigo-500/20 border-rose-400/30', tag: 'Warna' },
+    { keys: ['satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'seratus', 'seribu', 'angka', 'nomor'], icon: '🔢', bg: 'from-blue-500/20 to-sky-500/20 border-blue-400/30', tag: 'Angka & Hitungan' },
+    { keys: ['dilarang', 'peraturan', 'aturan', 'boleh', 'harus', 'bahaya', 'hati-hati', 'masuk', 'keluar', 'parkir', 'merokok'], icon: '⚠️', bg: 'from-yellow-500/20 to-red-500/20 border-yellow-400/30', tag: 'Aturan & Rambu' }
+  ];
+
+  function getVocabIllustrationHTML(meaningText = '', categoryText = '', kanjiText = '') {
+    const combined = (meaningText + ' ' + categoryText).toLowerCase();
+    let matched = VOCAB_VISUAL_RULES.find(rule => rule.keys.some(k => combined.includes(k)));
+
+    if (!matched) {
+      matched = {
+        icon: '🇯🇵',
+        bg: 'from-sky-500/15 to-indigo-500/15 border-sky-400/25',
+        tag: categoryText || 'Kosakata Jepang'
+      };
+    }
+
+    return `
+      <div class="vocab-illus-card inline-flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-gradient-to-r ${matched.bg} border my-2 mx-auto">
+        <span class="text-3xl leading-none select-none drop-shadow-sm">${matched.icon}</span>
+        <div class="text-left">
+          <div class="text-[10px] font-bold uppercase tracking-wider opacity-75">${matched.tag}</div>
+          <div class="text-xs font-extrabold">${kanjiText ? kanjiText + ' • ' : ''}${meaningText}</div>
+        </div>
+      </div>
+    `;
+  }
+</script>
     
 </body>
 </html>
