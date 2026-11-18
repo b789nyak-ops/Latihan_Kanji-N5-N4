@@ -4483,46 +4483,165 @@ let quizData = [], currentQuizIdx = 0, correctAnswers = 0, wrongAnswers = 0, isA
 
 function startQuiz() {
     const category = document.getElementById('quizCategory').value;
-    const order = document.getElementById('quizOrder').value;
-    const lengthOpt = document.getElementById('quizLength').value;
 
-    let pool = masterData.filter(item => category === 'ALL' || item.category === category);
-    if (order === 'SHUFFLE') pool = shuffle(pool);
-    if (lengthOpt !== 'ALL') pool = pool.slice(0, parseInt(lengthOpt));
+    let quizUserAnswers = {};
 
-    quizData = pool; currentQuizIdx = 0; correctAnswers = 0; wrongAnswers = 0;
-    document.getElementById('quizSetup').classList.add('hidden');
-    document.getElementById('quizResult').classList.add('hidden');
-    document.getElementById('quizPlay').classList.remove('hidden');
-    renderQuizQuestion();
+function startQuiz() {
+  const category = document.getElementById('quizCategory').value;
+  const order = document.getElementById('quizOrder').value;
+  const lengthOpt = document.getElementById('quizLength').value;
+
+  let pool = masterData.filter(item => category === 'ALL' || item.category === category);
+  if (order === 'SHUFFLE') pool = shuffle(pool);
+  if (lengthOpt !== 'ALL') pool = pool.slice(0, parseInt(lengthOpt));
+
+  // Reset riwayat jawaban & acakan opsi setiap kali mulai kuis baru
+  quizUserAnswers = {};
+  pool.forEach(q => delete q._cachedOptions);
+
+  quizData = pool; currentQuizIdx = 0; correctAnswers = 0; wrongAnswers = 0;
+  document.getElementById('quizSetup').classList.add('hidden');
+  document.getElementById('quizResult').classList.add('hidden');
+  document.getElementById('quizPlay').classList.remove('hidden');
+  renderQuizQuestion();
 }
 
 function renderQuizQuestion() {
-    isAnswering = false;
-    const item = quizData[currentQuizIdx];
-    document.getElementById('quizProgressText').innerText = `Soal ${currentQuizIdx + 1} / ${quizData.length}`;
-    document.getElementById('quizKanji').innerText = item.kanji;
-    document.getElementById('quizFeedback').innerText = "";
+  const item = quizData[currentQuizIdx];
+  const savedAnswer = quizUserAnswers[currentQuizIdx];
+  isAnswering = !!savedAnswer;
 
+  document.getElementById('quizProgressText').innerText = `Soal ${currentQuizIdx + 1} / ${quizData.length}`;
+  document.getElementById('quizKanji').innerText = item.kanji;
+
+  const feedback = document.getElementById('quizFeedback');
+  feedback.innerHTML = '';
+
+  // Pengecoh pilihan ganda dari kategori & kelas kata yang sama
+  if (!item._cachedOptions) {
     let options = [item.meaning];
-    let distractors = shuffle(masterData.filter(x => x.kanji !== item.kanji)).slice(0, 3);
-    distractors.forEach(d => options.push(d.meaning));
-    options = shuffle(options);
 
-    const optContainer = document.getElementById('quizOptions');
-    optContainer.innerHTML = '';
-    options.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.className = "w-full theme-card p-4 rounded-xl font-bold hover:opacity-90 active:scale-95 transition";
-        btn.innerText = opt;
-        btn.onclick = () => checkAnswer(btn, opt, item.meaning, item.kanji);
-        optContainer.appendChild(btn);
+    let sameCategoryPool = masterData.filter(x =>
+      x.kanji !== item.kanji &&
+      x.meaning !== item.meaning &&
+      x.category === item.category
+    );
+
+    const isMasu = item.kanji.endsWith('ます');
+    const isAdjectiveI = item.kanji.endsWith('い') && item.category === 'Sifat & Kondisi';
+
+    let smartPool = sameCategoryPool.filter(x => {
+      if (isMasu) return x.kanji.endsWith('ます');
+      if (isAdjectiveI) return x.kanji.endsWith('い');
+      return true;
     });
+
+    if (smartPool.length < 3) {
+      smartPool = sameCategoryPool;
+    }
+
+    let distractors = shuffle(smartPool).slice(0, 3);
+
+    if (distractors.length < 3) {
+      const usedMeanings = new Set([item.meaning, ...distractors.map(d => d.meaning)]);
+      const extraPool = masterData.filter(x => !usedMeanings.has(x.meaning));
+      distractors = distractors.concat(shuffle(extraPool).slice(0, 3 - distractors.length));
+    }
+
+    distractors.forEach(d => options.push(d.meaning));
+    item._cachedOptions = shuffle(options);
+  }
+
+  const optContainer = document.getElementById('quizOptions');
+  optContainer.innerHTML = '';
+
+  item._cachedOptions.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = "w-full theme-card p-4 rounded-xl font-bold hover:opacity-90 active:scale-95 transition border theme-border";
+    btn.innerText = opt;
+
+    if (savedAnswer) {
+      btn.disabled = true;
+      if (opt === item.meaning) {
+        btn.classList.add('!border-emerald-500', '!bg-emerald-500/15', '!text-emerald-500');
+      } else if (opt === savedAnswer && savedAnswer !== item.meaning) {
+        btn.classList.add('!border-red-500', '!bg-red-500/15', '!text-red-500');
+      }
+    } else {
+      btn.onclick = () => checkAnswer(btn, opt, item.meaning, item.kanji);
+    }
+
+    optContainer.appendChild(btn);
+  });
+
+  if (savedAnswer) {
+    const illusHTML = typeof getVocabIllustrationHTML === 'function'
+      ? getVocabIllustrationHTML(item.meaning, item.category || '', item.kanji)
+      : '';
+    if (savedAnswer === item.meaning) {
+      feedback.className = "text-lg font-bold text-emerald-500 mt-2 flex flex-col items-center";
+      feedback.innerHTML = `<div>✅ Benar!</div>${illusHTML}`;
+    } else {
+      feedback.className = "text-lg font-bold text-red-500 mt-2 flex flex-col items-center";
+      feedback.innerHTML = `<div>❌ Salah! Jawaban: ${item.meaning}</div>${illusHTML}`;
+    }
+  }
+
+  renderQuizNavControls();
+}
+
+function renderQuizNavControls() {
+  const optContainer = document.getElementById('quizOptions');
+  if (!optContainer || !optContainer.parentNode) return;
+
+  let navBox = document.getElementById('quizManualNavControls');
+  if (!navBox) {
+    navBox = document.createElement('div');
+    navBox.id = 'quizManualNavControls';
+    navBox.className = "flex gap-3 mt-5";
+    optContainer.parentNode.appendChild(navBox);
+  }
+
+  const isAnswered = !!quizUserAnswers[currentQuizIdx];
+  const isFirst = currentQuizIdx === 0;
+  const isLast = currentQuizIdx >= quizData.length - 1;
+
+  navBox.innerHTML = `
+    <button onclick="prevQuizQuestion()" ${isFirst ? 'disabled' : ''}
+      class="flex-1 theme-card border theme-border py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition ${isFirst ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90 active:scale-95'}">
+      <span>⬅️</span>
+      <span>Sebelumnya</span>
+    </button>
+
+    <button onclick="nextQuizQuestion()" ${!isAnswered ? 'disabled' : ''}
+      class="flex-1 py-3.5 px-4 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 shadow-md transition ${!isAnswered ? 'bg-slate-600/50 opacity-50 cursor-not-allowed' : 'theme-accent-bg hover:opacity-95 active:scale-95'}">
+      <span>${isLast ? 'Lihat Hasil 🎯' : 'Selanjutnya ➡️'}</span>
+    </button>
+  `;
+}
+
+function prevQuizQuestion() {
+  if (currentQuizIdx > 0) {
+    currentQuizIdx--;
+    renderQuizQuestion();
+  }
+}
+
+function nextQuizQuestion() {
+  if (!quizUserAnswers[currentQuizIdx]) return;
+  if (currentQuizIdx + 1 < quizData.length) {
+    currentQuizIdx++;
+    renderQuizQuestion();
+  } else {
+    showQuizResult();
+  }
 }
 
 function checkAnswer(btnElement, chosen, correct, kanji) {
-  if (isAnswering) return;
+  if (isAnswering || quizUserAnswers[currentQuizIdx]) return;
   isAnswering = true;
+  quizUserAnswers[currentQuizIdx] = chosen;
+
   const feedback = document.getElementById('quizFeedback');
   const currentItem = quizData[currentQuizIdx] || {};
   const illusHTML = typeof getVocabIllustrationHTML === 'function'
@@ -4531,10 +4650,17 @@ function checkAnswer(btnElement, chosen, correct, kanji) {
 
   speakText(kanji);
 
+  const allButtons = document.querySelectorAll('#quizOptions button');
+  allButtons.forEach(b => {
+    b.disabled = true;
+    if (b.innerText === correct) {
+      b.classList.add('!border-emerald-500', '!bg-emerald-500/15', '!text-emerald-500');
+    }
+  });
+
   if (chosen === correct) {
     correctAnswers++;
     if (typeof playQuizSound === 'function') playQuizSound('correct');
-    btnElement.classList.add('!border-emerald-500', '!bg-emerald-500/15', '!text-emerald-500');
     feedback.className = "text-lg font-bold text-emerald-500 mt-2 flex flex-col items-center";
     feedback.innerHTML = `<div>✅ Benar!</div>${illusHTML}`;
   } else {
@@ -4544,6 +4670,9 @@ function checkAnswer(btnElement, chosen, correct, kanji) {
     feedback.className = "text-lg font-bold text-red-500 mt-2 flex flex-col items-center";
     feedback.innerHTML = `<div>❌ Salah! Jawaban: ${correct}</div>${illusHTML}`;
   }
+
+  renderQuizNavControls();
+}
 
   setTimeout(() => {
     currentQuizIdx++;
