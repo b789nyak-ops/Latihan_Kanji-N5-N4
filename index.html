@@ -213,7 +213,22 @@
     const splash = document.getElementById('customSplashScreen');
     const popup = document.getElementById('welcomeAppPopup');
 
-    // Tampilkan splash screen logo MJ + "Master Japan" selama 1.8 detik
+    // Cek apakah halaman dibuka karena di-refresh atau sudah pernah muncul di sesi ini
+    const navEntries = performance.getEntriesByType('navigation');
+    const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
+    const hasSeenIntro = sessionStorage.getItem('mj_intro_shown');
+
+    if (isReload || hasSeenIntro) {
+      // Jika hanya refresh, langsung sembunyikan splash & popup tanpa jeda
+      if (splash) splash.style.display = 'none';
+      if (popup) popup.style.display = 'none';
+      return;
+    }
+
+    // Tandai bahwa intro sudah ditampilkan untuk sesi buka aplikasi kali ini
+    sessionStorage.setItem('mj_intro_shown', 'true');
+
+    // Ubah angka 3000 (3 detik) sesuai selera (misal 2500 = 2.5 detik, 3500 = 3.5 detik)
     setTimeout(() => {
       if (splash) {
         splash.style.opacity = '0';
@@ -226,7 +241,7 @@
           }
         }, 600);
       }
-    }, 1800);
+    }, 3000);
   });
 
   function closeWelcomePopup() {
