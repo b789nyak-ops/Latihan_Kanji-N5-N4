@@ -7,15 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" href="./logo.png">
-<link rel="apple-touch-icon" href="./logo.png">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
-  }
-</script>
+    <link rel="apple-touch-icon" href="./logo.png">
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js');
+      }
+    </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;700&display=swap');
 
         /* =========================================================
            SISTEM 4 TEMA JEPANG & TOKYO + CORAK TRADISIONAL (WAGARA)
@@ -34,7 +34,6 @@
             --header-grad: linear-gradient(135deg, #0f172a 0%, #1e1b4b 55%, #311042 100%);
             --header-border: rgba(56, 189, 248, 0.35);
             --canvas-bg: #ffffff;
-            /* Motif Cyber Grid Tokyo */
             --body-pattern: radial-gradient(rgba(56, 189, 248, 0.08) 1px, transparent 1px);
             --body-pattern-size: 22px 22px;
         }
@@ -53,7 +52,6 @@
             --header-grad: linear-gradient(135deg, #991b1b 0%, #c83e2b 60%, #b45309 100%);
             --header-border: rgba(251, 191, 36, 0.4);
             --canvas-bg: #fffdf9;
-            /* Motif Ombak Seigaiha Kyoto */
             --body-pattern: radial-gradient(circle at 100% 150%, transparent 24%, rgba(200, 62, 43, 0.045) 25%, rgba(200, 62, 43, 0.045) 28%, transparent 29%, transparent 36%, rgba(200, 62, 43, 0.045) 36%, rgba(200, 62, 43, 0.045) 40%, transparent 40%, transparent),
                             radial-gradient(circle at 0 150%, transparent 24%, rgba(200, 62, 43, 0.045) 25%, rgba(200, 62, 43, 0.045) 28%, transparent 29%, transparent 36%, rgba(200, 62, 43, 0.045) 36%, rgba(200, 62, 43, 0.045) 40%, transparent 40%, transparent),
                             radial-gradient(circle at 50% 100%, rgba(200, 62, 43, 0.045) 10%, transparent 11%, transparent 23%, rgba(200, 62, 43, 0.045) 24%, rgba(200, 62, 43, 0.045) 30%, transparent 31%);
@@ -74,7 +72,6 @@
             --header-grad: linear-gradient(135deg, #be185d 0%, #ec4899 60%, #f472b6 100%);
             --header-border: rgba(255, 255, 255, 0.4);
             --canvas-bg: #ffffff;
-            /* Motif Bintang Asanoha Sakura */
             --body-pattern: linear-gradient(30deg, rgba(219, 39, 119, 0.045) 12%, transparent 12.5%, transparent 87%, rgba(219, 39, 119, 0.045) 87.5%, rgba(219, 39, 119, 0.045)),
                             linear-gradient(150deg, rgba(219, 39, 119, 0.045) 12%, transparent 12.5%, transparent 87%, rgba(219, 39, 119, 0.045) 87.5%, rgba(219, 39, 119, 0.045)),
                             linear-gradient(60deg, rgba(244, 114, 182, 0.05) 25%, transparent 25.5%, transparent 75%, rgba(244, 114, 182, 0.05) 75%, rgba(244, 114, 182, 0.05));
@@ -95,7 +92,6 @@
             --header-grad: linear-gradient(135deg, #1d4ed8 0%, #3730a3 100%);
             --header-border: rgba(255, 255, 255, 0.25);
             --canvas-bg: #ffffff;
-            /* Motif Sisik Gunung Uroko Fuji */
             --body-pattern: linear-gradient(135deg, rgba(37, 99, 235, 0.04) 25%, transparent 25%),
                             linear-gradient(225deg, rgba(37, 99, 235, 0.04) 25%, transparent 25%);
             --body-pattern-size: 28px 28px;
@@ -130,12 +126,6 @@
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        .tab-btn.active {
-            color: var(--accent);
-            border-bottom: 2px solid var(--accent);
-            font-weight: 700;
-        }
-
         #writingCanvas {
             touch-action: none;
             background-color: var(--canvas-bg);
@@ -157,20 +147,115 @@
             box-shadow: 0 0 10px rgba(56, 189, 248, 0.45), 0 0 16px rgba(249, 115, 22, 0.25);
         }
 
-        /* Tampilkan siluet ikon khas sesuai tema aktif */
         .theme-motif-icon { display: none; }
         [data-theme="tokyo"] .motif-tokyo { display: block; }
         [data-theme="kyoto"] .motif-kyoto { display: block; }
         [data-theme="sakura"] .motif-sakura { display: block; }
         [data-theme="fuji"] .motif-fuji { display: block; }
+
+        /* Animasi Splash Screen Master Japan */
+        .mj-logo-stage {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.92);
+            animation: logoFadeInSmooth 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .mj-ambient-glow {
+            position: absolute;
+            inset: -24px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, rgba(56,189,248,0.35), rgba(251,146,60,0.35), rgba(56,189,248,0.35));
+            filter: blur(24px);
+            animation: spinGlow 5s linear infinite;
+        }
+        .mj-pulse-ring {
+            position: absolute;
+            inset: -6px;
+            border-radius: 42px;
+            border: 1.5px solid rgba(56,189,248,0.45);
+            animation: ringExpand 2.4s cubic-bezier(0.22, 1, 0.36, 1) 1.0s infinite;
+        }
+        .mj-splash-logo {
+            position: relative;
+            z-index: 2;
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
+            border-radius: 36px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
+        }
+        .mj-particles span {
+            position: absolute;
+            bottom: 18%;
+            left: var(--x);
+            width: var(--s);
+            height: var(--s);
+            border-radius: 60% 40% 60% 40%;
+            background: linear-gradient(135deg, rgba(56,189,248,0.6), rgba(251,146,60,0.6));
+            opacity: 0;
+            animation: floatPetal 3s ease-out var(--d) infinite;
+        }
+        .mj-reveal-text {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            margin-bottom: 0;
+        }
+        .mj-reveal-text span {
+            display: inline-block;
+            background: linear-gradient(90deg, #38bdf8, #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            filter: blur(6px);
+            transform: translateX(-10px) scale(0.95);
+            animation: letterFlowIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation-delay: calc(1.15s + (var(--i) * 0.08s));
+        }
+        .mj-reveal-text .mj-space {
+            width: 10px;
+            animation: none;
+            opacity: 1;
+            filter: none;
+            transform: none;
+        }
+        @keyframes logoFadeInSmooth {
+            0% { opacity: 0; transform: scale(0.92); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes spinGlow {
+            0% { transform: rotate(0deg) scale(0.95); }
+            50% { transform: rotate(180deg) scale(1.05); }
+            100% { transform: rotate(360deg) scale(0.95); }
+        }
+        @keyframes ringExpand {
+            0% { transform: scale(0.96); opacity: 0.7; }
+            100% { transform: scale(1.18); opacity: 0; }
+        }
+        @keyframes floatPetal {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            25% { opacity: 0.75; }
+            100% { transform: translateY(-220px) translateX(25px) rotate(140deg); opacity: 0; }
+        }
+        @keyframes letterFlowIn {
+            0% { opacity: 0; filter: blur(6px); transform: translateX(-10px) scale(0.95); }
+            100% { opacity: 1; filter: blur(0); transform: translateX(0) scale(1); }
+        }
     </style>
 </head>
 <body class="pb-24">
 
-<!-- 1. LAYAR PEMBUKA (LOGO FADE-IN HALUS -> DISUSUL TEKS MASTER JAPAN MENGALIR) -->
+<!-- 1. LAYAR PEMBUKA -->
 <div id="customSplashScreen" style="position:fixed; inset:0; z-index:99999; background:radial-gradient(circle at 50% 45%, #232936 0%, #14171d 70%, #0d0f13 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; transition:opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1); will-change:opacity;">
-  
-  <!-- Partikel Kelopak / Cahaya Melayang -->
   <div class="mj-particles" aria-hidden="true">
     <span style="--x:18%; --d:0.6s; --s:8px;"></span>
     <span style="--x:35%; --d:1.0s; --s:6px;"></span>
@@ -178,15 +263,11 @@
     <span style="--x:82%; --d:1.2s; --s:7px;"></span>
     <span style="--x:50%; --d:1.4s; --s:5px;"></span>
   </div>
-
-  <!-- Wadah Logo (Masuk Memudar Halus Terlebih Dahulu) -->
   <div class="mj-logo-stage">
     <div class="mj-ambient-glow"></div>
     <div class="mj-pulse-ring"></div>
     <img src="./logo.png" alt="Master Japan Logo" class="mj-splash-logo">
   </div>
-
-  <!-- Teks Master Japan (Baru Mengalir Setelah Logo Selesai Muncul) -->
   <h1 class="mj-reveal-text" aria-label="Master Japan" style="margin-top:26px;">
     <span style="--i:0">M</span><span style="--i:1">a</span><span style="--i:2">s</span><span style="--i:3">t</span><span style="--i:4">e</span><span style="--i:5">r</span><span class="mj-space"></span><span style="--i:6">J</span><span style="--i:7">a</span><span style="--i:8">p</span><span style="--i:9">a</span><span style="--i:10">n</span>
   </h1>
@@ -195,371 +276,105 @@
 <!-- 2. POPUP SETELAH TERBUKA -->
 <div id="welcomeAppPopup" style="position:fixed; inset:0; z-index:99998; background:rgba(10,12,16,0.85); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:20px; opacity:0; transition:opacity 0.45s ease;">
   <div id="welcomeCardBox" style="background:linear-gradient(160deg, #1e222b 0%, #14171d 100%); border:1px solid rgba(255,255,255,0.12); border-radius:24px; max-width:360px; width:100%; padding:28px 24px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.6); color:#f8fafc; transform:translateY(14px) scale(0.97); transition:transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);">
-    
-    <!-- Logo + Judul Master Japan -->
     <img src="./logo.png" alt="Master Japan" style="width:88px; height:88px; object-fit:contain; margin:0 auto 12px; border-radius:20px; filter:drop-shadow(0 0 16px rgba(251,146,60,0.4));">
     <h2 style="font-size:24px; font-weight:800; margin:0 0 8px; background:linear-gradient(90deg, #38bdf8, #fb923c); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
       Master Japan
     </h2>
-
-    <!-- Tulisan kecil deskripsi -->
     <p style="font-size:13px; color:#cbd5e1; margin:0 0 12px; line-height:1.5;">
-      Metode Pembelajaran Bahasa jepang dengan fitur lengkap
+      Metode Pembelajaran Bahasa Jepang dengan Fitur Lengkap
     </p>
-
-    <!-- Tulisan di bawahnya lagi -->
     <p style="font-size:14px; font-weight:600; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); padding:8px 14px; border-radius:12px; margin:0 0 22px;">
       Sesuaikan Belajar Dengan Level mu
     </p>
-
-    <button onclick="enterMasterJapanWithSound()"()" style="width:100%; padding:12px; border:none; border-radius:14px; font-size:15px; font-weight:700; color:#fff; background:linear-gradient(90deg, #0284c7, #ea580c); cursor:pointer; box-shadow:0 6px 20px rgba(2,132,199,0.35);">
+    <button onclick="enterMasterJapanWithSound()" style="width:100%; padding:12px; border:none; border-radius:14px; font-size:15px; font-weight:700; color:#fff; background:linear-gradient(90deg, #0284c7, #ea580c); cursor:pointer; box-shadow:0 6px 20px rgba(2,132,199,0.35);">
       Mulai Belajar
     </button>
   </div>
 </div>
 
-<style>
-  /* Panggung Logo & Fade-In Halus (0s - 1.2s) */
-  .mj-logo-stage {
-    position: relative;
-    width: 180px;
-    height: 180px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transform: scale(0.92);
-    animation: logoFadeInSmooth 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  }
-
-  .mj-ambient-glow {
-    position: absolute;
-    inset: -24px;
-    border-radius: 50%;
-    background: conic-gradient(from 0deg, rgba(56,189,248,0.35), rgba(251,146,60,0.35), rgba(56,189,248,0.35));
-    filter: blur(24px);
-    animation: spinGlow 5s linear infinite;
-  }
-
-  .mj-pulse-ring {
-    position: absolute;
-    inset: -6px;
-    border-radius: 42px;
-    border: 1.5px solid rgba(56,189,248,0.45);
-    animation: ringExpand 2.4s cubic-bezier(0.22, 1, 0.36, 1) 1.0s infinite;
-  }
-
-  .mj-splash-logo {
-    position: relative;
-    z-index: 2;
-    width: 180px;
-    height: 180px;
-    object-fit: contain;
-    border-radius: 36px;
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
-  }
-
-  /* Partikel Kelopak / Cahaya Melayang */
-  .mj-particles span {
-    position: absolute;
-    bottom: 18%;
-    left: var(--x);
-    width: var(--s);
-    height: var(--s);
-    border-radius: 60% 40% 60% 40%;
-    background: linear-gradient(135deg, rgba(56,189,248,0.6), rgba(251,146,60,0.6));
-    opacity: 0;
-    animation: floatPetal 3s ease-out var(--d) infinite;
-  }
-
-  /* Animasi Huruf Mengalir Kiri ke Kanan (Mulai di detik ke-1.15 setelah logo selesai muncul) */
-  .mj-reveal-text {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 30px;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-    margin-bottom: 0;
-  }
-
-  .mj-reveal-text span {
-    display: inline-block;
-    background: linear-gradient(90deg, #38bdf8, #fb923c);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    opacity: 0;
-    filter: blur(6px);
-    transform: translateX(-10px) scale(0.95);
-    animation: letterFlowIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    animation-delay: calc(1.15s + (var(--i) * 0.08s));
-  }
-
-  .mj-reveal-text .mj-space {
-    width: 10px;
-    animation: none;
-    opacity: 1;
-    filter: none;
-    transform: none;
-  }
-
-  @keyframes logoFadeInSmooth {
-    0% {
-      opacity: 0;
-      transform: scale(0.92);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  @keyframes spinGlow {
-    0% { transform: rotate(0deg) scale(0.95); }
-    50% { transform: rotate(180deg) scale(1.05); }
-    100% { transform: rotate(360deg) scale(0.95); }
-  }
-
-  @keyframes ringExpand {
-    0% { transform: scale(0.96); opacity: 0.7; }
-    100% { transform: scale(1.18); opacity: 0; }
-  }
-
-  @keyframes floatPetal {
-    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-    25% { opacity: 0.75; }
-    100% { transform: translateY(-220px) translateX(25px) rotate(140deg); opacity: 0; }
-  }
-
-  @keyframes letterFlowIn {
-    0% {
-      opacity: 0;
-      filter: blur(6px);
-      transform: translateX(-10px) scale(0.95);
-    }
-    100% {
-      opacity: 1;
-      filter: blur(0);
-      transform: translateX(0) scale(1);
-    }
-  }
-</style>
-
-<script>
-  let hasPlayedIntroChime = false;
-
-  // Efek Sound 1: Lonceng Kristal Modern (Master Japan Signature Chime)
-  function playMasterJapanChime() {
-    if (hasPlayedIntroChime) return;
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-
-      const ctx = new AudioCtx();
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
-
-      // Hanya tandai sudah berbunyi jika konteks audio benar-benar aktif/diizinkan browser
-      if (ctx.state === 'running') {
-        hasPlayedIntroChime = true;
-      }
-
-      const now = ctx.currentTime;
-      const notes = [
-        { freq: 587.33, time: 0.00, dur: 1.1, vol: 0.16 }, // D5
-        { freq: 783.99, time: 0.11, dur: 1.2, vol: 0.18 }, // G5
-        { freq: 880.00, time: 0.22, dur: 1.3, vol: 0.18 }, // A5
-        { freq: 1174.66, time: 0.35, dur: 1.8, vol: 0.22 } // D6
-      ];
-
-      notes.forEach(n => {
-        const osc = ctx.createOscillator();
-        const shimmer = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const sGain = ctx.createGain();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(n.freq, now + n.time);
-
-        shimmer.type = 'triangle';
-        shimmer.frequency.setValueAtTime(n.freq * 2, now + n.time);
-        sGain.gain.setValueAtTime(0.03, now + n.time);
-
-        gain.gain.setValueAtTime(0.0001, now + n.time);
-        gain.gain.exponentialRampToValueAtTime(n.vol, now + n.time + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + n.time + n.dur);
-
-        osc.connect(gain);
-        shimmer.connect(sGain);
-        sGain.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(now + n.time);
-        shimmer.start(now + n.time);
-        osc.stop(now + n.time + n.dur);
-        shimmer.stop(now + n.time + n.dur);
-      });
-    } catch (e) {
-      console.log('Menunggu sentuhan layar untuk audio:', e);
-    }
-  }
-
-  window.addEventListener('DOMContentLoaded', () => {
-    const splash = document.getElementById('customSplashScreen');
-    const popup = document.getElementById('welcomeAppPopup');
-    const cardBox = document.getElementById('welcomeCardBox');
-
-    const navEntries = performance.getEntriesByType('navigation');
-    const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
-    const hasSeenIntro = sessionStorage.getItem('mj_intro_shown');
-
-    if (isReload || hasSeenIntro) {
-      if (splash) splash.style.display = 'none';
-      if (popup) popup.style.display = 'none';
-      return;
-    }
-
-    sessionStorage.setItem('mj_intro_shown', 'true');
-
-    // 1. Coba putar saat logo muncul (berhasil di desktop/browser yang mengizinkan)
-    setTimeout(() => {
-      playMasterJapanChime();
-    }, 300);
-
-    // 2. Jika diblokir browser HP saat baru buka, langsung bunyikan begitu layar logo disentuh
-    if (splash) {
-      splash.addEventListener('pointerdown', () => {
-        playMasterJapanChime();
-      }, { once: true });
-    }
-
-    // Total durasi 3.8 detik sebelum transisi ke popup
-    setTimeout(() => {
-      if (popup) {
-        popup.style.display = 'flex';
-        popup.style.opacity = '1';
-      }
-
-      requestAnimationFrame(() => {
-        if (splash) splash.style.opacity = '0';
-        if (cardBox) cardBox.style.transform = 'translateY(0) scale(1)';
-
-        setTimeout(() => {
-          if (splash) splash.style.display = 'none';
-        }, 600);
-      });
-    }, 3800);
-  });
-
-  function enterMasterJapanWithSound() {
-    playMasterJapanChime();
-    closeWelcomePopup();
-  }
-
-  function closeWelcomePopup() {
-    const popup = document.getElementById('welcomeAppPopup');
-    if (popup) {
-      popup.style.opacity = '0';
-      setTimeout(() => { popup.style.display = 'none'; }, 400);
-    }
-  }
-</script>
-    
-    <!-- MODAL POP-UP NAMA & TEMPAT ASAL (UNTUK LOG GOOGLE SHEETS) -->
-    <div id="visitorModal" class="hidden fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="theme-card w-full max-w-md rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-xl overflow-hidden bg-slate-900 border border-cyan-400/50 logo-glow flex items-center justify-center shrink-0">
-                    <img src="logo.png" alt="MJ" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                    <span class="hidden font-black text-sm text-cyan-400">MJ</span>
-                </div>
-                <div>
-                    <h2 class="text-lg font-extrabold leading-tight">ようこそ！Selamat Datang</h2>
-                    <p class="text-xs theme-text-muted">Kenalan dulu yuk sebelum memulai belajar!</p>
-                </div>
+<!-- MODAL POP-UP NAMA & TEMPAT ASAL -->
+<div id="visitorModal" class="hidden fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="theme-card w-full max-w-md rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl overflow-hidden bg-slate-900 border border-cyan-400/50 logo-glow flex items-center justify-center shrink-0">
+                <img src="logo.png" alt="MJ" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <span class="hidden font-black text-sm text-cyan-400">MJ</span>
             </div>
+            <div>
+                <h2 class="text-lg font-extrabold leading-tight">ようこそ！Selamat Datang</h2>
+                <p class="text-xs theme-text-muted">Kenalan dulu yuk sebelum memulai belajar!</p>
+            </div>
+        </div>
+        <form onsubmit="submitVisitorForm(event)" class="space-y-3.5">
+            <div>
+                <label class="block text-xs font-semibold theme-text-muted mb-1">Nama *</label>
+                <input type="text" id="visitorNameInput" required placeholder="Contoh: Raka" class="w-full theme-input p-3 rounded-xl outline-none text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold theme-text-muted mb-1">Kota / Daerah *</label>
+                <input type="text" id="visitorOriginInput" required placeholder="Contoh: Tangerang / Bandung" class="w-full theme-input p-3 rounded-xl outline-none text-sm">
+            </div>
+            <button type="submit" id="visitorSubmitBtn" class="w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md transition mt-2">
+                🚀 Mulai Belajar
+            </button>
+        </form>
+    </div>
+</div>
 
-            <form onsubmit="submitVisitorForm(event)" class="space-y-3.5">
-                <div>
-                    <label class="block text-xs font-semibold theme-text-muted mb-1">Nama *</label>
-                    <input type="text" id="visitorNameInput" required placeholder="Contoh: Raka" class="w-full theme-input p-3 rounded-xl outline-none text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold theme-text-muted mb-1">Kota / Daerah *</label>
-                    <input type="text" id="visitorOriginInput" required placeholder="Contoh: Tangerang / Bandung" class="w-full theme-input p-3 rounded-xl outline-none text-sm">
-                </div>
-                <button type="submit" id="visitorSubmitBtn" class="w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md transition mt-2">
-                    🚀 Mulai Belajar
-                </button>
-            </form>
+<!-- HEADER DENGAN LOGO MJ & SILUET IKON TEMA -->
+<header class="theme-header text-white p-3.5 sm:p-4 rounded-b-3xl shadow-xl sticky top-0 z-50 overflow-hidden">
+    <svg class="theme-motif-icon motif-tokyo absolute right-24 -bottom-2 w-20 h-24 text-cyan-300/15 pointer-events-none" viewBox="0 0 100 120" fill="currentColor">
+        <path d="M47 5h6v15h-6zM43 20h14l3 25H40l3-25zm-6 25h26l6 30H31l6-30zm-11 30h48l12 45H68l-6-20H38l-6 20H14l12-45z"/>
+    </svg>
+    <svg class="theme-motif-icon motif-kyoto absolute right-24 -bottom-1 w-24 h-20 text-amber-200/20 pointer-events-none" viewBox="0 0 120 100" fill="currentColor">
+        <path d="M10 15 Q60 25 110 15 L114 23 Q60 32 6 23 Z M20 35 H100 V43 H20 Z M32 25 H42 V95 H32 Z M78 25 H88 V95 H78 Z M56 25 H64 V38 H56 Z"/>
+    </svg>
+    <svg class="theme-motif-icon motif-sakura absolute right-24 -bottom-2 w-24 h-24 text-white/20 pointer-events-none" viewBox="0 0 100 100" fill="currentColor">
+        <path d="M50 10 C58 25 70 25 65 40 C80 35 88 48 75 58 C88 68 78 82 62 75 C65 90 48 94 42 80 C30 90 16 78 26 64 C12 58 18 40 34 44 C26 28 40 18 50 10 Z"/>
+        <circle cx="50" cy="52" r="7" fill="rgba(255,255,255,0.45)"/>
+    </svg>
+    <svg class="theme-motif-icon motif-fuji absolute right-20 -bottom-1 w-28 h-20 text-white/20 pointer-events-none" viewBox="0 0 140 90" fill="currentColor">
+        <path d="M5 85 Q45 55 58 22 L82 22 Q95 55 135 85 Z"/>
+        <path d="M58 22 L82 22 L88 37 L77 32 L70 39 L63 32 L52 37 Z" fill="rgba(255,255,255,0.5)"/>
+    </svg>
+
+    <div class="max-w-3xl mx-auto flex justify-between items-center gap-3 relative z-10">
+        <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl overflow-hidden bg-slate-900 border border-cyan-400/60 logo-glow flex items-center justify-center shrink-0">
+                <img id="appLogoImg" src="logo.png" alt="MJ Logo" class="w-full h-full object-cover" onerror="handleLogoFallback(this)">
+                <svg id="appLogoFallbackSvg" class="hidden w-full h-full p-1" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="mjGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#38bdf8"/>
+                            <stop offset="50%" stop-color="#a855f7"/>
+                            <stop offset="100%" stop-color="#f97316"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="100" height="100" rx="20" fill="#0f172a"/>
+                    <text x="50" y="64" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="42" fill="url(#mjGrad)">MJ</text>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-base sm:text-lg font-extrabold tracking-tight leading-tight">Master Japan</h1>
+                <p class="text-[11px] text-white/80" id="headerGreeting">皆の日本語 • JLPT/JFT • N5-N4</p>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-end gap-1">
+            <select id="themeSelector" onchange="changeTheme(this.value)" aria-label="Pilih Tema" class="bg-black/30 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full border border-white/25 outline-none backdrop-blur-sm cursor-pointer">
+                <option value="tokyo" class="text-slate-900">🌃 Tokyo Night</option>
+                <option value="kyoto" class="text-slate-900">⛩️ Kyoto Torii</option>
+                <option value="sakura" class="text-slate-900">🌸 Tokyo Sakura</option>
+                <option value="fuji" class="text-slate-900">🗻 Mount Fuji</option>
+            </select>
+            <div class="bg-white/15 px-2.5 py-0.5 rounded-full text-[11px] font-semibold backdrop-blur-sm">
+                Hafal: <span id="progressCount">0</span>/<span id="totalVocabCount">0</span>
+            </div>
         </div>
     </div>
+</header>
 
-    <!-- HEADER DENGAN LOGO MJ KECIL & SILUET IKON TEMA -->
-    <header class="theme-header text-white p-3.5 sm:p-4 rounded-b-3xl shadow-xl sticky top-0 z-50 overflow-hidden">
-        
-        <!-- Siluet Ikon Latar Belakang Sesuai Tema -->
-        <!-- 1. Tokyo Tower (Tokyo Night) -->
-        <svg class="theme-motif-icon motif-tokyo absolute right-24 -bottom-2 w-20 h-24 text-cyan-300/15 pointer-events-none" viewBox="0 0 100 120" fill="currentColor">
-            <path d="M47 5h6v15h-6zM43 20h14l3 25H40l3-25zm-6 25h26l6 30H31l6-30zm-11 30h48l12 45H68l-6-20H38l-6 20H14l12-45z"/>
-        </svg>
-        <!-- 2. Gerbang Torii (Kyoto Torii) -->
-        <svg class="theme-motif-icon motif-kyoto absolute right-24 -bottom-1 w-24 h-20 text-amber-200/20 pointer-events-none" viewBox="0 0 120 100" fill="currentColor">
-            <path d="M10 15 Q60 25 110 15 L114 23 Q60 32 6 23 Z M20 35 H100 V43 H20 Z M32 25 H42 V95 H32 Z M78 25 H88 V95 H78 Z M56 25 H64 V38 H56 Z"/>
-        </svg>
-        <!-- 3. Bunga Sakura (Tokyo Sakura) -->
-        <svg class="theme-motif-icon motif-sakura absolute right-24 -bottom-2 w-24 h-24 text-white/20 pointer-events-none" viewBox="0 0 100 100" fill="currentColor">
-            <path d="M50 10 C58 25 70 25 65 40 C80 35 88 48 75 58 C88 68 78 82 62 75 C65 90 48 94 42 80 C30 90 16 78 26 64 C12 58 18 40 34 44 C26 28 40 18 50 10 Z"/>
-            <circle cx="50" cy="52" r="7" fill="rgba(255,255,255,0.45)"/>
-        </svg>
-        <!-- 4. Gunung Fuji (Mount Fuji) -->
-        <svg class="theme-motif-icon motif-fuji absolute right-20 -bottom-1 w-28 h-20 text-white/20 pointer-events-none" viewBox="0 0 140 90" fill="currentColor">
-            <path d="M5 85 Q45 55 58 22 L82 22 Q95 55 135 85 Z"/>
-            <path d="M58 22 L82 22 L88 37 L77 32 L70 39 L63 32 L52 37 Z" fill="rgba(255,255,255,0.5)"/>
-        </svg>
-
-        <div class="max-w-3xl mx-auto flex justify-between items-center gap-3 relative z-10">
-            <!-- Logo MJ Ukuran Kecil & Ringkas -->
-            <div class="flex items-center gap-2.5">
-                <div class="w-10 h-10 rounded-xl overflow-hidden bg-slate-900 border border-cyan-400/60 logo-glow flex items-center justify-center shrink-0">
-                    <img id="appLogoImg" src="logo.png" alt="MJ Logo" class="w-full h-full object-cover" onerror="handleLogoFallback(this)">
-                    <svg id="appLogoFallbackSvg" class="hidden w-full h-full p-1" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="mjGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#38bdf8"/>
-                                <stop offset="50%" stop-color="#a855f7"/>
-                                <stop offset="100%" stop-color="#f97316"/>
-                            </linearGradient>
-                        </defs>
-                        <rect width="100" height="100" rx="20" fill="#0f172a"/>
-                        <text x="50" y="64" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="42" fill="url(#mjGrad)">MJ</text>
-                    </svg>
-                </div>
-
-                <div>
-                    <h1 class="text-base sm:text-lg font-extrabold tracking-tight leading-tight">Master Japan</h1>
-                    <p class="text-[11px] text-white/80" id="headerGreeting">皆の日本語 • JLPT/JFT • N5-N4</p>
-                </div>
-            </div>
-
-            <!-- Kontrol Kanan: Pengubah Tema & Progres -->
-            <div class="flex flex-col items-end gap-1">
-                <select id="themeSelector" onchange="changeTheme(this.value)" aria-label="Pilih Tema" class="bg-black/30 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full border border-white/25 outline-none backdrop-blur-sm cursor-pointer">
-                    <option value="tokyo" class="text-slate-900">🌃 Tokyo Night</option>
-                    <option value="kyoto" class="text-slate-900">⛩️ Kyoto Torii</option>
-                    <option value="sakura" class="text-slate-900">🌸 Tokyo Sakura</option>
-                    <option value="fuji" class="text-slate-900">🗻 Mount Fuji</option>
-                </select>
-                <div class="bg-white/15 px-2.5 py-0.5 rounded-full text-[11px] font-semibold backdrop-blur-sm">
-                    Hafal: <span id="progressCount">0</span>/<span id="totalVocabCount">0</span>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- NAVIGATION HUB MODERN DENGAN IKON SVG ANIMASI -->
+<!-- NAVIGATION HUB MODERN DENGAN IKON SVG ANIMASI -->
 <nav id="modernMainNav" class="max-w-3xl mx-auto theme-card mx-3 sm:mx-auto mt-4 rounded-2xl shadow-lg p-1.5 grid grid-cols-4 gap-1 border theme-border">
   <button onclick="openModernHub('beranda')" id="hub-btn-beranda" class="hub-nav-btn active flex flex-col items-center justify-center py-2 px-1 rounded-xl text-xs font-bold transition-all duration-300">
     <svg class="w-5 h-5 mb-1 hub-icon transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1105,23 +920,24 @@
                 <button onclick="startQuiz()" class="w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md transition">🚀 Mulai Kuis</button>
             </div>
 
-            <div id="quizPlay" class="hidden">
+                <div id="quizPlay" class="hidden">
                 <div class="theme-card p-6 rounded-2xl shadow-sm text-center mb-6">
                     <p class="text-sm font-bold theme-text-muted mb-2" id="quizProgressText">Soal 1 / 10</p>
                     <h2 class="text-5xl sm:text-6xl font-bold jp-text my-4" id="quizKanji">-</h2>
-                    <p id="quizFeedback" class="text-lg font-bold min-h-[28px] mt-2"></p>
+                    <div id="quizFeedback" class="text-lg font-bold min-h-[28px] mt-2"></div>
                 </div>
                 <div class="grid grid-cols-1 gap-3" id="quizOptions"></div>
+                <div id="quizManualNavControls" class="flex gap-3 mt-5"></div>
             </div>
             
             <div id="quizResult" class="hidden theme-card p-6 rounded-2xl shadow-sm text-center">
                 <h2 class="text-2xl font-bold mb-2">Kuis Selesai! 🎉</h2>
                 <p class="text-5xl font-extrabold theme-accent-text my-6" id="quizScore">100%</p>
                 <p class="theme-text-muted mb-6" id="quizDetailScore">Benar: 10 | Salah: 0</p>
-                <button onclick="document.getElementById('quizPlay').classList.add('hidden'); document.getElementById('quizResult').classList.add('hidden'); document.getElementById('quizSetup').classList.remove('hidden');" class="w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md">Ulangi Kuis</button>
+                <button onclick="resetQuizToSetup()" class="w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md">Ulangi Kuis</button>
             </div>
-
-                        <!-- SIMULASI UJIAN SETARA JLPT N5 & JFT-BASIC A2 / N4 -->
+            
+            <!-- SIMULASI UJIAN SETARA JLPT N5 & JFT-BASIC A2 / N4 -->
             <div id="exam-selector" class="theme-card p-6 rounded-2xl shadow-sm mt-6 space-y-4">
                 <div class="text-center">
                     <h3 class="text-xl font-bold">🎯 Simulasi Ujian (JLPT / JFT-Basic)</h3>
@@ -4591,16 +4407,8 @@ function renderQuizQuestion() {
 }
 
 function renderQuizNavControls() {
-  const optContainer = document.getElementById('quizOptions');
-  if (!optContainer || !optContainer.parentNode) return;
-
-  let navBox = document.getElementById('quizManualNavControls');
-  if (!navBox) {
-    navBox = document.createElement('div');
-    navBox.id = 'quizManualNavControls';
-    navBox.className = "flex gap-3 mt-5";
-    optContainer.parentNode.appendChild(navBox);
-  }
+  const navBox = document.getElementById('quizManualNavControls');
+  if (!navBox) return;
 
   const isAnswered = !!quizUserAnswers[currentQuizIdx];
   const isFirst = currentQuizIdx === 0;
@@ -4618,6 +4426,12 @@ function renderQuizNavControls() {
       <span>${isLast ? 'Lihat Hasil 🎯' : 'Selanjutnya ➡️'}</span>
     </button>
   `;
+}
+
+function resetQuizToSetup() {
+  document.getElementById('quizPlay').classList.add('hidden');
+  document.getElementById('quizResult').classList.add('hidden');
+  document.getElementById('quizSetup').classList.remove('hidden');
 }
 
 function prevQuizQuestion() {
