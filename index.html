@@ -422,78 +422,90 @@
 
     <main class="max-w-3xl mx-auto px-3 sm:px-4">
 
-  <!-- BERANDA UTAMA (HOME DASHBOARD) -->
-  <section id="hub-beranda-view" class="space-y-4 mt-4 animate-fade-in">
-    <!-- Banner Sambutan & Tombol Mulai Cepat -->
-    <div class="theme-card rounded-3xl p-5 shadow-md border theme-border relative overflow-hidden">
-      <div class="flex items-center justify-between gap-3">
+<!-- ==================== BERANDA UTAMA (GRID PETAK) ==================== -->
+<div id="hub-beranda-view" class="tab-content space-y-4">
+    <!-- Kartu Sambutan & Ringkasan -->
+    <div class="theme-card p-5 rounded-2xl shadow-sm flex items-center justify-between">
         <div>
-          <span class="inline-block text-[11px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full theme-accent-soft theme-accent-text mb-2">Master Japan • N5 & N4</span>
-          <h2 class="text-xl font-extrabold leading-snug">Konnichiwa! Mau latihan apa hari ini?</h2>
-          <p class="text-xs theme-text-muted mt-1">Semua fitur kuis, latihan skill, dan kamus kini terkelompok rapi.</p>
+            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full theme-accent-soft">JLPT N4 & N5 Prep</span>
+            <h2 id="berandaGreeting" class="text-xl sm:text-2xl font-extrabold mt-1">Ganbatte, Juan! 💪</h2>
+            <p class="text-xs theme-text-muted mt-0.5">Pilih salah satu menu di bawah untuk mulai belajar hari ini.</p>
         </div>
-        <div class="w-12 h-12 rounded-2xl theme-accent-soft flex items-center justify-center shrink-0">
-          <svg class="w-7 h-7 theme-accent-text animate-pulse" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-          </svg>
+        <div class="text-right shrink-0">
+            <div class="text-xs theme-text-muted">Total Hafal</div>
+            <div id="berandaHafalCount" class="text-lg font-extrabold theme-accent-text">0 / 713</div>
         </div>
-      </div>
-
-      <button onclick="jumpToFeature('kuis', 'tab-kuis')" class="mt-4 w-full py-3 px-4 rounded-2xl theme-accent-bg text-white font-bold text-sm shadow-md flex items-center justify-center gap-2 active:scale-98 transition-transform">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <span>Mulai Kuis Cepat Sekarang</span>
-      </button>
     </div>
 
-    <!-- Grid 4 Kartu Fitur Utama -->
+    <!-- Grid Petak Menu Fitur (2 Kolom Kanan-Kiri) -->
     <div class="grid grid-cols-2 gap-3">
-      <!-- Kartu 1: Pusat Kuis -->
-      <button onclick="jumpToFeature('kuis', 'tab-kuis')" class="theme-card rounded-2xl p-4 text-left border theme-border shadow-sm hover:scale-[1.02] active:scale-95 transition-all group">
-        <div class="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-400 flex items-center justify-center mb-3 group-hover:rotate-6 transition-transform">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        </div>
-        <div class="font-bold text-sm">Pusat Kuis & Partikel</div>
-        <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Kuis Kanji, Partikel kalimat & latihan menulis.</p>
-      </button>
+        <!-- 1. Daftar Kosakata -->
+        <button onclick="jumpToFeature('pustaka', 'tab-daftar')" class="theme-card p-4 rounded-2xl text-left border theme-border hover:scale-[1.02] transition flex flex-col justify-between gap-3 group">
+            <div class="w-10 h-10 rounded-xl theme-accent-bg flex items-center justify-center text-xl shadow-sm">📖</div>
+            <div>
+                <h3 class="text-sm font-extrabold group-hover:theme-accent-text transition">Daftar Kosakata</h3>
+                <p class="text-[11px] theme-text-muted mt-0.5">Kamus & daftar lengkap kata.</p>
+            </div>
+        </button>
 
-      <!-- Kartu 2: Flashcard -->
-      <button onclick="jumpToFeature('belajar', 'tab-flashcard')" class="theme-card rounded-2xl p-4 text-left border theme-border shadow-sm hover:scale-[1.02] active:scale-95 transition-all group">
-        <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center mb-3 group-hover:rotate-6 transition-transform">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-          </svg>
-        </div>
-        <div class="font-bold text-sm">Kartu Flashcard</div>
-        <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Hafalan kartu bolak-balik lengkap dengan audio.</p>
-      </button>
+        <!-- 2. Konjugasi Kata Kerja -->
+        <button onclick="jumpToFeature('pustaka', 'tab-konjugasi')" class="theme-card p-4 rounded-2xl text-left border theme-border hover:scale-[1.02] transition flex flex-col justify-between gap-3 group">
+            <div class="w-10 h-10 rounded-xl theme-accent-bg flex items-center justify-center text-xl shadow-sm">⚙️</div>
+            <div>
+                <h3 class="text-sm font-extrabold group-hover:theme-accent-text transition">Konjugasi Verba</h3>
+                <p class="text-[11px] theme-text-muted mt-0.5">14 bentuk perubahan kata kerja.</p>
+            </div>
+        </button>
 
-      <!-- Kartu 3: Membaca & Choukai -->
-      <button onclick="jumpToFeature('belajar', 'tab-membaca')" class="theme-card rounded-2xl p-4 text-left border theme-border shadow-sm hover:scale-[1.02] active:scale-95 transition-all group">
-        <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center mb-3 group-hover:rotate-6 transition-transform">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
-          </svg>
-        </div>
-        <div class="font-bold text-sm">Membaca & Choukai</div>
-        <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Latihan pemahaman bacaan & pendengaran Jepang.</p>
-      </button>
+        <!-- 3. Tata Bahasa (Bunpou) -->
+        <button onclick="jumpToFeature('bunpou', 'tab-bunpou')" class="theme-card p-4 rounded-2xl text-left border theme-border hover:scale-[1.02] transition flex flex-col justify-between gap-3 group">
+            <div class="w-10 h-10 rounded-xl theme-accent-bg flex items-center justify-center text-xl shadow-sm">📜</div>
+            <div>
+                <h3 class="text-sm font-extrabold group-hover:theme-accent-text transition">Tata Bahasa</h3>
+                <p class="text-[11px] theme-text-muted mt-0.5">Pola kalimat & penjelasan Bunpou.</p>
+            </div>
+        </button>
 
-      <!-- Kartu 4: Pustaka & Bunpou -->
-      <button onclick="jumpToFeature('pustaka', 'tab-daftar')" class="theme-card rounded-2xl p-4 text-left border theme-border shadow-sm hover:scale-[1.02] active:scale-95 transition-all group">
-        <div class="w-10 h-10 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center mb-3 group-hover:rotate-6 transition-transform">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-          </svg>
-        </div>
-        <div class="font-bold text-sm">Kamus & Tata Bahasa</div>
-        <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Daftar kosakata N5-N4 & rumus pola kalimat Bunpou.</p>
-      </button>
+        <!-- 4. Kartu Flashcard -->
+        <button onclick="jumpToFeature('belajar', 'tab-flashcard')" class="theme-card p-4 rounded-2xl text-left border theme-border hover:scale-[1.02] transition flex flex-col justify-between gap-3 group">
+            <div class="w-10 h-10 rounded-xl theme-accent-bg flex items-center justify-center text-xl shadow-sm">⚡</div>
+            <div>
+                <h3 class="text-sm font-extrabold group-hover:theme-accent-text transition">Kartu Flashcard</h3>
+                <p class="text-[11px] theme-text-muted mt-0.5">Latihan hafal kilat interaktif.</p>
+            </div>
+        </button>
+
+        <!-- 5. Membaca (Dokkai) -->
+        <button onclick="jumpToFeature('belajar', 'tab-membaca')" class="theme-card p-4 rounded-2xl text-left border theme-border hover:scale-[1.02] transition flex flex-col justify-between gap-3 group">
+            <div class="w-10 h-10 rounded-xl theme-accent-bg flex items-center justify-center text-xl shadow-sm">📑</div>
+            <div>
+                <h3 class="text-sm font-extrabold group-hover:theme-accent-text transition">Membaca (Dokkai)</h3>
+                <p class="text-[11px] theme-text-muted mt-0.5">Pemahaman bacaan & paragraf.</p>
+            </div>
+        </button>
+
+        <!-- 6. Mendengarkan (Choukai) -->
+        <button onclick="jumpToFeature('belajar', 'tab-choukai')" class="theme-card p-4 rounded-2xl text-left border theme-border hover:scale-[1.02] transition flex flex-col justify-between gap-3 group">
+            <div class="w-10 h-10 rounded-xl theme-accent-bg flex items-center justify-center text-xl shadow-sm">🎧</div>
+            <div>
+                <h3 class="text-sm font-extrabold group-hover:theme-accent-text transition">Mendengarkan</h3>
+                <p class="text-[11px] theme-text-muted mt-0.5">Latihan audio & respons cepat.</p>
+            </div>
+        </button>
+
+        <!-- 7. Pusat Kuis & Ujian JLPT -->
+        <button onclick="jumpToFeature('kuis', 'tab-kuis-hub')" class="theme-card p-4 rounded-2xl text-left border theme-border hover:scale-[1.02] transition flex flex-col justify-between gap-3 group col-span-2">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl theme-accent-bg flex items-center justify-center text-xl shadow-sm">🎯</div>
+                <div>
+                    <h3 class="text-sm font-extrabold group-hover:theme-accent-text transition">Pusat Kuis & Ujian JLPT</h3>
+                    <p class="text-[11px] theme-text-muted mt-0.5">Pilih berbagai jenis latihan (Kosakata, Partikel, Choukai, & Simulasi).</p>
+                </div>
+            </div>
+        </button>
     </div>
+</div>
+
   </section>
         
         <!-- ==================== TAB 1: FLASHCARD ==================== -->
@@ -1062,6 +1074,53 @@
         </div>
     </div>
 </section> 
+
+<!-- ==================== HUB UTAMA PILIHAN KUIS ==================== -->
+<section id="tab-kuis-hub" class="tab-content space-y-4">
+    <div class="theme-card p-5 rounded-2xl shadow-sm space-y-3">
+        <h2 class="text-lg sm:text-xl font-extrabold">🎯 Pusat Latihan & Kuis JLPT</h2>
+        <p class="text-xs theme-text-muted">Pilih jenis latihan atau kuis yang ingin kamu kerjakan hari ini.</p>
+        
+        <!-- Grid Pilihan Kuis (2 Kolom) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <!-- 1. Kuis Kosakata -->
+            <button onclick="selectSubTab('tab-kuis-kosakata')" class="theme-subcard p-4 rounded-xl border theme-border text-left hover:scale-[1.01] transition flex items-center gap-3.5 group">
+                <div class="w-10 h-10 rounded-xl theme-accent-bg flex items-center justify-center text-xl shadow-sm shrink-0">📖</div>
+                <div>
+                    <h3 class="text-sm font-extrabold group-hover:theme-accent-text transition">Kuis Kosakata & Kanji</h3>
+                    <p class="text-[11px] theme-text-muted mt-0.5">Uji hafalan arti kata dan kanji.</p>
+                </div>
+            </button>
+
+            <!-- 2. Kuis Partikel -->
+            <button onclick="selectSubTab('tab-kuis-partikel')" class="theme-subcard p-4 rounded-xl border theme-border text-left hover:scale-[1.01] transition flex items-center gap-3.5 group">
+                <div class="w-10 h-10 rounded-xl theme-accent-bg flex items-center justify-center text-xl shadow-sm shrink-0">🧩</div>
+                <div>
+                    <h3 class="text-sm font-extrabold group-hover:theme-accent-text transition">Kuis Partikel Kalimat</h3>
+                    <p class="text-[11px] theme-text-muted mt-0.5">Latihan penggunaan は, を, で, に, dll.</p>
+                </div>
+            </button>
+
+            <!-- 3. Kuis Choukai -->
+            <button onclick="selectSubTab('tab-kuis-choukai')" class="theme-subcard p-4 rounded-xl border theme-border text-left hover:scale-[1.01] transition flex items-center gap-3.5 group">
+                <div class="w-10 h-10 rounded-xl theme-accent-bg flex items-center justify-center text-xl shadow-sm shrink-0">🎧</div>
+                <div>
+                    <h3 class="text-sm font-extrabold group-hover:theme-accent-text transition">Kuis Choukai (Audio)</h3>
+                    <p class="text-[11px] theme-text-muted mt-0.5">Dengarkan audio & pilih respons.</p>
+                </div>
+            </button>
+
+            <!-- 4. Simulasi JLPT -->
+            <button onclick="selectSubTab('tab-jlpt-simulasi')" class="theme-subcard p-4 rounded-xl border theme-border text-left hover:scale-[1.01] transition flex items-center gap-3.5 group">
+                <div class="w-10 h-10 rounded-xl theme-accent-bg flex items-center justify-center text-xl shadow-sm shrink-0">🎓</div>
+                <div>
+                    <h3 class="text-sm font-extrabold group-hover:theme-accent-text transition">Simulasi Ujian JLPT</h3>
+                    <p class="text-[11px] theme-text-muted mt-0.5">Ujian lengkap standar N5 & N4.</p>
+                </div>
+            </button>
+        </div>
+    </div>
+</section>
         
     </main>
     
@@ -5808,22 +5867,26 @@ renderBunpouTables();
 
 <script>
   const HUB_GROUPS = {
-    kuis: [
-      { id: 'tab-kuis', label: 'Kuis Kosakata & Kanji' },
-      { id: 'tab-partikel', label: 'Kuis Partikel' },
-      { id: 'tab-menulis', label: 'Latihan Menulis' }
-    ],
-    belajar: [
-      { id: 'tab-flashcard', label: 'Kartu Flashcard' },
-      { id: 'tab-membaca', label: 'Membaca (Dokkai)' },
-      { id: 'tab-choukai', label: 'Mendengar (Choukai)' }
-    ],
-    pustaka: [
+  pustaka: [
     { id: 'tab-daftar', label: 'Daftar Kosakata' },
-    { id: 'tab-bunpou', label: 'Tata Bahasa (Bunpou)' },
     { id: 'tab-konjugasi', label: 'Konjugasi Kata Kerja' }
+  ],
+  bunpou: [
+    { id: 'tab-bunpou', label: 'Tata Bahasa (Bunpou)' }
+  ],
+  belajar: [
+    { id: 'tab-flashcard', label: 'Kartu Flashcard' },
+    { id: 'tab-membaca', label: 'Membaca (Dokkai)' },
+    { id: 'tab-choukai', label: 'Mendengarkan (Choukai)' }
+  ],
+  kuis: [
+    { id: 'tab-kuis-hub', label: 'Pilih Kuis' },
+    { id: 'tab-kuis-kosakata', label: 'Kuis Kosakata' },
+    { id: 'tab-kuis-partikel', label: 'Kuis Partikel' },
+    { id: 'tab-kuis-choukai', label: 'Kuis Choukai' },
+    { id: 'tab-jlpt-simulasi', label: 'Simulasi JLPT' }
   ]
-  };
+};
 
   function openModernHub(hubName, specificTabId = null) {
     // 1. Sorot tombol navigasi utama
