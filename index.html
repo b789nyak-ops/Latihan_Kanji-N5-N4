@@ -6285,12 +6285,80 @@ function enhanceAllKanjiWithRuby() {
 
   function injectRuby(el) {
     if (!el || el.querySelector('ruby')) return;
+
+// =========================================================================
+// 1. SISTEM FURIGANA MANUAL GLOBAL (MENYALA / MATI UNTUK SEMUA KANJI)
+// =========================================================================
+let isFuriganaVisible = localStorage.getItem('mj_furigana_on') !== 'false';
+
+function applyFuriganaState() {
+  document.body.classList.toggle('hide-furigana', !isFuriganaVisible);
+  const label = document.getElementById('furiganaStatusText');
+  if (label) label.innerText = isFuriganaVisible ? 'Furigana: ON' : 'Furigana: OFF';
+}
+
+function toggleGlobalFurigana() {
+  isFuriganaVisible = !isFuriganaVisible;
+  localStorage.setItem('mj_furigana_on', isFuriganaVisible);
+  applyFuriganaState();
+}
+
+function getItemHiragana(item) {
+  if (!item) return '';
+  return (item.hiragana || item.reading || item.kana || '').trim();
+}
+
+function formatKanjiWithFurigana(kanjiText, readingText) {
+  if (!kanjiText) return '';
+  if (!readingText || kanjiText === readingText || !/[\u4e00-\u9faf]/.test(kanjiText)) {
+    return kanjiText;
+  }
+  let i = 1;
+  while (
+    i <= kanjiText.length &&
+    i <= readingText.length &&
+    kanjiText[kanjiText.length - i] === readingText[readingText.length - i] &&
+    !/[\u4e00-\u9faf]/.test(kanjiText[kanjiText.length - i])
+  ) {
+    i++;
+  }
+  const suffixLen = i - 1;
+  const kStem = suffixLen > 0 ? kanjiText.slice(0, -suffixLen) : kanjiText;
+  const rStem = suffixLen > 0 ? readingText.slice(0, -suffixLen) : readingText;
+  const okurigana = suffixLen > 0 ? kanjiText.slice(-suffixLen) : '';
+  return `<ruby>${kStem}<rt>${rStem}</rt></ruby>${okurigana}`;
+}
+
+function enhanceAllKanjiWithRuby() {
+  if (typeof masterData === 'undefined') return;
+
+  // Bangun kamus Kanji -> HTML <ruby> dari seluruh masterData
+  const kanjiEntries = [];
+  const kanjiMap = new Map();
+  masterData.forEach(item => {
+    const k = (item.kanji || '').trim();
+    const h = getItemHiragana(item);
+    if (k && h && k !== h && /[\u4e00-\u9faf]/.test(k)) {
+      const rubyHtml = formatKanjiWithFurigana(k, h);
+      kanjiMap.set(k, rubyHtml);
+      kanjiEntries.push([k, rubyHtml]);
+    }
+  });
+  // Urutkan dari kata terpanjang agar kata majemuk diproses lebih dulu
+  kanjiEntries.sort((a, b) => b[0].length - a[0].length);
+
+  function injectRubyIntoElement(el) {
+    if (!el || el.querySelector('ruby')) return;
     const raw = el.textContent.trim();
     if (!raw || !/[\u4e00-\u9faf]/.test(raw)) return;
+
+    // 1. Cocok persis 1 kata (Flashcard, Daftar Kosakata, Kuis, Latihan Menulis)
     if (kanjiMap.has(raw)) {
       el.innerHTML = kanjiMap.get(raw);
       return;
     }
+
+    // 2. Cocok di dalam kalimat penuh (Kuis Partikel, Dokkai, Bunpou)
     let html = raw;
     let changed = false;
     for (const [k, rubyHtml] of kanjiEntries) {
@@ -6302,24 +6370,34 @@ function enhanceAllKanjiWithRuby() {
     if (changed) el.innerHTML = html;
   }
 
-  function scanVisibleKanji() {
-    const selectors = [
+  function scanAllVisibleKanji() {
+    // Sembunyikan kartu Kuis Selesai jika jumlah soal 0 (mencegah NaN%)
+    const resScoreEl = document.getElementById('quizScorePercent') || document.getElementById('resultPercent');
+    if (resScoreEl && resScoreEl.textContent.includes('NaN')) {
+      const card = resScoreEl.closest('.theme-card');
+      if (card) card.classList.add('hidden');
+    }
+
+    // Pindai semua ID & elemen tampilan Kanji utama di seluruh tab
+    const targetSelectors = [
       '#quizKanji', '#fcFront', '#fcKanji', '#writeKanji', '#writeTargetKanji',
+      '#particleQuestion', '#particleQuizQuestion', '#readingPassage',
       '#vocabList .jp-text', '#vocabList .text-xl', '#vocabList .text-2xl',
-      '#tab-partikel .jp-text', '#tab-menulis .jp-text',
+      '#tab-partikel .jp-text', '#tab-partikel button', '#tab-menulis .jp-text',
       '#bunpouTbody1 .jp-text', '#bunpouTbody2 .jp-text'
     ];
-    document.querySelectorAll(selectors.join(',')).forEach(injectRuby);
+    document.querySelectorAll(targetSelectors.join(',')).forEach(injectRubyIntoElement);
   }
 
-  let timer = null;
+  let scanTimer = null;
   const observer = new MutationObserver(() => {
-    clearTimeout(timer);
-    timer = setTimeout(scanVisibleKanji, 40);
+    clearTimeout(scanTimer);
+    scanTimer = setTimeout(scanAllVisibleKanji, 40);
   });
+
   observer.observe(document.body, { childList: true, subtree: true, characterData: true });
   applyFuriganaState();
-  scanVisibleKanji();
+  scanAllVisibleKanji();
 }
 
 // =========================================================================
