@@ -167,17 +167,34 @@
 </head>
 <body class="pb-24">
 
-<!-- 1. LAYAR PEMBUKA (LOGO MJ + TULISAN MASTER JAPAN DI BAWAHNYA) -->
-<div id="customSplashScreen" style="position:fixed; inset:0; z-index:99999; background:radial-gradient(circle at center, #232730 0%, #14161b 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.6s ease;">
-  <img src="./logo.png" alt="Master Japan Logo" style="width:150px; height:150px; object-fit:contain; border-radius:28px; filter:drop-shadow(0 0 24px rgba(59,130,246,0.45)); animation:pulseLogo 1.8s infinite ease-in-out;">
-  <h1 style="margin-top:20px; font-size:28px; font-weight:800; letter-spacing:1.5px; background:linear-gradient(90deg, #38bdf8, #fb923c); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
-    Master Japan
+<!-- 1. LAYAR PEMBUKA (LOGO MJ + EFEK VISUAL + TEKS MASTER JAPAN MENGALIR) -->
+<div id="customSplashScreen" style="position:fixed; inset:0; z-index:99999; background:radial-gradient(circle at 50% 45%, #232936 0%, #14171d 70%, #0d0f13 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; transition:opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1); will-change:opacity;">
+  
+  <!-- Partikel Kelopak / Cahaya Melayang -->
+  <div class="mj-particles" aria-hidden="true">
+    <span style="--x:18%; --d:0s; --s:8px;"></span>
+    <span style="--x:35%; --d:0.4s; --s:6px;"></span>
+    <span style="--x:65%; --d:0.2s; --s:9px;"></span>
+    <span style="--x:82%; --d:0.6s; --s:7px;"></span>
+    <span style="--x:50%; --d:0.8s; --s:5px;"></span>
+  </div>
+
+  <!-- Wadah Logo + Aura Cahaya & Cincin Berdenyut -->
+  <div class="mj-logo-stage">
+    <div class="mj-ambient-glow"></div>
+    <div class="mj-pulse-ring"></div>
+    <img src="./logo.png" alt="Master Japan Logo" class="mj-splash-logo">
+  </div>
+
+  <!-- Teks Master Japan Mengalir + Kilau Cahaya -->
+  <h1 class="mj-reveal-text" aria-label="Master Japan" style="margin-top:26px;">
+    <span style="--i:0">M</span><span style="--i:1">a</span><span style="--i:2">s</span><span style="--i:3">t</span><span style="--i:4">e</span><span style="--i:5">r</span><span class="mj-space"></span><span style="--i:6">J</span><span style="--i:7">a</span><span style="--i:8">p</span><span style="--i:9">a</span><span style="--i:10">n</span>
   </h1>
 </div>
 
 <!-- 2. POPUP SETELAH TERBUKA -->
-<div id="welcomeAppPopup" style="position:fixed; inset:0; z-index:99998; background:rgba(10,12,16,0.82); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:20px; opacity:0; transition:opacity 0.4s ease;">
-  <div style="background:linear-gradient(160deg, #1e222b 0%, #14171d 100%); border:1px solid rgba(255,255,255,0.12); border-radius:24px; max-width:360px; width:100%; padding:28px 24px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.6); color:#f8fafc;">
+<div id="welcomeAppPopup" style="position:fixed; inset:0; z-index:99998; background:rgba(10,12,16,0.85); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:20px; opacity:0; transition:opacity 0.4s ease;">
+  <div id="welcomeCardBox" style="background:linear-gradient(160deg, #1e222b 0%, #14171d 100%); border:1px solid rgba(255,255,255,0.12); border-radius:24px; max-width:360px; width:100%; padding:28px 24px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.6); color:#f8fafc; transform:translateY(12px) scale(0.97); transition:transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);">
     
     <!-- Logo + Judul Master Japan -->
     <img src="./logo.png" alt="Master Japan" style="width:88px; height:88px; object-fit:contain; margin:0 auto 12px; border-radius:20px; filter:drop-shadow(0 0 16px rgba(251,146,60,0.4));">
@@ -202,9 +219,116 @@
 </div>
 
 <style>
-  @keyframes pulseLogo {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+  /* Panggung Logo & Aura Cahaya */
+  .mj-logo-stage {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mj-ambient-glow {
+    position: absolute;
+    inset: -24px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, rgba(56,189,248,0.35), rgba(251,146,60,0.35), rgba(56,189,248,0.35));
+    filter: blur(24px);
+    animation: spinGlow 4s linear infinite;
+  }
+
+  .mj-pulse-ring {
+    position: absolute;
+    inset: -6px;
+    border-radius: 42px;
+    border: 1.5px solid rgba(56,189,248,0.45);
+    animation: ringExpand 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+
+  .mj-splash-logo {
+    position: relative;
+    z-index: 2;
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    border-radius: 36px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
+  }
+
+  /* Partikel Kelopak / Cahaya Melayang */
+  .mj-particles span {
+    position: absolute;
+    bottom: 18%;
+    left: var(--x);
+    width: var(--s);
+    height: var(--s);
+    border-radius: 60% 40% 60% 40%;
+    background: linear-gradient(135deg, rgba(56,189,248,0.6), rgba(251,146,60,0.6));
+    opacity: 0;
+    animation: floatPetal 2.6s ease-out var(--d) infinite;
+  }
+
+  /* Animasi Huruf Mengalir Kiri ke Kanan */
+  .mj-reveal-text {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    margin-bottom: 0;
+  }
+
+  .mj-reveal-text span {
+    display: inline-block;
+    background: linear-gradient(90deg, #38bdf8, #fb923c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateX(-8px) scale(0.95);
+    animation: letterFlowIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: calc(var(--i) * 0.06s);
+  }
+
+  .mj-reveal-text .mj-space {
+    width: 10px;
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+
+  @keyframes spinGlow {
+    0% { transform: rotate(0deg) scale(0.95); }
+    50% { transform: rotate(180deg) scale(1.05); }
+    100% { transform: rotate(360deg) scale(0.95); }
+  }
+
+  @keyframes ringExpand {
+    0% { transform: scale(0.96); opacity: 0.7; }
+    100% { transform: scale(1.18); opacity: 0; }
+  }
+
+  @keyframes floatPetal {
+    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+    25% { opacity: 0.75; }
+    100% { transform: translateY(-220px) translateX(25px) rotate(140deg); opacity: 0; }
+  }
+
+  @keyframes letterFlowIn {
+    0% {
+      opacity: 0;
+      filter: blur(6px);
+      transform: translateX(-8px) scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      filter: blur(0);
+      transform: translateX(0) scale(1);
+    }
   }
 </style>
 
@@ -212,36 +336,36 @@
   window.addEventListener('DOMContentLoaded', () => {
     const splash = document.getElementById('customSplashScreen');
     const popup = document.getElementById('welcomeAppPopup');
+    const cardBox = document.getElementById('welcomeCardBox');
 
-    // Cek apakah halaman dibuka karena di-refresh atau sudah pernah muncul di sesi ini
     const navEntries = performance.getEntriesByType('navigation');
     const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
     const hasSeenIntro = sessionStorage.getItem('mj_intro_shown');
 
     if (isReload || hasSeenIntro) {
-      // Jika hanya refresh, langsung sembunyikan splash & popup tanpa jeda
       if (splash) splash.style.display = 'none';
       if (popup) popup.style.display = 'none';
       return;
     }
 
-    // Tandai bahwa intro sudah ditampilkan untuk sesi buka aplikasi kali ini
     sessionStorage.setItem('mj_intro_shown', 'true');
 
-    // Ubah angka 3000 (3 detik) sesuai selera (misal 2500 = 2.5 detik, 3500 = 3.5 detik)
+    // Durasi 2.4 detik agar aura logo, partikel, dan aliran huruf Master Japan dinikmati penuh
     setTimeout(() => {
-      if (splash) {
-        splash.style.opacity = '0';
-        setTimeout(() => {
-          splash.style.display = 'none';
-          // Munculkan popup sambutan setelah splash selesai
-          if (popup) {
-            popup.style.display = 'flex';
-            requestAnimationFrame(() => { popup.style.opacity = '1'; });
-          }
-        }, 600);
+      if (popup) {
+        popup.style.display = 'flex';
+        popup.style.opacity = '1';
       }
-    }, 3000);
+
+      requestAnimationFrame(() => {
+        if (splash) splash.style.opacity = '0';
+        if (cardBox) cardBox.style.transform = 'translateY(0) scale(1)';
+
+        setTimeout(() => {
+          if (splash) splash.style.display = 'none';
+        }, 500);
+      });
+    }, 2400);
   });
 
   function closeWelcomePopup() {
