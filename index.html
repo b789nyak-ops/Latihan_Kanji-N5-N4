@@ -3158,7 +3158,7 @@ function conjugateMasu(masuJp, masuRom, targetForm) {
     }
 
     // 3. Kata Kerja Golongan 1
-    const stemJp = masuJp.slice(0, -2);
+    const stemJp = masuJp.slice(0, -3);
     if (masuRom.endsWith('kimasu')) {
         const r = masuRom.slice(0, -6);
         if (targetForm === 'dict') return [stemJp + 'く', r + 'ku'];
