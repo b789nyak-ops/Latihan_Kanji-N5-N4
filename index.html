@@ -6035,6 +6035,127 @@ renderBunpouTables();
     `;
   }
 </script>
+
+<script>
+  let hasPlayedIntroChime = false;
+
+  function playMasterJapanChime() {
+    if (hasPlayedIntroChime) return;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+      if (ctx.state === 'running') {
+        hasPlayedIntroChime = true;
+      }
+
+      const now = ctx.currentTime;
+      const notes = [
+        { freq: 587.33, time: 0.00, dur: 1.1, vol: 0.16 },
+        { freq: 783.99, time: 0.11, dur: 1.2, vol: 0.18 },
+        { freq: 880.00, time: 0.22, dur: 1.3, vol: 0.18 },
+        { freq: 1174.66, time: 0.35, dur: 1.8, vol: 0.22 }
+      ];
+
+      notes.forEach(n => {
+        const osc = ctx.createOscillator();
+        const shimmer = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const sGain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(n.freq, now + n.time);
+
+        shimmer.type = 'triangle';
+        shimmer.frequency.setValueAtTime(n.freq * 2, now + n.time);
+        sGain.gain.setValueAtTime(0.03, now + n.time);
+
+        gain.gain.setValueAtTime(0.0001, now + n.time);
+        gain.gain.exponentialRampToValueAtTime(n.vol, now + n.time + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + n.time + n.dur);
+
+        osc.connect(gain);
+        shimmer.connect(sGain);
+        sGain.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now + n.time);
+        shimmer.start(now + n.time);
+        osc.stop(now + n.time + n.dur);
+        shimmer.stop(now + n.time + n.dur);
+      });
+    } catch (e) {
+      console.log('Menunggu sentuhan layar untuk audio:', e);
+    }
+  }
+
+  function runIntroTransition() {
+    const splash = document.getElementById('customSplashScreen');
+    const popup = document.getElementById('welcomeAppPopup');
+    const cardBox = document.getElementById('welcomeCardBox');
+
+    const navEntries = performance.getEntriesByType('navigation');
+    const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
+    const hasSeenIntro = sessionStorage.getItem('mj_intro_shown');
+
+    if (isReload || hasSeenIntro) {
+      if (splash) splash.style.display = 'none';
+      if (popup) popup.style.display = 'none';
+      return;
+    }
+
+    sessionStorage.setItem('mj_intro_shown', 'true');
+
+    setTimeout(() => {
+      playMasterJapanChime();
+    }, 300);
+
+    if (splash) {
+      splash.addEventListener('pointerdown', () => {
+        playMasterJapanChime();
+      }, { once: true });
+    }
+
+    setTimeout(() => {
+      if (popup) {
+        popup.style.display = 'flex';
+        popup.style.opacity = '1';
+      }
+
+      requestAnimationFrame(() => {
+        if (splash) splash.style.opacity = '0';
+        if (cardBox) cardBox.style.transform = 'translateY(0) scale(1)';
+
+        setTimeout(() => {
+          if (splash) splash.style.display = 'none';
+        }, 600);
+      });
+    }, 3800);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runIntroTransition);
+  } else {
+    runIntroTransition();
+  }
+
+  function enterMasterJapanWithSound() {
+    playMasterJapanChime();
+    closeWelcomePopup();
+  }
+
+  function closeWelcomePopup() {
+    const popup = document.getElementById('welcomeAppPopup');
+    if (popup) {
+      popup.style.opacity = '0';
+      setTimeout(() => { popup.style.display = 'none'; }, 400);
+    }
+  }
+</script>
     
 </body>
 </html>
