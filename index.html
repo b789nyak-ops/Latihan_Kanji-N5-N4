@@ -6,6 +6,8 @@
     <title>Master Japan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" href="./logo.png">
+<link rel="apple-touch-icon" href="./logo.png">
 <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js');
@@ -165,12 +167,83 @@
 </head>
 <body class="pb-24">
 
+<!-- 1. LAYAR PEMBUKA (LOGO MJ + TULISAN MASTER JAPAN DI BAWAHNYA) -->
+<div id="customSplashScreen" style="position:fixed; inset:0; z-index:99999; background:radial-gradient(circle at center, #232730 0%, #14161b 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.6s ease;">
+  <img src="./logo.png" alt="Master Japan Logo" style="width:150px; height:150px; object-fit:contain; border-radius:28px; filter:drop-shadow(0 0 24px rgba(59,130,246,0.45)); animation:pulseLogo 1.8s infinite ease-in-out;">
+  <h1 style="margin-top:20px; font-size:28px; font-weight:800; letter-spacing:1.5px; background:linear-gradient(90deg, #38bdf8, #fb923c); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+    Master Japan
+  </h1>
+</div>
+
+<!-- 2. POPUP SETELAH TERBUKA -->
+<div id="welcomeAppPopup" style="position:fixed; inset:0; z-index:99998; background:rgba(10,12,16,0.82); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:20px; opacity:0; transition:opacity 0.4s ease;">
+  <div style="background:linear-gradient(160deg, #1e222b 0%, #14171d 100%); border:1px solid rgba(255,255,255,0.12); border-radius:24px; max-width:360px; width:100%; padding:28px 24px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.6); color:#f8fafc;">
+    
+    <!-- Logo + Judul Master Japan -->
+    <img src="./logo.png" alt="Master Japan" style="width:88px; height:88px; object-fit:contain; margin:0 auto 12px; border-radius:20px; filter:drop-shadow(0 0 16px rgba(251,146,60,0.4));">
+    <h2 style="font-size:24px; font-weight:800; margin:0 0 8px; background:linear-gradient(90deg, #38bdf8, #fb923c); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+      Master Japan
+    </h2>
+
+    <!-- Tulisan kecil deskripsi -->
+    <p style="font-size:13px; color:#cbd5e1; margin:0 0 12px; line-height:1.5;">
+      Metode Pembelajaran Bahasa jepang dengan fitur lengkap
+    </p>
+
+    <!-- Tulisan di bawahnya lagi -->
+    <p style="font-size:14px; font-weight:600; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); padding:8px 14px; border-radius:12px; margin:0 0 22px;">
+      Sesuaikan Belajar Dengan Level mu
+    </p>
+
+    <button onclick="closeWelcomePopup()" style="width:100%; padding:12px; border:none; border-radius:14px; font-size:15px; font-weight:700; color:#fff; background:linear-gradient(90deg, #0284c7, #ea580c); cursor:pointer; box-shadow:0 6px 20px rgba(2,132,199,0.35);">
+      Mulai Belajar
+    </button>
+  </div>
+</div>
+
+<style>
+  @keyframes pulseLogo {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+</style>
+
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const splash = document.getElementById('customSplashScreen');
+    const popup = document.getElementById('welcomeAppPopup');
+
+    // Tampilkan splash screen logo MJ + "Master Japan" selama 1.8 detik
+    setTimeout(() => {
+      if (splash) {
+        splash.style.opacity = '0';
+        setTimeout(() => {
+          splash.style.display = 'none';
+          // Munculkan popup sambutan setelah splash selesai
+          if (popup) {
+            popup.style.display = 'flex';
+            requestAnimationFrame(() => { popup.style.opacity = '1'; });
+          }
+        }, 600);
+      }
+    }, 1800);
+  });
+
+  function closeWelcomePopup() {
+    const popup = document.getElementById('welcomeAppPopup');
+    if (popup) {
+      popup.style.opacity = '0';
+      setTimeout(() => { popup.style.display = 'none'; }, 400);
+    }
+  }
+</script>
+    
     <!-- MODAL POP-UP NAMA & TEMPAT ASAL (UNTUK LOG GOOGLE SHEETS) -->
     <div id="visitorModal" class="hidden fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="theme-card w-full max-w-md rounded-3xl p-6 shadow-2xl relative overflow-hidden">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-xl overflow-hidden bg-slate-900 border border-cyan-400/50 logo-glow flex items-center justify-center shrink-0">
-                    <img src="logo.jpg" alt="MJ" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <img src="logo.png" alt="MJ" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                     <span class="hidden font-black text-sm text-cyan-400">MJ</span>
                 </div>
                 <div>
@@ -222,7 +295,7 @@
             <!-- Logo MJ Ukuran Kecil & Ringkas -->
             <div class="flex items-center gap-2.5">
                 <div class="w-10 h-10 rounded-xl overflow-hidden bg-slate-900 border border-cyan-400/60 logo-glow flex items-center justify-center shrink-0">
-                    <img id="appLogoImg" src="logo.jpg" alt="MJ Logo" class="w-full h-full object-cover" onerror="handleLogoFallback(this)">
+                    <img id="appLogoImg" src="logo.png" alt="MJ Logo" class="w-full h-full object-cover" onerror="handleLogoFallback(this)">
                     <svg id="appLogoFallbackSvg" class="hidden w-full h-full p-1" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                         <defs>
                             <linearGradient id="mjGrad" x1="0%" y1="0%" x2="100%" y2="100%">
