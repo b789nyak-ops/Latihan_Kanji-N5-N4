@@ -6972,6 +6972,43 @@ renderBunpouTables();
     document.addEventListener('DOMContentLoaded', renderVerbConjugationGrid);
     if (document.readyState !== 'loading') renderVerbConjugationGrid();
 </script>
+
+    <script>
+    function autoLoadPustakaTables() {
+        // 1. Muat otomatis isi Daftar Kosakata
+        const selects = document.querySelectorAll('select');
+        for (const sel of selects) {
+            if (sel.options && sel.options.length > 0 && /Semua Kategori/i.test(sel.options[0].textContent)) {
+                sel.dispatchEvent(new Event('change', { bubbles: true }));
+                break;
+            }
+        }
+
+        // 2. Muat otomatis isi Tabel 1 Bunpou (Bab 1–25) jika masih 0 Pola
+        if (document.body.innerText.includes('0 Pola')) {
+            const buttons = document.querySelectorAll('button');
+            for (const btn of buttons) {
+                if (/Tabel 1:\s*Bab 1/i.test(btn.textContent)) {
+                    btn.click();
+                    break;
+                }
+            }
+        }
+    }
+
+    // Jalankan otomatis saat halaman selesai dibuka
+    window.addEventListener('load', () => setTimeout(autoLoadPustakaTables, 150));
+    if (document.readyState === 'complete') {
+        setTimeout(autoLoadPustakaTables, 150);
+    }
+
+    // Cadangan: pastikan langsung terisi saat tab Pustaka atau sub-tabnya diketuk
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('#hub-btn-pustaka, #subGroupPills button')) {
+            setTimeout(autoLoadPustakaTables, 50);
+        }
+    });
+</script>
     
 </body>
 </html>
