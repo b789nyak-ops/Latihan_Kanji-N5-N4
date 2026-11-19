@@ -555,6 +555,11 @@
                 <div class="bg-white/15 px-2.5 py-0.5 rounded-full text-[11px] font-semibold backdrop-blur-sm">
                     Hafal: <span id="progressCount">0</span>/<span id="totalVocabCount">0</span>
                 </div>
+                <button id="btnKanaToggle" onclick="toggleKanaReading()" class="bg-white/20 hover:bg-white/30 text-white px-2.5 py-0.5 rounded-full text-[11px] font-bold backdrop-blur-sm transition">
+                    あ Kana: ON
+                </button>
+            </div>
+
             </div>
         </div>
     </header>
@@ -4144,7 +4149,7 @@ function renderReadingQuestion() {
 
     document.getElementById('readBadge').innerText = item.badge;
     document.getElementById('readProgressText').innerText = `${readCurrentIdx + 1} / ${readSessionQuestions.length}`;
-    document.getElementById('readJpPassage').innerText = item.jp;
+    document.getElementById('readJpPassage').innerHTML = formatSentenceWithKana(item.jp);
 
     const romajiEl = document.getElementById('readRomajiPassage');
     romajiEl.innerText = item.romaji;
@@ -4239,7 +4244,7 @@ function renderChoukaiQuestion() {
     document.getElementById('choukaiTranscriptBox').classList.add('hidden');
     document.getElementById('choukaiNextBtn').classList.add('hidden');
 
-    document.getElementById('choukaiJpScript').innerText = item.lines.map(l => `${l.speaker}：${l.text}`).join('\n');
+    document.getElementById('choukaiJpScript').innerHTML = item.lines.map(l => `${l.speaker}: ${formatSentenceWithKana(l.text)}`).join('<br>');
     document.getElementById('choukaiRomajiScript').innerText = item.lines.map(l => `${l.romaji}`).join('\n');
     document.getElementById('choukaiIdScript').innerText = item.lines.map(l => `${l.id}`).join('\n');
 
@@ -4342,7 +4347,7 @@ function initFlashcard() {
 function renderFlashcard() {
     document.querySelector('.flashcard').classList.remove('flipped');
     const item = fcData[fcIndex];
-    document.getElementById('fcKanji').innerText = item.kanji;
+    document.getElementById('fcKanji').innerHTML = formatItemWithKana(item);
     document.getElementById('fcRomaji').innerText = item.romaji;
     document.getElementById('fcArti').innerText = item.meaning;
     document.getElementById('fcCounter').innerText = `${fcIndex + 1} / ${fcData.length}`;
@@ -4450,7 +4455,7 @@ function loadWriteCard() {
     if (writeData.length === 0) return;
     clearCanvas();
     const item = writeData[writeIdx];
-    document.getElementById('writeKanji').innerText = item.kanji;
+    document.getElementById('writeKanji').innerHTML = formatItemWithKana(item);
     document.getElementById('writeRomaji').innerText = item.romaji;
     document.getElementById('writeArti').innerText = item.meaning;
     document.getElementById('writeCounter').innerText = `${writeIdx + 1} / ${writeData.length}`;
@@ -4655,11 +4660,11 @@ function getSmartDistractors(item, count = 3) {
 function renderQuizQuestion() {
     const item = quizData[currentQuizIdx];
     document.getElementById('quizProgressText').innerText = `Soal ${currentQuizIdx + 1} / ${quizData.length}`;
-    document.getElementById('quizKanji').innerText = item.kanji;
+    document.getElementById('quizKanji').innerHTML = formatItemWithKana(item);
 
     const feedback = document.getElementById('quizFeedback');
     feedback.innerHTML = '';
-
+    
     // Simpan urutan pilihan pengecoh agar tidak teracak ulang saat klik "Sebelumnya"
     if (!quizHistory[currentQuizIdx]) {
         let options = [item.meaning];
@@ -5239,7 +5244,7 @@ function renderPartikelQuiz() {
     const q = pkPool[pkIdx];
     document.getElementById('pkProgress').innerText = `Soal ${pkIdx + 1} / ${pkPool.length}`;
     document.getElementById('pkLevelBadge').innerText = q.level;
-    document.getElementById('pkQuestion').innerText = q.question;
+    document.getElementById('pkQuestion').innerHTML = formatSentenceWithKana(q.question);
     document.getElementById('pkHint').innerText = `Arti: "${q.hint}"`;
 
     nextBtn.innerText = 'Soal Berikutnya ➡️';
@@ -5434,7 +5439,7 @@ function renderArrangeTiles() {
 
     bankEl.innerHTML = psBankTokens.map((tok, idx) => `
         <button onclick="selectArrangeToken(${idx})" class="px-3 py-2 rounded-xl text-sm font-bold jp-text theme-subcard hover:opacity-85 active:scale-95 transition">
-            ${tok.text}
+            ${formatSentenceWithKana(tok.text)}
         </button>
     `).join('');
 }
@@ -5939,10 +5944,14 @@ function renderExamQuestion() {
 
     document.getElementById('exam-section-label').textContent = q.section;
     document.getElementById('exam-progress').textContent = `${examState.currentIndex + 1} / ${examState.questions.length}`;
-    document.getElementById('exam-question-text').innerText = q.prompt;
+   
+    const qEl = document.getElementById('exam-question-text');
+    qEl.innerHTML = q.section.includes('Cara Baca') ? q.prompt : formatSentenceWithKana(q.prompt);
+
     document.getElementById('exam-next-btn').disabled = true;
     document.getElementById('exam-next-btn').textContent =
         examState.currentIndex === examState.questions.length - 1 ? 'Selesai & Lihat Skor ✓' : 'Lanjut →';
+
 
     const audioBox = document.getElementById('exam-audio-box');
     if (q.isAudio) {
@@ -6398,6 +6407,191 @@ renderBunpouTables();
       </div>
     `;
   }
+</script>
+
+<style>
+    ruby {
+        ruby-align: center;
+    }
+    ruby rt {
+        font-size: 0.52em;
+        font-weight: 600;
+        color: var(--accent, #38bdf8);
+        letter-spacing: 0.02em;
+        user-select: none;
+    }
+    body.hide-kana ruby rt {
+        display: none;
+    }
+</style>
+
+<script>
+    let isKanaEnabled = localStorage.getItem('mj_kana_enabled') !== 'false';
+
+    function applyKanaState() {
+        document.body.classList.toggle('hide-kana', !isKanaEnabled);
+        const btn = document.getElementById('btnKanaToggle');
+        if (btn) {
+            btn.innerText = isKanaEnabled ? 'あ Kana: ON' : 'あ Kana: OFF';
+            btn.style.opacity = isKanaEnabled ? '1' : '0.65';
+        }
+    }
+
+    function toggleKanaReading() {
+        isKanaEnabled = !isKanaEnabled;
+        localStorage.setItem('mj_kana_enabled', isKanaEnabled);
+        applyKanaState();
+    }
+
+    // Konverter Romaji -> Hiragana otomatis untuk seluruh masterData
+    function romajiToHiragana(romaji) {
+        if (!romaji) return '';
+        let s = romaji.toLowerCase().trim()
+            .replace(/ā/g, 'aa').replace(/ī/g, 'ii').replace(/ū/g, 'uu')
+            .replace(/ē/g, 'ee').replace(/ō/g, 'ou')
+            .replace(/n'/g, 'ん');
+
+        const map = {
+            kya:'きゃ', kyu:'きゅ', kyo:'きょ', gya:'ぎゃ', gyu:'ぎゅ', gyo:'ぎょ',
+            sha:'しゃ', shi:'し', shu:'しゅ', sho:'しょ', sya:'しゃ', syu:'しゅ', syo:'しょ',
+            ja:'じゃ', ju:'じゅ', jo:'じょ', jya:'じゃ', jyu:'じゅ', jyo:'じょ',
+            cha:'ちゃ', chi:'ち', chu:'ちゅ', cho:'ちょ', tya:'ちゃ', tyu:'ちゅ', tyo:'ちょ',
+            nya:'にゃ', nyu:'にゅ', nyo:'にょ', hya:'ひゃ', hyu:'ひゅ', hyo:'ひょ',
+            bya:'びゃ', byu:'びゅ', byo:'びょ', pya:'ぴゃ', pyu:'ぴゅ', pyo:'ぴょ',
+            mya:'みゃ', myu:'みゅ', myo:'みょ', rya:'りゃ', ryu:'りゅ', ryo:'りょ',
+            tsu:'つ', dzu:'づ', ji:'じ', di:'ぢ', du:'づ', fu:'ふ',
+            ka:'か', ki:'き', ku:'く', ke:'け', ko:'こ',
+            ga:'が', gi:'ぎ', gu:'ぐ', ge:'げ', go:'ご',
+            sa:'さ', si:'し', su:'す', se:'せ', so:'そ',
+            za:'ざ', zi:'じ', zu:'ず', ze:'ぜ', zo:'ぞ',
+            ta:'た', ti:'ち', tu:'つ', te:'て', to:'と',
+            da:'だ', de:'で', do:'ど',
+            na:'な', ni:'に', nu:'ぬ', ne:'ね', no:'の',
+            ha:'は', hi:'ひ', hu:'ふ', he:'へ', ho:'ほ',
+            ba:'ば', bi:'び', bu:'ぶ', be:'べ', bo:'ぼ',
+            pa:'ぱ', pi:'ぴ', pu:'ぷ', pe:'ぺ', po:'ぽ',
+            ma:'ま', mi:'み', mu:'む', me:'め', mo:'も',
+            ya:'や', yu:'ゆ', yo:'よ',
+            ra:'ら', ri:'り', ru:'る', re:'れ', ro:'ろ',
+            wa:'わ', wo:'を', nn:'ん',
+            a:'あ', i:'い', u:'う', e:'え', o:'お', '-':'ー'
+        };
+
+        let out = '';
+        let i = 0;
+        while (i < s.length) {
+            const ch = s[i];
+            const next = s[i + 1] || '';
+
+            // Konsonan ganda (っ), kecuali nn
+            if (ch === next && /[bcdfghjklmpqrstvwxyz]/.test(ch) && ch !== 'n') {
+                out += 'っ';
+                i++;
+                continue;
+            }
+            if (s.slice(i, i + 3) === 'tch') {
+                out += 'っ';
+                i++;
+                continue;
+            }
+            // Huruf 'n' sebelum konsonan (bukan vokal/y) atau di akhir kata -> ん
+            if (ch === 'n' && !/[aeiouyn]/.test(next)) {
+                out += 'ん';
+                i++;
+                continue;
+            }
+
+            const tri = s.slice(i, i + 3);
+            if (map[tri]) { out += map[tri]; i += 3; continue; }
+
+            const bi = s.slice(i, i + 2);
+            if (map[bi]) { out += map[bi]; i += 2; continue; }
+
+            if (map[ch]) { out += map[ch]; i++; continue; }
+
+            out += ch;
+            i++;
+        }
+        return out;
+    }
+
+    // Pasang furigana rapi (hanya di atas huruf Kanji, okurigana tetap bersih)
+    function makeRubyHTML(word, kana) {
+        if (!word || !kana || !/[\u4e00-\u9faf]/.test(word)) return word;
+        let prefix = '';
+        let suffix = '';
+        let w = word;
+        let k = kana;
+
+        while (w.length > 1 && k.length > 1 && w[0] === k[0] && !/[\u4e00-\u9faf]/.test(w[0])) {
+            prefix += w[0];
+            w = w.slice(1);
+            k = k.slice(1);
+        }
+        while (w.length > 1 && k.length > 1 && w[w.length - 1] === k[k.length - 1] && !/[\u4e00-\u9faf]/.test(w[w.length - 1])) {
+            suffix = w[w.length - 1] + suffix;
+            w = w.slice(0, -1);
+            k = k.slice(0, -1);
+        }
+        return `${prefix}<ruby>${w}<rt>${k}</rt></ruby>${suffix}`;
+    }
+
+    // Untuk soal yang punya object item { kanji, romaji }
+    function formatItemWithKana(item) {
+        if (!item || !item.kanji) return '';
+        const kana = item.kana || item.hiragana || romajiToHiragana(item.romaji || '');
+        return makeRubyHTML(item.kanji, kana);
+    }
+
+    // Kamus Kanji dari masterData untuk memberi Kana pada kalimat penuh (Partikel, Dokkai, Choukai, JLPT)
+    let _kanjiDictCache = null;
+    function getKanjiDictionary() {
+        if (_kanjiDictCache) return _kanjiDictCache;
+        const entries = [];
+        if (typeof masterData !== 'undefined') {
+            for (const item of masterData) {
+                if (item.kanji && /[\u4e00-\u9faf]/.test(item.kanji)) {
+                    const kana = item.kana || item.hiragana || romajiToHiragana(item.romaji || '');
+                    if (kana) entries.push({ word: item.kanji, kana });
+                }
+            }
+        }
+        // Urutkan dari kata terpanjang agar kata majemuk (misal: 卒業式) cocok lebih dulu
+        entries.sort((a, b) => b.word.length - a.word.length);
+        _kanjiDictCache = entries;
+        return entries;
+    }
+
+    function formatSentenceWithKana(text) {
+        if (!text || !/[\u4e00-\u9faf]/.test(text)) return text;
+        const dict = getKanjiDictionary();
+        let result = '';
+        let i = 0;
+
+        while (i < text.length) {
+            if (!/[\u4e00-\u9faf]/.test(text[i])) {
+                result += text[i];
+                i++;
+                continue;
+            }
+            let matched = false;
+            for (const entry of dict) {
+                if (text.startsWith(entry.word, i)) {
+                    result += makeRubyHTML(entry.word, entry.kana);
+                    i += entry.word.length;
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                result += text[i];
+                i++;
+            }
+        }
+        return result;
+    }
+
+    applyKanaState();
 </script>
     
 </body>
