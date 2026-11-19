@@ -1111,8 +1111,16 @@
                     <h2 class="text-5xl sm:text-6xl font-bold jp-text my-4" id="quizKanji">-</h2>
                     <p id="quizFeedback" class="text-lg font-bold min-h-[28px] mt-2"></p>
                 </div>
-                <div class="grid grid-cols-1 gap-3" id="quizOptions"></div>
-            </div>
+               <div class="grid grid-cols-1 gap-3" id="quizOptions"></div>
+    <div class="flex gap-3 mt-4">
+        <button id="btnQuizPrev" onclick="prevQuizQuestion()" class="w-1/2 theme-card p-3.5 rounded-xl font-bold text-sm disabled:opacity-40 transition">
+            ← Sebelumnya
+        </button>
+        <button id="btnQuizNext" onclick="nextQuizQuestion()" class="w-1/2 theme-accent-bg p-3.5 rounded-xl font-bold text-sm transition">
+            Selanjutnya →
+        </button>
+    </div>
+</div>
             
             <div id="quizResult" class="hidden theme-card p-6 rounded-2xl shadow-sm text-center">
                 <h2 class="text-2xl font-bold mb-2">Kuis Selesai! 🎉</h2>
@@ -1120,6 +1128,11 @@
                 <p class="theme-text-muted mb-6" id="quizDetailScore">Benar: 10 | Salah: 0</p>
                 <button onclick="document.getElementById('quizPlay').classList.add('hidden'); document.getElementById('quizResult').classList.add('hidden'); document.getElementById('quizSetup').classList.remove('hidden');" class="w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md">Ulangi Kuis</button>
             </div>
+
+            </section>
+
+           <!-- ================= TAB 8: SIMULASI UJIAN JLPT ================= -->
+            <section id="tab-jlpt" class="tab-content hidden">
 
                         <!-- SIMULASI UJIAN SETARA JLPT N5 & JFT-BASIC A2 / N4 -->
             <div id="exam-selector" class="theme-card p-6 rounded-2xl shadow-sm mt-6 space-y-4">
@@ -4482,7 +4495,7 @@ canvas.addEventListener('touchmove', draw, { passive: false });
 canvas.addEventListener('touchcancel', finishedPosition, { passive: false });
     
 // --- QUIZ LOGIC ---
-let quizData = [], currentQuizIdx = 0, correctAnswers = 0, wrongAnswers = 0, isAnswering = false;
+let quizData = [], quizHistory = [], currentQuizIdx = 0, correctAnswers = 0, wrongAnswers = 0, isAnswering = false;
 
 function startQuiz() {
     const category = document.getElementById('quizCategory').value;
@@ -4493,7 +4506,12 @@ function startQuiz() {
     if (order === 'SHUFFLE') pool = shuffle(pool);
     if (lengthOpt !== 'ALL') pool = pool.slice(0, parseInt(lengthOpt));
 
-    quizData = pool; currentQuizIdx = 0; correctAnswers = 0; wrongAnswers = 0;
+    quizData = pool;
+    quizHistory = [];
+    currentQuizIdx = 0;
+    correctAnswers = 0;
+    wrongAnswers = 0;
+
     document.getElementById('quizSetup').classList.add('hidden');
     document.getElementById('quizResult').classList.add('hidden');
     document.getElementById('quizPlay').classList.remove('hidden');
@@ -4501,60 +4519,121 @@ function startQuiz() {
 }
 
 function renderQuizQuestion() {
-    isAnswering = false;
     const item = quizData[currentQuizIdx];
     document.getElementById('quizProgressText').innerText = `Soal ${currentQuizIdx + 1} / ${quizData.length}`;
     document.getElementById('quizKanji').innerText = item.kanji;
-    document.getElementById('quizFeedback').innerText = "";
 
-    let options = [item.meaning];
-    let distractors = shuffle(masterData.filter(x => x.kanji !== item.kanji)).slice(0, 3);
-    distractors.forEach(d => options.push(d.meaning));
-    options = shuffle(options);
+    const feedback = document.getElementById('quizFeedback');
+    feedback.innerHTML = '';
+
+    // Simpan urutan pilihan agar tidak teracak ulang saat klik "Sebelumnya"
+    if (!quizHistory[currentQuizIdx]) {
+        let options = [item.meaning];
+        let distractors = shuffle(masterData.filter(x => x.kanji !== item.kanji)).slice(0, 3);
+        distractors.forEach(d => options.push(d.meaning));
+        quizHistory[currentQuizIdx] = {
+            options: shuffle(options),
+            chosen: null
+        };
+    }
+
+    const record = quizHistory[currentQuizIdx];
+    isAnswering = record.chosen !== null;
 
     const optContainer = document.getElementById('quizOptions');
     optContainer.innerHTML = '';
-    options.forEach(opt => {
+
+    record.options.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = "w-full theme-card p-4 rounded-xl font-bold hover:opacity-90 active:scale-95 transition";
         btn.innerText = opt;
-        btn.onclick = () => checkAnswer(btn, opt, item.meaning, item.kanji);
+
+        if (record.chosen !== null) {
+            btn.disabled = true;
+            if (opt === item.meaning) {
+                btn.classList.add('border-emerald-500', 'bg-emerald-500/15', 'text-emerald-500');
+            } else if (opt === record.chosen) {
+                btn.classList.add('border-red-500', 'bg-red-500/15', 'text-red-500');
+            }
+        } else {
+            btn.onclick = () => checkAnswer(btn, opt, item.meaning, item.kanji);
+        }
+
         optContainer.appendChild(btn);
     });
+
+    // Tampilkan lagi keterangan Benar/Salah jika soal ini sudah pernah dijawab
+    if (record.chosen !== null) {
+        const illusHTML = typeof getVocabIllustrationHTML === 'function'
+            ? getVocabIllustrationHTML(item.meaning, item.category || '', item.kanji)
+            : '';
+        if (record.chosen === item.meaning) {
+            feedback.className = "text-lg font-bold text-emerald-500 mt-2 flex flex-col items-center";
+            feedback.innerHTML = `<div>✅ Benar!</div>${illusHTML}`;
+        } else {
+            feedback.className = "text-lg font-bold text-red-500 mt-2 flex flex-col items-center";
+            feedback.innerHTML = `<div>❌ Salah! Jawaban: ${item.meaning}</div>${illusHTML}`;
+        }
+    }
+
+    // Atur kondisi tombol Sebelumnya & Selanjutnya
+    const prevBtn = document.getElementById('btnQuizPrev');
+    const nextBtn = document.getElementById('btnQuizNext');
+    if (prevBtn) prevBtn.disabled = (currentQuizIdx === 0);
+    if (nextBtn) {
+        nextBtn.innerText = (currentQuizIdx === quizData.length - 1) ? 'Lihat Hasil →' : 'Selanjutnya →';
+    }
 }
 
 function checkAnswer(btnElement, chosen, correct, kanji) {
-  if (isAnswering) return;
-  isAnswering = true;
-  const feedback = document.getElementById('quizFeedback');
-  const currentItem = quizData[currentQuizIdx] || {};
-  const illusHTML = typeof getVocabIllustrationHTML === 'function'
-    ? getVocabIllustrationHTML(correct, currentItem.category || '', kanji)
-    : '';
+    if (isAnswering) return;
+    isAnswering = true;
+    quizHistory[currentQuizIdx].chosen = chosen;
 
-  speakText(kanji);
+    const feedback = document.getElementById('quizFeedback');
+    const currentItem = quizData[currentQuizIdx] || {};
+    const illusHTML = typeof getVocabIllustrationHTML === 'function'
+        ? getVocabIllustrationHTML(correct, currentItem.category || '', kanji)
+        : '';
 
-  if (chosen === correct) {
-    correctAnswers++;
-    if (typeof playQuizSound === 'function') playQuizSound('correct');
-    btnElement.classList.add('!border-emerald-500', '!bg-emerald-500/15', '!text-emerald-500');
-    feedback.className = "text-lg font-bold text-emerald-500 mt-2 flex flex-col items-center";
-    feedback.innerHTML = `<div>✅ Benar!</div>${illusHTML}`;
-  } else {
-    wrongAnswers++;
-    if (typeof playQuizSound === 'function') playQuizSound('wrong');
-    btnElement.classList.add('!border-red-500', '!bg-red-500/15', '!text-red-500');
-    feedback.className = "text-lg font-bold text-red-500 mt-2 flex flex-col items-center";
-    feedback.innerHTML = `<div>❌ Salah! Jawaban: ${correct}</div>${illusHTML}`;
-  }
+    speakText(kanji);
 
-  setTimeout(() => {
-    currentQuizIdx++;
-    if (currentQuizIdx < quizData.length) renderQuizQuestion();
-    else showQuizResult();
-  }, 2200);
+    document.querySelectorAll('#quizOptions button').forEach(b => {
+        b.disabled = true;
+        if (b.innerText === correct) {
+            b.classList.add('border-emerald-500', 'bg-emerald-500/15', 'text-emerald-500');
+        }
+    });
+
+    if (chosen === correct) {
+        correctAnswers++;
+        if (typeof playQuizSound === 'function') playQuizSound('correct');
+        feedback.className = "text-lg font-bold text-emerald-500 mt-2 flex flex-col items-center";
+        feedback.innerHTML = `<div>✅ Benar!</div>${illusHTML}`;
+    } else {
+        wrongAnswers++;
+        if (typeof playQuizSound === 'function') playQuizSound('wrong');
+        btnElement.classList.add('border-red-500', 'bg-red-500/15', 'text-red-500');
+        feedback.className = "text-lg font-bold text-red-500 mt-2 flex flex-col items-center";
+        feedback.innerHTML = `<div>❌ Salah! Jawaban: ${correct}</div>${illusHTML}`;
+    }
 }
 
+function prevQuizQuestion() {
+    if (currentQuizIdx > 0) {
+        currentQuizIdx--;
+        renderQuizQuestion();
+    }
+}
+
+function nextQuizQuestion() {
+    if (currentQuizIdx < quizData.length - 1) {
+        currentQuizIdx++;
+        renderQuizQuestion();
+    } else {
+        showQuizResult();
+    }
+}
 
 function showQuizResult() {
     document.getElementById('quizPlay').classList.add('hidden');
@@ -5810,7 +5889,8 @@ renderBunpouTables();
     kuis: [
       { id: 'tab-kuis', label: 'Kuis Kosakata & Kanji' },
       { id: 'tab-partikel', label: 'Kuis Partikel' },
-      { id: 'tab-menulis', label: 'Latihan Menulis' }
+      { id: 'tab-menulis', label: 'Latihan Menulis' },
+      { id: 'tab-jlpt', label: 'Simulasi JLPT' } 
     ],
     belajar: [
       { id: 'tab-flashcard', label: 'Kartu Flashcard' },
