@@ -6973,18 +6973,32 @@ renderBunpouTables();
     if (document.readyState !== 'loading') renderVerbConjugationGrid();
 </script>
 
-    <script>
+<script>
     function autoLoadPustakaTables() {
-        // 1. Muat otomatis isi Daftar Kosakata
+        // 1. Paksa muat SEMUA daftar kosakata (baik di Beranda maupun di Pustaka -> Daftar Kosakata)
         const selects = document.querySelectorAll('select');
         for (const sel of selects) {
             if (sel.options && sel.options.length > 0 && /Semua Kategori/i.test(sel.options[0].textContent)) {
                 sel.dispatchEvent(new Event('change', { bubbles: true }));
-                break;
+                const parentBox = sel.closest('section, div[id]');
+                if (parentBox) {
+                    const searchInput = parentBox.querySelector('input[type="text"], input[type="search"]');
+                    if (searchInput) {
+                        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
             }
         }
 
-        // 2. Muat otomatis isi Tabel 1 Bunpou (Bab 1–25) jika masih 0 Pola
+        // 2. Cadangan pemanggilan langsung fungsi render daftar kosakata
+        const renderFns = ['renderVocabList', 'renderKamus', 'renderDictionary', 'filterVocab', 'filterVocabList', 'renderVocabTable'];
+        for (const fnName of renderFns) {
+            if (typeof window[fnName] === 'function') {
+                try { window[fnName](); } catch (e) {}
+            }
+        }
+
+        // 3. Muat otomatis isi Tabel 1 Bunpou (Bab 1–25) jika masih 0 Pola
         if (document.body.innerText.includes('0 Pola')) {
             const buttons = document.querySelectorAll('button');
             for (const btn of buttons) {
@@ -6996,15 +7010,13 @@ renderBunpouTables();
         }
     }
 
-    // Jalankan otomatis saat halaman selesai dibuka
     window.addEventListener('load', () => setTimeout(autoLoadPustakaTables, 150));
     if (document.readyState === 'complete') {
         setTimeout(autoLoadPustakaTables, 150);
     }
 
-    // Cadangan: pastikan langsung terisi saat tab Pustaka atau sub-tabnya diketuk
     document.addEventListener('click', (e) => {
-        if (e.target.closest('#hub-btn-pustaka, #subGroupPills button')) {
+        if (e.target.closest('#hub-btn-pustaka, #hub-btn-beranda, #subGroupPills button')) {
             setTimeout(autoLoadPustakaTables, 50);
         }
     });
