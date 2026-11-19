@@ -4385,14 +4385,16 @@ function playWriteAudio() { if (writeData.length > 0) speakText(writeData[writeI
 
 function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
-    if (rect.width === 0) return;
-    canvas.width = rect.width;
-    canvas.height = rect.width;
+    if (rect.width === 0 || rect.height === 0) return;
+    canvas.width = Math.round(rect.width);
+    canvas.height = Math.round(rect.height);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.strokeStyle = '#0f172a';
     redrawStrokes();
 }
+// Otomatis sinkronkan ukuran kanvas setiap kali tab Menulis dibuka atau layar berubah
+new ResizeObserver(() => resizeCanvas()).observe(canvas);
 
 function getPos(e) {
     const rect = canvas.getBoundingClientRect();
@@ -4477,7 +4479,8 @@ canvas.addEventListener('mousemove', draw);
 canvas.addEventListener('touchstart', startPosition, { passive: false });
 canvas.addEventListener('touchend', finishedPosition, { passive: false });
 canvas.addEventListener('touchmove', draw, { passive: false });
-
+canvas.addEventListener('touchcancel', finishedPosition, { passive: false });
+    
 // --- QUIZ LOGIC ---
 let quizData = [], currentQuizIdx = 0, correctAnswers = 0, wrongAnswers = 0, isAnswering = false;
 
