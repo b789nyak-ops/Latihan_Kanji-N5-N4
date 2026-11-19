@@ -4068,6 +4068,74 @@ function startReadingSession() {
     document.getElementById('readPlay').classList.remove('hidden');
     renderReadingQuestion();
 }
+    
+   function buildTrickyPassageOptions(item, sessionPool = [], isChoukai = false) {
+    const correct = (item.correct || '').trim();
+    const passageText = isChoukai
+        ? (item.lines || []).map(l => l.id || '').join(' ').toLowerCase()
+        : (item.id || '').toLowerCase();
+
+    // Ambil kata-kata penting (>= 4 huruf) dari terjemahan teks/dialog untuk jebakan konteks
+    const passageWords = new Set(
+        passageText.split(/[^a-zA-Z0-9\u00C0-\u024F]+/).filter(w => w.length >= 4)
+    );
+
+    const candidateSet = new Set(item.wrong || []);
+
+    // 1. Kumpulkan kandidat dari soal lain dalam sesi yang memiliki jenis pertanyaan serupa
+    for (const other of sessionPool) {
+        if (other === item) continue;
+        if (other.q === item.q) {
+            if (other.correct) candidateSet.add(other.correct);
+            (other.wrong || []).forEach(w => candidateSet.add(w));
+        }
+    }
+
+    // 2. Buat jebakan geser angka/jam jika jawaban benar mengandung angka
+    const numMatch = correct.match(/\d+/);
+    if (numMatch) {
+        const origNum = parseInt(numMatch[0], 10);
+        const altNum = origNum > 1 ? origNum - 1 : origNum + 1;
+        const shifted = correct.replace(numMatch[0], String(altNum));
+        if (shifted !== correct) candidateSet.add(shifted);
+    }
+
+    const correctFirstWord = correct.split(/[\s,/(]+/)[0].toLowerCase();
+
+    const scored = Array.from(candidateSet)
+        .map(opt => (opt || '').trim())
+        .filter(opt => opt && opt !== correct)
+        .map(opt => {
+            let score = 0;
+
+            // Poin +10: Opsi menyebut kata yang ada di bacaan/dialog (jebakan klasik JLPT)
+            const optWords = opt.toLowerCase().split(/[^a-zA-Z0-9\u00C0-\u024F]+/).filter(w => w.length >= 4);
+            if (optWords.some(w => passageWords.has(w))) score += 10;
+
+            // Poin +8: Awalan kata sama dengan jawaban benar (misal sama-sama "Karena" / "Di" / "Jam")
+            const optFirstWord = opt.split(/[\s,/(]+/)[0].toLowerCase();
+            if (correctFirstWord.length >= 2 && correctFirstWord === optFirstWord) score += 8;
+
+            // Poin +6: Panjang kalimat mirip dengan jawaban benar
+            const lenDiff = Math.abs(opt.length - correct.length);
+            if (lenDiff <= 12) score += 6;
+            else if (lenDiff <= 25) score += 3;
+
+            return { opt, score, rand: Math.random() };
+        });
+
+    scored.sort((a, b) => (b.score - a.score) || (a.rand - b.rand));
+
+    const picked = [];
+    for (const s of scored) {
+        if (!picked.includes(s.opt)) {
+            picked.push(s.opt);
+            if (picked.length === 3) break;
+        }
+    }
+
+    return shuffle([correct, ...picked]);
+} 
 
 function renderReadingQuestion() {
     readAnswered = false;
@@ -4086,7 +4154,7 @@ function renderReadingQuestion() {
     document.getElementById('readExplanationBox').classList.add('hidden');
     document.getElementById('readNextBtn').classList.add('hidden');
 
-    const allOptions = shuffle([item.correct, ...item.wrong]);
+    const allOptions = buildTrickyPassageOptions(item, readSessionQuestions, false);
     const optContainer = document.getElementById('readOptions');
     optContainer.innerHTML = '';
 
@@ -4175,7 +4243,7 @@ function renderChoukaiQuestion() {
     document.getElementById('choukaiRomajiScript').innerText = item.lines.map(l => `${l.romaji}`).join('\n');
     document.getElementById('choukaiIdScript').innerText = item.lines.map(l => `${l.id}`).join('\n');
 
-    const allOptions = shuffle([item.correct, ...item.wrong]);
+    const allOptions = buildTrickyPassageOptions(item, choukaiSessionQuestions, true);
     const optContainer = document.getElementById('choukaiOptions');
     optContainer.innerHTML = '';
 
@@ -4518,6 +4586,72 @@ function startQuiz() {
     renderQuizQuestion();
 }
 
+// Mesin pencari pengecoh mirip (dipakai ulang untuk semua kuis & ujian)
+function getSmartDistractors(item, count = 3) {
+    const candidates = masterData.filter(x => x.kanji !== item.kanji && x.meaning !== item.meaning);
+
+    // 1. Ambil huruf Kanji dari soal (misal: 卒業式 -> ['卒', '業', '式'])
+    const itemKanjis = (item.kanji.match(/[\u4e00-\u9faf]/g) || []);
+    // 2. Ambil kata pertama pada arti Indonesia (misal: "Upacara Kelulusan" -> "upacara")
+    const firstWordId = (item.meaning || '').trim().split(/[\s\/,(]+/)[0].toLowerCase();
+    // 3. Deteksi kelas kata (Kata Kerja vs Kata Benda/Sifat)
+    const isIndoVerb = /^(me|mem|men|meng|meny|ber|di|ter)[a-z]+/i.test(firstWordId);
+
+    const scored = candidates.map(x => {
+        let score = 0;
+
+        // Poin +12: Punya huruf Kanji yang sama (misal: 卒業式 vs 結婚式 sama-sama berakhiran 式)
+        const xKanjis = (x.kanji.match(/[\u4e00-\u9faf]/g) || []);
+        if (itemKanjis.some(k => xKanjis.includes(k))) score += 12;
+
+        // Poin +10: Kata depan arti sama (misal: sesama "Upacara ..." atau sesama "Hari ...")
+        const xFirstWord = (x.meaning || '').trim().split(/[\s\/,(]+/)[0].toLowerCase();
+        if (firstWordId.length >= 3 && firstWordId === xFirstWord) score += 10;
+
+        // Poin +8: Sama-sama Kata Kerja atau sama-sama bukan Kata Kerja
+        const xIsVerb = /^(me|mem|men|meng|meny|ber|di|ter)[a-z]+/i.test(xFirstWord);
+        if (isIndoVerb === xIsVerb) score += 8;
+
+        // Poin +6: Kategori topik sama
+        if (item.category && x.category === item.category) score += 6;
+
+        // Poin +4: Akhiran bunyi romaji mirip (misal: -shiki, -masu, -ru, -i)
+        const r1 = (item.romaji || '').toLowerCase();
+        const r2 = (x.romaji || '').toLowerCase();
+        if (r1.length >= 4 && r2.length >= 4 && r1.slice(-3) === r2.slice(-3)) score += 4;
+
+        return { item: x, score, rand: Math.random() };
+    });
+
+    // Urutkan dari pengecoh yang paling mirip
+    scored.sort((a, b) => (b.score - a.score) || (a.rand - b.rand));
+
+    // Ambil 8 kandidat paling menjebak teratas lalu pilih 3 secara acak agar bervariasi
+    const topPool = scored.slice(0, Math.max(count * 3, 8)).map(s => s.item);
+    const selected = [];
+    const usedMeanings = new Set([item.meaning]);
+
+    for (const cand of shuffle(topPool)) {
+        if (!usedMeanings.has(cand.meaning)) {
+            usedMeanings.add(cand.meaning);
+            selected.push(cand);
+            if (selected.length === count) break;
+        }
+    }
+
+    if (selected.length < count) {
+        for (const s of scored) {
+            if (!usedMeanings.has(s.item.meaning)) {
+                usedMeanings.add(s.item.meaning);
+                selected.push(s.item);
+                if (selected.length === count) break;
+            }
+        }
+    }
+
+    return selected;
+}
+
 function renderQuizQuestion() {
     const item = quizData[currentQuizIdx];
     document.getElementById('quizProgressText').innerText = `Soal ${currentQuizIdx + 1} / ${quizData.length}`;
@@ -4526,10 +4660,10 @@ function renderQuizQuestion() {
     const feedback = document.getElementById('quizFeedback');
     feedback.innerHTML = '';
 
-    // Simpan urutan pilihan agar tidak teracak ulang saat klik "Sebelumnya"
+    // Simpan urutan pilihan pengecoh agar tidak teracak ulang saat klik "Sebelumnya"
     if (!quizHistory[currentQuizIdx]) {
         let options = [item.meaning];
-        let distractors = shuffle(masterData.filter(x => x.kanji !== item.kanji)).slice(0, 3);
+        const distractors = getSmartDistractors(item, 3);
         distractors.forEach(d => options.push(d.meaning));
         quizHistory[currentQuizIdx] = {
             options: shuffle(options),
@@ -4562,7 +4696,6 @@ function renderQuizQuestion() {
         optContainer.appendChild(btn);
     });
 
-    // Tampilkan lagi keterangan Benar/Salah jika soal ini sudah pernah dijawab
     if (record.chosen !== null) {
         const illusHTML = typeof getVocabIllustrationHTML === 'function'
             ? getVocabIllustrationHTML(item.meaning, item.category || '', item.kanji)
@@ -4576,7 +4709,6 @@ function renderQuizQuestion() {
         }
     }
 
-    // Atur kondisi tombol Sebelumnya & Selanjutnya
     const prevBtn = document.getElementById('btnQuizPrev');
     const nextBtn = document.getElementById('btnQuizNext');
     if (prevBtn) prevBtn.disabled = (currentQuizIdx === 0);
@@ -5113,12 +5245,37 @@ function renderPartikelQuiz() {
     nextBtn.innerText = 'Soal Berikutnya ➡️';
     nextBtn.onclick = nextPartikelQuiz;
 
-    const shuffledOpts = shuffle(q.options);
-    optBox.innerHTML = shuffledOpts.map(opt => `
-        <button onclick="answerPartikelQuiz('${opt}', this)" class="pk-opt-btn theme-card p-3.5 rounded-xl font-bold text-base jp-text hover:opacity-90 transition">
-            ${opt}
-        </button>
-    `).join('');
+        const particleTraps = {
+        'は': ['が', 'を', 'も', 'に'],
+        'が': ['は', 'を', 'に', 'で'],
+        'を': ['が', 'は', 'に', 'で'],
+        'に': ['で', 'へ', 'を', 'が'],
+        'で': ['に', 'を', 'へ', 'と'],
+        'へ': ['に', 'で', 'を', 'から'],
+        'と': ['や', 'に', 'で', 'も'],
+        'や': ['と', 'か', 'も', 'の'],
+        'の': ['を', 'が', 'に', 'は'],
+        'も': ['は', 'が', 'と', 'を'],
+        'から': ['まで', 'に', 'で', 'より'],
+        'まで': ['から', 'に', 'へ', 'で'],
+        'より': ['から', 'ほど', 'まで', 'に'],
+        'か': ['や', 'と', 'ね', 'よ'],
+        'ね': ['よ', 'か', 'わ', 'な'],
+        'よ': ['ね', 'か', 'ぞ', 'わ']
+    };
+    const trapCandidates = [
+        ...(particleTraps[q.answer] || []),
+        ...(q.options || []),
+        'は', 'が', 'を', 'に', 'で', 'へ', 'と', 'も', 'の'
+    ];
+    const finalOpts = [q.answer];
+    for (const p of trapCandidates) {
+        if (!finalOpts.includes(p)) {
+            finalOpts.push(p);
+            if (finalOpts.length === 4) break;
+        }
+    }
+    const shuffledOpts = shuffle(finalOpts);
 }
 
 function answerPartikelQuiz(chosen, btnEl) {
@@ -5199,8 +5356,65 @@ function renderArrangeSentence() {
     nextBtn.innerText = 'Kalimat Berikutnya ➡️';
     nextBtn.onclick = nextArrangeSentence;
 
-    psSelectedTokens = [];
-    psBankTokens = shuffle(item.tokens.map((text, idx) => ({ id: idx, text })));
+        psSelectedTokens = [];
+    const trapPairs = {
+        'は': 'が', 'が': 'は', 'を': 'が', 'に': 'で',
+        'で': 'に', 'へ': 'で', 'と': 'や', 'も': 'は',
+        'から': 'まで', 'まで': 'から'
+    };
+    const usedTexts = new Set(item.tokens);
+    const decoyTexts = [];
+
+    for (const tok of item.tokens) {
+        if (decoyTexts.length >= 3) break;
+        // 1. Jika token adalah partikel tunggal, buat kembaran pengecohnya
+        if (trapPairs[tok] && !usedTexts.has(trapPairs[tok])) {
+            usedTexts.add(trapPairs[tok]);
+            decoyTexts.push(trapPairs[tok]);
+            continue;
+        }
+        // 2. Jika kata menempel dengan partikel di akhir (misal: 学校へ -> 学校で)
+        const lastChar = tok.slice(-1);
+        if (tok.length >= 2 && trapPairs[lastChar]) {
+            const swapped = tok.slice(0, -1) + trapPairs[lastChar];
+            if (!usedTexts.has(swapped)) {
+                usedTexts.add(swapped);
+                decoyTexts.push(swapped);
+                continue;
+            }
+        }
+        // 3. Jika akhir kata kerja -ます / -ました / -て, buat bentuk pengecohnya
+        if (tok.endsWith('ます') && !usedTexts.has(tok.slice(0, -2) + 'ません')) {
+            const neg = tok.slice(0, -2) + 'ません';
+            usedTexts.add(neg);
+            decoyTexts.push(neg);
+        } else if (tok.endsWith('ました') && !usedTexts.has(tok.slice(0, -3) + 'ます')) {
+            const pres = tok.slice(0, -3) + 'ます';
+            usedTexts.add(pres);
+            decoyTexts.push(pres);
+        }
+    }
+
+    // Lengkapi hingga minimal 2 pengecoh dari bank token kalimat lain
+    const targetDecoyCount = item.tokens.length >= 4 ? 3 : 2;
+    if (decoyTexts.length < targetDecoyCount && typeof sentenceArrangeBank !== 'undefined') {
+        const extraPool = shuffle(
+            sentenceArrangeBank.flatMap(s => s.tokens).filter(t => t.length <= 4 && !usedTexts.has(t))
+        );
+        for (const extra of extraPool) {
+            if (!usedTexts.has(extra)) {
+                usedTexts.add(extra);
+                decoyTexts.push(extra);
+                if (decoyTexts.length >= targetDecoyCount) break;
+            }
+        }
+    }
+
+    const allTokens = [
+        ...item.tokens.map((text, idx) => ({ id: idx, text })),
+        ...decoyTexts.map((text, idx) => ({ id: item.tokens.length + idx, text, isDecoy: true }))
+    ];
+    psBankTokens = shuffle(allTokens);
     renderArrangeTiles();
 }
 
@@ -5295,19 +5509,29 @@ function buildVocabExamQuestion(level) {
     const target = pickRandom(pool.length ? pool : masterData);
     const askReading = Math.random() > 0.45 && /[\u4e00-\u9faf]/.test(target.kanji);
 
-    const distractors = shuffle(
-        masterData.filter(x => x.id !== target.id && x.category === target.category)
-    ).slice(0, 3);
+        const smartPool = getSmartDistractors(target, 8);
 
     if (askReading) {
+        // Ambil 3 pengecoh cara baca (romaji) unik dari kata yang memiliki Kanji/akhiran mirip
+        const readingDistractors = [];
+        const usedRomaji = new Set([target.romaji]);
+        for (const d of smartPool) {
+            if (d.romaji && !usedRomaji.has(d.romaji)) {
+                usedRomaji.add(d.romaji);
+                readingDistractors.push(d.romaji);
+                if (readingDistractors.length === 3) break;
+            }
+        }
         return {
             section: 'Sesi 1: Kanji & Cara Baca',
-            prompt: `Pilih cara baca (romaji) yang tepat untuk kata: 【 ${target.kanji} 】 (${target.meaning})`,
+            prompt: `Pilih cara baca (romaji) yang tepat untuk kata: 【 ${target.kanji} 】`,
             correct: target.romaji,
-            options: shuffle([target.romaji, ...distractors.map(d => d.romaji)]),
+            options: shuffle([target.romaji, ...readingDistractors]),
             explanation: `${target.kanji} dibaca "${target.romaji}" artinya "${target.meaning}".`
         };
     }
+
+    const distractors = smartPool.slice(0, 3);
     return {
         section: 'Sesi 1: Kosakata',
         prompt: `Apa arti dari kosakata 【 ${target.kanji} 】 (${target.romaji})?`,
