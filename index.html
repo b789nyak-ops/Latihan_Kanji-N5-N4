@@ -5585,19 +5585,150 @@ function buildVocabExamQuestion(level) {
     const target = pickRandom(pool.length ? pool : masterData);
     const askReading = Math.random() > 0.45 && /[\u4e00-\u9faf]/.test(target.kanji);
 
-        const smartPool = getSmartDistractors(target, 8);
+function kanaToRomajiForTrap(kanaStr) {
+        if (!kanaStr) return '';
+        // Ubah Katakana ke Hiragana jika ada
+        const hira = kanaStr.replace(/[\u30a1-\u30f6]/g, ch =>
+            String.fromCharCode(ch.charCodeAt(0) - 0x60)
+        );
+        const table = {
+            kya:'kya', kyu:'kyu', kyo:'kyo', gya:'gya', gyu:'gyu', gyo:'gyo',
+            sha:'sha', shu:'shu', sho:'sho', ja:'ja', ju:'ju', jo:'jo',
+            cha:'cha', chu:'chu', cho:'cho', nya:'nya', nyu:'nyu', nyo:'nyo',
+            hya:'hya', hyu:'hyu', hyo:'hyo', bya:'bya', byu:'byu', byo:'byo',
+            pya:'pya', pyu:'pyu', pyo:'pyo', mya:'mya', myu:'myu', myo:'myo',
+            rya:'rya', ryu:'ryu', ryo:'ryo',
+            shi:'shi', chi:'chi', tsu:'tsu', fu:'fu', ji:'ji', di:'ji', du:'zu',
+            ka:'ka', ki:'ki', ku:'ku', ke:'ke', ko:'ko',
+            ga:'ga', gi:'gi', gu:'gu', ge:'ge', go:'go',
+            sa:'sa', su:'su', se:'se', so:'so',
+            za:'za', zu:'zu', ze:'ze', zo:'zo',
+            ta:'ta', te:'te', to:'to',
+            da:'da', de:'de', do:'do',
+            na:'na', ni:'ni', nu:'nu', ne:'ne', no:'no',
+            ha:'ha', hi:'hi', he:'he', ho:'ho',
+            ba:'ba', bi:'bi', bu:'bu', be:'be', bo:'bo',
+            pa:'pa', pi:'pi', pu:'pu', pe:'pe', po:'po',
+            ma:'ma', mi:'mi', mu:'mu', me:'me', mo:'mo',
+            ya:'ya', yu:'yu', yo:'yo',
+            ra:'ra', ri:'ri', ru:'ru', re:'re', ro:'ro',
+            wa:'wa', wo:'wo', nn:'n',
+            a:'a', i:'i', u:'u', e:'e', o:'o'
+        };
+        let out = '';
+        let i = 0;
+        while (i < hira.length) {
+            const ch = hira[i];
+            if (ch === 'っ') {
+                const nextRom = table[hira.slice(i + 1, i + 3)] || table[hira[i + 1]] || '';
+                if (nextRom) out += nextRom.startsWith('ch') ? 't' : nextRom[0];
+                i++;
+                continue;
+            }
+            if (ch === 'ん') {
+                out += 'n';
+                i++;
+                continue;
+            }
+            const bi = hira.slice(i, i + 2);
+            if (table[bi]) { out += table[bi]; i += 2; continue; }
+            if (table[ch]) { out += table[ch]; i++; continue; }
+            i++;
+        }
+        return out;
+    }
 
-    if (askReading) {
-        // Ambil 3 pengecoh cara baca (romaji) unik dari kata yang memiliki Kanji/akhiran mirip
-        const readingDistractors = [];
-        const usedRomaji = new Set([target.romaji]);
-        for (const d of smartPool) {
-            if (d.romaji && !usedRomaji.has(d.romaji)) {
-                usedRomaji.add(d.romaji);
-                readingDistractors.push(d.romaji);
-                if (readingDistractors.length === 3) break;
+    function getSmartReadingDistractors(target, count = 3) {
+        const cleanKanji = (target.kanji || '').replace(/\s*\(.*?\)\s*/g, '').split('/')[0].trim();
+        const targetRomaji = (target.romaji || '').replace(/\s*\(.*?\)\s*/g, '').split('/')[0].toLowerCase().trim();
+
+        // Ambil huruf kana di akhir & awal yang terlihat jelas di soal (misal: 壊します -> します -> shimasu)
+        const trailingKanaMatch = cleanKanji.match(/[\u3041-\u3096\u30a1-\u30f6]+$/);
+        const leadingKanaMatch = cleanKanji.match(/^[\u3041-\u3096\u30a1-\u30f6]+/);
+        const suffixRomaji = trailingKanaMatch ? kanaToRomajiForTrap(trailingKanaMatch[0]) : '';
+        const prefixRomaji = leadingKanaMatch ? kanaToRomajiForTrap(leadingKanaMatch[0]) : '';
+
+        const targetKanjis = cleanKanji.match(/[\u4e00-\u9faf]/g) || [];
+        const hasVisibleOkurigana = suffixRomaji.length >= 2 && targetRomaji.endsWith(suffixRomaji);
+
+        const scored = masterData
+            .map(x => {
+                const r = (x.romaji || '').replace(/\s*\(.*?\)\s*/g, '').split('/')[0].toLowerCase().trim();
+                const k = (x.kanji || '').replace(/\s*\(.*?\)\s*/g, '').split('/')[0].trim();
+                return { item: x, romaji: r, kanji: k };
+            })
+            .filter(x => x.romaji && x.romaji !== targetRomaji && x.kanji !== cleanKanji)
+            .filter(x => {
+                // Jika soal punya okurigana terlihat (misal: します), WAJIB pakai akhiran romaji yang sama
+                if (hasVisibleOkurigana && !x.romaji.endsWith(suffixRomaji)) return false;
+                if (prefixRomaji && targetRomaji.startsWith(prefixRomaji) && !x.romaji.startsWith(prefixRomaji)) return false;
+                // Jika soal FULL Kanji tanpa okurigana, buang pengecoh berakhiran -masu agar tidak mudah ditebak
+                if (!hasVisibleOkurigana && x.romaji.endsWith('masu') && !targetRomaji.endsWith('masu')) return false;
+                return true;
+            })
+            .map(x => {
+                let score = 0;
+                const xKanjis = x.kanji.match(/[\u4e00-\u9faf]/g) || [];
+                // Poin +25: Punya huruf Kanji yang sama (jebakan On'yomi vs Kun'yomi)
+                if (targetKanjis.some(c => xKanjis.includes(c))) score += 25;
+                // Poin +20: Huruf pertama romaji sama (misal: kowashimasu vs kaeshimasu / kashimasu / keshimasu)
+                if (x.romaji[0] === targetRomaji[0]) score += 20;
+                // Poin +12: Panjang suku kata mirip
+                const lenDiff = Math.abs(x.romaji.length - targetRomaji.length);
+                if (lenDiff <= 2) score += 12;
+                else if (lenDiff <= 4) score += 6;
+                // Poin +8: Huruf kedua juga sama
+                if (x.romaji[1] && x.romaji[1] === targetRomaji[1]) score += 8;
+                return { romaji: x.romaji, score, rand: Math.random() };
+            });
+
+        scored.sort((a, b) => (b.score - a.score) || (a.rand - b.rand));
+
+        const picked = [];
+        const used = new Set([targetRomaji]);
+        const topPool = scored.slice(0, 10);
+
+        for (const cand of shuffle(topPool)) {
+            if (!used.has(cand.romaji)) {
+                used.add(cand.romaji);
+                picked.push(cand.romaji);
+                if (picked.length === count) break;
             }
         }
+        if (picked.length < count) {
+            for (const cand of scored) {
+                if (!used.has(cand.romaji)) {
+                    used.add(cand.romaji);
+                    picked.push(cand.romaji);
+                    if (picked.length === count) break;
+                }
+            }
+        }
+
+        // Cadangan otomatis jika akhiran okurigana langka: buat jebakan bacaan Kanji dengan akhiran sama
+        if (picked.length < count && hasVisibleOkurigana) {
+            const stem = targetRomaji.slice(0, -suffixRomaji.length);
+            const vowelSwaps = { a: ['o', 'e'], o: ['a', 'u'], u: ['o', 'a'], e: ['a', 'i'], i: ['e', 'a'] };
+            for (let idx = 0; idx < stem.length && picked.length < count; idx++) {
+                const ch = stem[idx];
+                if (vowelSwaps[ch]) {
+                    for (const altV of vowelSwaps[ch]) {
+                        const fake = stem.slice(0, idx) + altV + stem.slice(idx + 1) + suffixRomaji;
+                        if (!used.has(fake)) {
+                            used.add(fake);
+                            picked.push(fake);
+                            if (picked.length === count) break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return picked.slice(0, count);
+    }
+
+    if (askReading) {
+        const readingDistractors = getSmartReadingDistractors(target, 3);
         return {
             section: 'Sesi 1: Kanji & Cara Baca',
             prompt: `Pilih cara baca (romaji) yang tepat untuk kata: 【 ${target.kanji} 】`,
@@ -5607,6 +5738,7 @@ function buildVocabExamQuestion(level) {
         };
     }
 
+    const smartPool = getSmartDistractors(target, 8);
     const distractors = smartPool.slice(0, 3);
     return {
         section: 'Sesi 1: Kosakata',
