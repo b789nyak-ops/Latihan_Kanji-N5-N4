@@ -1204,6 +1204,77 @@
             </div>
         </section>
 
+        <!-- ============ TAB: BANK KONJUGASI KATA KERJA ============ -->
+<section id="tab-konjugasi" class="tab-content hidden space-y-4">
+
+    <!-- HALAMAN 1: DAFTAR KATA KERJA (BENTUK KAMUS - 2 KOLOM) -->
+    <div id="verbListView" class="theme-card p-5 rounded-2xl shadow-sm space-y-4">
+        <div class="flex items-center justify-between gap-2">
+            <div>
+                <h2 class="text-lg font-extrabold">Bank Konjugasi Kata Kerja</h2>
+                <p class="text-xs theme-text-muted">Ketuk kata kerja untuk membuka 13 perubahannya</p>
+            </div>
+            <button onclick="document.getElementById('verbFormulaBox').classList.toggle('hidden')" class="theme-subcard px-3 py-1.5 rounded-xl text-xs font-bold border theme-border shrink-0">
+                Pola Rumus
+            </button>
+        </div>
+
+        <!-- Panduan Rumus Singkat (Bisa Buka/Tutup) -->
+        <div id="verbFormulaBox" class="hidden theme-subcard p-3.5 rounded-xl border theme-border text-xs space-y-2 leading-relaxed">
+            <div><strong class="text-sky-400">Golongan 1 (Godan):</strong> Vokal <code>-i</code> sebelum <em>masu</em> berubah mengikuti deret <strong>u</strong> (Kamus), <strong>a + nai</strong> (Negatif), <strong>e + ru</strong> (Bisa), <strong>o + u</strong> (Ajakan), <strong>e + ba</strong> (Syarat). Bentuk <em>Te/Ta</em> mengikuti aturan <em>tte, nde, ite, ide, shite</em>.</div>
+            <div><strong class="text-emerald-400">Golongan 2 (Ichidan):</strong> Akhiran <code>-e</code> sebelum <em>masu</em> (serta pengecualian seperti <em>mimasu, okimasu, karimasu, abimasu, kimasu, imasu, dekimasu</em>). Buang <em>masu</em> lalu tambah <strong>ru / te / nai / ta / rareru / you / reba / ro / saseru</strong>.</div>
+            <div><strong class="text-amber-400">Golongan 3 (Tidak Beraturan):</strong> Hanya <strong>する (shimasu)</strong> dan <strong>来る (kimasu)</strong> beserta kata gabungannya.</div>
+        </div>
+
+        <!-- Pencarian & Filter Golongan -->
+        <div class="space-y-2.5">
+            <input type="text" id="verbSearchInput" oninput="renderVerbConjugationGrid()" placeholder="Cari bentuk kamus, masu, romaji, atau arti..." class="w-full theme-subcard px-3.5 py-2.5 rounded-xl text-sm border theme-border focus:outline-none">
+            <div class="flex flex-wrap gap-1.5">
+                <button onclick="setVerbGroupFilter('ALL', this)" class="verb-filter-btn theme-accent-bg px-3 py-1.5 rounded-lg text-xs font-bold transition">Semua</button>
+                <button onclick="setVerbGroupFilter('1', this)" class="verb-filter-btn theme-subcard px-3 py-1.5 rounded-lg text-xs font-bold border theme-border transition">Golongan 1</button>
+                <button onclick="setVerbGroupFilter('2', this)" class="verb-filter-btn theme-subcard px-3 py-1.5 rounded-lg text-xs font-bold border theme-border transition">Golongan 2</button>
+                <button onclick="setVerbGroupFilter('3', this)" class="verb-filter-btn theme-subcard px-3 py-1.5 rounded-lg text-xs font-bold border theme-border transition">Golongan 3</button>
+            </div>
+        </div>
+
+        <div class="text-xs theme-text-muted font-semibold" id="verbTableCount">Menampilkan 0 kata kerja</div>
+
+        <!-- Grid 2 Kolom Kanan-Kiri ke Bawah -->
+        <div id="verbGridContainer" class="grid grid-cols-2 gap-2.5"></div>
+    </div>
+
+    <!-- HALAMAN 2 (DALAMAN BARU): DETAIL 13 KONJUGASI KATA TERPILIH -->
+    <div id="verbDetailView" class="hidden theme-card p-5 rounded-2xl shadow-sm space-y-4">
+        <div class="flex items-center justify-between gap-2">
+            <button onclick="closeVerbDetail()" class="theme-subcard px-3.5 py-2 rounded-xl text-xs font-bold border theme-border hover:opacity-90 transition flex items-center gap-1.5">
+                ← Kembali ke Daftar
+            </button>
+            <span id="verbDetailGroupBadge" class="px-3 py-1 rounded-full text-xs font-extrabold bg-sky-500/15 text-sky-400">
+                Golongan 1
+            </span>
+        </div>
+
+        <!-- Kartu Utama Kata Terpilih -->
+        <div id="verbDetailHeader" class="theme-subcard p-4 rounded-2xl border theme-border text-center space-y-1.5"></div>
+
+        <p class="text-[11px] theme-text-muted text-center">Ketuk kotak perubahan di bawah untuk mendengarkan pelafalannya</p>
+
+        <!-- Daftar 13 Bentuk Konjugasi (2 Kolom) -->
+        <div id="verbDetailCards" class="grid grid-cols-2 gap-2.5"></div>
+
+        <!-- Navigasi Cepat Antar Kata Kerja -->
+        <div class="flex gap-2.5 pt-2">
+            <button id="btnVerbPrev" onclick="navigateVerbDetail(-1)" class="w-1/2 theme-subcard p-3 rounded-xl text-xs font-bold border theme-border disabled:opacity-40 transition">
+                ‹ Kata Sebelumnya
+            </button>
+            <button id="btnVerbNext" onclick="navigateVerbDetail(1)" class="w-1/2 theme-accent-bg p-3 rounded-xl text-xs font-bold disabled:opacity-40 transition">
+                Kata Berikutnya ›
+            </button>
+        </div>
+    </div>
+
+</section>
+        
     </main>
 
 <script>
@@ -6132,7 +6203,8 @@ renderBunpouTables();
     ],
     pustaka: [
       { id: 'tab-daftar', label: 'Daftar Kosakata' },
-      { id: 'tab-bunpou', label: 'Tata Bahasa (Bunpou)' }
+      { id: 'tab-bunpou', label: 'Tata Bahasa (Bunpou)' },
+      { id: 'tab-konjugasi', label: 'Perubahan Kata Kerja' }
     ]
   };
 
@@ -6592,6 +6664,313 @@ renderBunpouTables();
     }
 
     applyKanaState();
+</script>
+
+    <script>
+    let currentVerbGroupFilter = 'ALL';
+    let filteredVerbList = [];
+    let currentVerbDetailIndex = 0;
+
+    function setVerbGroupFilter(group, btnEl) {
+        currentVerbGroupFilter = group;
+        document.querySelectorAll('.verb-filter-btn').forEach(b => {
+            b.className = 'verb-filter-btn theme-subcard px-3 py-1.5 rounded-lg text-xs font-bold border theme-border transition';
+        });
+        if (btnEl) {
+            btnEl.className = 'verb-filter-btn theme-accent-bg px-3 py-1.5 rounded-lg text-xs font-bold transition';
+        }
+        renderVerbConjugationGrid();
+    }
+
+    function formatVerbRuby(kanjiStr, kanaStr) {
+        if (typeof makeRubyHTML === 'function') {
+            return makeRubyHTML(kanjiStr, kanaStr);
+        }
+        return kanjiStr;
+    }
+
+    function conjugateJapaneseVerbFull(item) {
+        const rawKanji = (item.kanji || '').replace(/\s*\(.*?\)\s*/g, '').split('/')[0].trim();
+        const rawRomaji = (item.romaji || '').replace(/\s*\(.*?\)\s*/g, '').split('/')[0].toLowerCase().trim();
+        const rawKana = (typeof romajiToHiragana === 'function' ? romajiToHiragana(rawRomaji) : '').replace(/\s+/g, '');
+
+        const group2ImasuRomaji = [
+            'imasu', 'mimasu', 'okimasu', 'karimasu', 'abimasu', 'kimasu',
+            'dekimasu', 'sugimasu', 'shinjimasu', 'kanjimasu', 'tojimasu',
+            'tarimasu', 'nimasu', 'ochimasu', 'nobimasu'
+        ];
+
+        // 1. Golongan 3: 来ます (kuru)
+        const isKuru = rawKanji.endsWith('来ます') ||
+            (['kimasu', 'mottekimasu', 'tsuretekimasu'].includes(rawRomaji) && !['着ます', '聞きます', '書きます', '効きます'].includes(rawKanji));
+        if (isKuru) {
+            const p = rawKanji.slice(0, -2);
+            const kp = rawKana ? rawKana.slice(0, -3) : '';
+            return {
+                group: '3',
+                groupLabel: 'Golongan 3 (Tidak Beraturan)',
+                dict: { k: p + '来る', h: kp + 'くる' },
+                masu: { k: rawKanji, h: rawKana },
+                te: { k: p + '来て', h: kp + 'きて' },
+                nai: { k: p + '来ない', h: kp + 'こない' },
+                ta: { k: p + '来た', h: kp + 'きた' },
+                nakatta: { k: p + '来なかった', h: kp + 'こなかった' },
+                potential: { k: p + '来られる', h: kp + 'こられる' },
+                volitional: { k: p + '来よう', h: kp + 'こよう' },
+                conditional: { k: p + '来れば', h: kp + 'くれば' },
+                imperative: { k: p + '来い', h: kp + 'こい' },
+                prohibitive: { k: p + '来るな', h: kp + 'くるな' },
+                passive: { k: p + '来られる', h: kp + 'こられる' },
+                causative: { k: p + '来させる', h: kp + 'こさせる' }
+            };
+        }
+
+        // 2. Golongan 3: します (suru)
+        const godanShimasu = ['hanashimasu', 'dashimasu', 'keshimasu', 'oshimasu', 'naoshimasu', 'kaeshimasu', 'watashimasu', 'nakushimasu', 'otoshimasu', 'moyashimasu', 'wakashimasu', 'hiyashimasu'];
+        if (rawKanji.endsWith('します') && rawRomaji.endsWith('shimasu') && !godanShimasu.includes(rawRomaji)) {
+            const p = rawKanji.slice(0, -3);
+            const kp = rawKana ? rawKana.slice(0, -3) : '';
+            return {
+                group: '3',
+                groupLabel: 'Golongan 3 (Tidak Beraturan)',
+                dict: { k: p + 'する', h: kp + 'する' },
+                masu: { k: rawKanji, h: rawKana },
+                te: { k: p + 'して', h: kp + 'して' },
+                nai: { k: p + 'しない', h: kp + 'しない' },
+                ta: { k: p + 'した', h: kp + 'した' },
+                nakatta: { k: p + 'しなかった', h: kp + 'しなかった' },
+                potential: { k: p + 'できる', h: kp + 'できる' },
+                volitional: { k: p + 'しよう', h: kp + 'しよう' },
+                conditional: { k: p + 'すれば', h: kp + 'すれば' },
+                imperative: { k: p + 'しろ', h: kp + 'しろ' },
+                prohibitive: { k: p + 'するな', h: kp + 'するな' },
+                passive: { k: p + 'される', h: kp + 'される' },
+                causative: { k: p + 'させる', h: kp + 'させる' }
+            };
+        }
+
+        const stem = rawKanji.endsWith('ます') ? rawKanji.slice(0, -2) : rawKanji;
+        const kStem = rawKana.endsWith('ます') ? rawKana.slice(0, -2) : rawKana;
+        const romajiStem = rawRomaji.endsWith('masu') ? rawRomaji.slice(0, -4) : rawRomaji;
+
+        const isOrimasuTurun = rawKanji === '降ります' && rawRomaji.startsWith('ori');
+        const isGroup2 = isOrimasuTurun ||
+            (/[e]$/i.test(romajiStem)) ||
+            (group2ImasuRomaji.includes(rawRomaji) && rawKanji !== '行きます');
+
+        // 3. Golongan 2 (Ichidan)
+        if (isGroup2) {
+            return {
+                group: '2',
+                groupLabel: 'Golongan 2 (Ichidan)',
+                dict: { k: stem + 'る', h: kStem + 'る' },
+                masu: { k: rawKanji, h: rawKana },
+                te: { k: stem + 'て', h: kStem + 'て' },
+                nai: { k: stem + 'ない', h: kStem + 'ない' },
+                ta: { k: stem + 'た', h: kStem + 'た' },
+                nakatta: { k: stem + 'なかった', h: kStem + 'なかった' },
+                potential: { k: stem + 'られる', h: kStem + 'られる' },
+                volitional: { k: stem + 'よう', h: kStem + 'よう' },
+                conditional: { k: stem + 'れば', h: kStem + 'れば' },
+                imperative: { k: stem + 'ろ', h: kStem + 'ろ' },
+                prohibitive: { k: stem + 'るな', h: kStem + 'るな' },
+                passive: { k: stem + 'られる', h: kStem + 'られる' },
+                causative: { k: stem + 'させる', h: kStem + 'させる' }
+            };
+        }
+
+        // 4. Golongan 1 (Godan) - Pengecualian あります
+        if (rawKanji === 'あります' || rawRomaji === 'arimasu') {
+            return {
+                group: '1',
+                groupLabel: 'Golongan 1 (Godan)',
+                dict: { k: 'ある', h: 'ある' },
+                masu: { k: 'あります', h: 'あります' },
+                te: { k: 'あって', h: 'あって' },
+                nai: { k: 'ない', h: 'ない' },
+                ta: { k: 'あった', h: 'あった' },
+                nakatta: { k: 'なかった', h: 'なかった' },
+                potential: { k: 'ありえる', h: 'ありえる' },
+                volitional: { k: 'あろう', h: 'あろう' },
+                conditional: { k: 'あれば', h: 'あれば' },
+                imperative: { k: 'あれ', h: 'あれ' },
+                prohibitive: { k: 'あるな', h: 'あるな' },
+                passive: { k: 'あられる', h: 'あられる' },
+                causative: { k: 'あらせる', h: 'あらせる' }
+            };
+        }
+
+        const base = stem.slice(0, -1);
+        const kBase = kStem ? kStem.slice(0, -1) : '';
+        const lastKana = stem.slice(-1);
+
+        const godanTable = {
+            'き': { u: 'く', te: rawKanji === '行きます' ? 'って' : 'いて', ta: rawKanji === '行きます' ? 'った' : 'いた', a: 'か', e: 'け', o: 'こう' },
+            'ぎ': { u: 'ぐ', te: 'いで', ta: 'いだ', a: 'が', e: 'げ', o: 'ごう' },
+            'し': { u: 'す', te: 'して', ta: 'した', a: 'さ', e: 'せ', o: 'そう' },
+            'ち': { u: 'つ', te: 'って', ta: 'った', a: 'た', e: 'て', o: 'とう' },
+            'に': { u: 'ぬ', te: 'んで', ta: 'んだ', a: 'な', e: 'ね', o: 'のう' },
+            'び': { u: 'ぶ', te: 'んで', ta: 'んだ', a: 'ば', e: 'べ', o: 'ぼう' },
+            'み': { u: 'む', te: 'んで', ta: 'んだ', a: 'ま', e: 'め', o: 'もう' },
+            'り': { u: 'る', te: 'って', ta: 'った', a: 'ら', e: 'れ', o: 'ろう' },
+            'い': { u: 'う', te: 'って', ta: 'った', a: 'わ', e: 'え', o: 'おう' }
+        };
+
+        const r = godanTable[lastKana] || { u: lastKana + 'る', te: lastKana + 'て', ta: lastKana + 'た', a: lastKana, e: lastKana, o: lastKana + 'よう' };
+
+        return {
+            group: '1',
+            groupLabel: 'Golongan 1 (Godan)',
+            dict: { k: base + r.u, h: kBase + r.u },
+            masu: { k: rawKanji, h: rawKana },
+            te: { k: base + r.te, h: kBase + r.te },
+            nai: { k: base + r.a + 'ない', h: kBase + r.a + 'ない' },
+            ta: { k: base + r.ta, h: kBase + r.ta },
+            nakatta: { k: base + r.a + 'なかった', h: kBase + r.a + 'なかった' },
+            potential: { k: base + r.e + 'る', h: kBase + r.e + 'る' },
+            volitional: { k: base + r.o, h: kBase + r.o },
+            conditional: { k: base + r.e + 'ば', h: kBase + r.e + 'ば' },
+            imperative: { k: base + r.e, h: kBase + r.e },
+            prohibitive: { k: base + r.u + 'な', h: kBase + r.u + 'な' },
+            passive: { k: base + r.a + 'れる', h: kBase + r.a + 'れる' },
+            causative: { k: base + r.a + 'せる', h: kBase + r.a + 'せる' }
+        };
+    }
+
+    function renderVerbConjugationGrid() {
+        const grid = document.getElementById('verbGridContainer');
+        if (!grid || typeof masterData === 'undefined') return;
+
+        const keyword = (document.getElementById('verbSearchInput')?.value || '').toLowerCase().trim();
+        const verbs = masterData.filter(item => item.category === 'Kata Kerja');
+
+        filteredVerbList = verbs
+            .map(item => ({ item, conj: conjugateJapaneseVerbFull(item) }))
+            .filter(({ item, conj }) => {
+                if (currentVerbGroupFilter !== 'ALL' && conj.group !== currentVerbGroupFilter) return false;
+                if (!keyword) return true;
+                return (item.kanji || '').toLowerCase().includes(keyword) ||
+                    (item.romaji || '').toLowerCase().includes(keyword) ||
+                    (item.meaning || '').toLowerCase().includes(keyword) ||
+                    conj.dict.k.includes(keyword) ||
+                    conj.dict.h.includes(keyword);
+            });
+
+        const countEl = document.getElementById('verbTableCount');
+        if (countEl) countEl.innerText = `Menampilkan ${filteredVerbList.length} kata kerja`;
+
+        const badgeStyles = {
+            '1': 'bg-sky-500/15 text-sky-400',
+            '2': 'bg-emerald-500/15 text-emerald-400',
+            '3': 'bg-amber-500/15 text-amber-400'
+        };
+
+        grid.innerHTML = filteredVerbList.map(({ item, conj }, idx) => {
+            const dictDisplay = formatVerbRuby(conj.dict.k, conj.dict.h);
+            return `
+                <button onclick="openVerbDetail(${idx})" class="theme-subcard p-3.5 rounded-xl border theme-border text-left hover:border-sky-400/60 active:scale-95 transition flex flex-col justify-between gap-1.5">
+                    <div class="flex items-center justify-between w-full">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${badgeStyles[conj.group] || ''}">
+                            Gol ${conj.group}
+                        </span>
+                        <span class="text-[11px] theme-text-muted">›</span>
+                    </div>
+                    <div class="text-base sm:text-lg font-extrabold jp-text leading-snug pt-0.5">
+                        ${dictDisplay}
+                    </div>
+                    <div class="text-xs theme-text-muted line-clamp-1">
+                        ${item.meaning}
+                    </div>
+                </button>
+            `;
+        }).join('');
+    }
+
+    function openVerbDetail(index) {
+        if (!filteredVerbList[index]) return;
+        currentVerbDetailIndex = index;
+
+        const { item, conj } = filteredVerbList[index];
+        const badgeStyles = {
+            '1': 'px-3 py-1 rounded-full text-xs font-extrabold bg-sky-500/15 text-sky-400',
+            '2': 'px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/15 text-emerald-400',
+            '3': 'px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500/15 text-amber-400'
+        };
+
+        const badgeEl = document.getElementById('verbDetailGroupBadge');
+        if (badgeEl) {
+            badgeEl.className = badgeStyles[conj.group] || badgeStyles['1'];
+            badgeEl.innerText = conj.groupLabel;
+        }
+
+        const dictRuby = formatVerbRuby(conj.dict.k, conj.dict.h);
+        const safeDict = conj.dict.k.replace(/'/g, "\\'");
+
+        document.getElementById('verbDetailHeader').innerHTML = `
+            <div class="text-[11px] uppercase tracking-wider theme-text-muted font-bold">Bentuk Kamus (辞書形)</div>
+            <div onclick="speakText('${safeDict}')" class="text-3xl font-extrabold jp-text cursor-pointer inline-flex items-center justify-center gap-2 py-1">
+                <span>${dictRuby}</span>
+                <span class="text-base opacity-70">🔊</span>
+            </div>
+            <div class="text-sm font-bold text-sky-400">${item.meaning}</div>
+            <div class="text-xs theme-text-muted">Bentuk Sopan: <span class="jp-text font-semibold">${conj.masu.k}</span> (${item.romaji})</div>
+        `;
+
+        const forms = [
+            { title: 'Kamus (辞書形)', sub: 'Dasar / Kasual', data: conj.dict },
+            { title: 'Masu (ます形)', sub: 'Sopan / Formal', data: conj.masu },
+            { title: 'Te (て形)', sub: 'Sambung / Tolong', data: conj.te },
+            { title: 'Nai (ない形)', sub: 'Negatif (Tidak)', data: conj.nai },
+            { title: 'Ta (た形)', sub: 'Lampau (Sudah)', data: conj.ta },
+            { title: 'Nakatta (なかった)', sub: 'Lampau Negatif', data: conj.nakatta },
+            { title: 'Bisa (可能形)', sub: 'Potensial (Dapat)', data: conj.potential },
+            { title: 'Ajakan (意向形)', sub: 'Volisional (Ayo)', data: conj.volitional },
+            { title: 'Syarat (〜ば形)', sub: 'Kondisional (Jika)', data: conj.conditional },
+            { title: 'Perintah (命令形)', sub: 'Imperatif (Suruhan)', data: conj.imperative },
+            { title: 'Larangan (禁止形)', sub: 'Prohibitif (Jangan)', data: conj.prohibitive },
+            { title: 'Pasif (受身形)', sub: 'Di- / Ter-', data: conj.passive },
+            { title: 'Kausatif (使役形)', sub: 'Menyuruh / Biarkan', data: conj.causative }
+        ];
+
+        document.getElementById('verbDetailCards').innerHTML = forms.map(f => {
+            const rubyWord = formatVerbRuby(f.data.k, f.data.h);
+            const safeWord = f.data.k.replace(/'/g, "\\'");
+            return `
+                <button onclick="speakText('${safeWord}')" class="theme-subcard p-3.5 rounded-xl border theme-border text-left hover:border-sky-400/60 active:scale-95 transition space-y-1">
+                    <div class="flex items-center justify-between gap-1">
+                        <span class="text-[11px] font-extrabold text-sky-400">${f.title}</span>
+                        <span class="text-[10px] opacity-60">🔊</span>
+                    </div>
+                    <div class="text-base sm:text-lg font-bold jp-text leading-snug">${rubyWord}</div>
+                    <div class="text-[10px] theme-text-muted">${f.sub}</div>
+                </button>
+            `;
+        }).join('');
+
+        const prevBtn = document.getElementById('btnVerbPrev');
+        const nextBtn = document.getElementById('btnVerbNext');
+        if (prevBtn) prevBtn.disabled = (index === 0);
+        if (nextBtn) nextBtn.disabled = (index >= filteredVerbList.length - 1);
+
+        document.getElementById('verbListView').classList.add('hidden');
+        document.getElementById('verbDetailView').classList.remove('hidden');
+        document.getElementById('tab-konjugasi').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function closeVerbDetail() {
+        document.getElementById('verbDetailView').classList.add('hidden');
+        document.getElementById('verbListView').classList.remove('hidden');
+    }
+
+    function navigateVerbDetail(step) {
+        const targetIdx = currentVerbDetailIndex + step;
+        if (targetIdx >= 0 && targetIdx < filteredVerbList.length) {
+            openVerbDetail(targetIdx);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderVerbConjugationGrid);
+    if (document.readyState !== 'loading') renderVerbConjugationGrid();
 </script>
     
 </body>
