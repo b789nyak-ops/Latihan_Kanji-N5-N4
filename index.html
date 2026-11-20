@@ -163,9 +163,78 @@
         [data-theme="kyoto"] .motif-kyoto { display: block; }
         [data-theme="sakura"] .motif-sakura { display: block; }
         [data-theme="fuji"] .motif-fuji { display: block; }
+
+        /* CUSTOM MODERN DROPDOWN & BOTTOM SHEET */
+        select.mj-native-hidden {
+            display: none !important;
+        }
+        .mj-custom-select-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .mj-custom-select-btn:hover {
+            border-color: var(--accent);
+        }
+        .mj-custom-select-btn:active {
+            transform: scale(0.99);
+        }
+        .mj-sheet-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(5, 8, 18, 0.72);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            animation: mjFadeIn 0.18s ease-out;
+        }
+        @media (min-width: 640px) {
+            .mj-sheet-backdrop {
+                align-items: center;
+                padding: 1rem;
+            }
+        }
+        .mj-sheet-panel {
+            width: 100%;
+            max-width: 460px;
+            max-height: 75vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem 1.5rem 0 0;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.45);
+            overflow: hidden;
+            animation: mjSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @media (min-width: 640px) {
+            .mj-sheet-panel {
+                border-radius: 1.5rem;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+            }
+        }
+        @keyframes mjFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes mjSlideUp {
+            from { opacity: 0; transform: translateY(28px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
     </style>
+
 </head>
-<body class="pb-24">
+
+    <body class="pb-24">
 
 <!-- 1. LAYAR PEMBUKA (LOGO FADE-IN HALUS -> DISUSUL TEKS MASTER JAPAN MENGALIR) -->
 <div id="customSplashScreen" style="position:fixed; inset:0; z-index:99999; background:radial-gradient(circle at 50% 45%, #232936 0%, #14171d 70%, #0d0f13 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; transition:opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1); will-change:opacity;">
@@ -8718,6 +8787,143 @@ renderBunpouTables();
             kanaCurrentStroke = [];
             redrawKanaCanvas();
         }
+
+        // ============================================================
+        // UPGRADE OTOMATIS SEMUA <SELECT> MENJADI MODERN BOTTOM SHEET
+        // ============================================================
+        (function initModernDropdownUpgrader() {
+            let activeSheet = null;
+
+            function closeModernSelectSheet() {
+                if (activeSheet) {
+                    activeSheet.remove();
+                    activeSheet = null;
+                }
+            }
+
+            function openModernSelectSheet(selectEl) {
+                closeModernSelectSheet();
+
+                // Cari label terdekat di atas select jika ada
+                let titleText = 'Pilih Opsi';
+                const prevEl = selectEl.previousElementSibling;
+                if (prevEl && prevEl.tagName === 'LABEL') {
+                    titleText = prevEl.innerText.replace(':', '').trim();
+                }
+
+                const backdrop = document.createElement('div');
+                backdrop.className = 'mj-sheet-backdrop';
+                backdrop.addEventListener('click', (e) => {
+                    if (e.target === backdrop) closeModernSelectSheet();
+                });
+
+                const panel = document.createElement('div');
+                panel.className = 'mj-sheet-panel';
+
+                const optionsHTML = Array.from(selectEl.options).map((opt, idx) => {
+                    const isSelected = opt.selected;
+                    return `
+                        <button type="button" data-opt-idx="${idx}"
+                            class="w-full px-4 py-3.5 rounded-xl text-left flex items-center justify-between gap-3 transition ${
+                                isSelected
+                                    ? 'theme-accent-soft theme-accent-text font-bold border border-sky-400/40'
+                                    : 'hover:bg-white/5 theme-text-main font-medium'
+                            }">
+                            <span class="text-sm leading-snug">${opt.text}</span>
+                            ${isSelected
+                                ? '<span class="w-5 h-5 rounded-full theme-accent-bg flex items-center justify-center text-xs shrink-0">✓</span>'
+                                : '<span class="w-5 h-5 rounded-full border theme-border opacity-40 shrink-0"></span>'
+                            }
+                        </button>
+                    `;
+                }).join('');
+
+                panel.innerHTML = `
+                    <div class="px-5 pt-3 pb-3 border-b theme-border flex items-center justify-between">
+                        <div>
+                            <div class="w-9 h-1 rounded-full bg-slate-500/40 mx-auto mb-2 sm:hidden"></div>
+                            <h4 class="text-sm font-extrabold tracking-wide">${titleText}</h4>
+                        </div>
+                        <button type="button" id="mjSheetCloseBtn" class="w-8 h-8 rounded-full theme-subcard flex items-center justify-center text-xs font-bold hover:opacity-80">✕</button>
+                    </div>
+                    <div class="p-3 overflow-y-auto space-y-1.5" id="mjSheetOptionsList">
+                        ${optionsHTML}
+                    </div>
+                `;
+
+                backdrop.appendChild(panel);
+                document.body.appendChild(backdrop);
+                activeSheet = backdrop;
+
+                panel.querySelector('#mjSheetCloseBtn').addEventListener('click', closeModernSelectSheet);
+                panel.querySelectorAll('[data-opt-idx]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const idx = parseInt(btn.getAttribute('data-opt-idx'), 10);
+                        selectEl.selectedIndex = idx;
+                        syncCustomButtonLabel(selectEl);
+                        closeModernSelectSheet();
+                        selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                    });
+                });
+            }
+
+            function syncCustomButtonLabel(selectEl) {
+                const btn = selectEl._mjCustomBtn;
+                if (!btn) return;
+                const selectedOpt = selectEl.options[selectEl.selectedIndex];
+                const labelSpan = btn.querySelector('.mj-select-label');
+                if (labelSpan) {
+                    labelSpan.textContent = selectedOpt ? selectedOpt.text : '';
+                }
+            }
+
+            function upgradeSelectElement(selectEl) {
+                if (selectEl.dataset.mjUpgraded) {
+                    syncCustomButtonLabel(selectEl);
+                    return;
+                }
+                selectEl.dataset.mjUpgraded = '1';
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                // Salin kelas ukuran/layout dari select asli agar tata letak grid tetap presisi
+                const inheritedClasses = selectEl.className
+                    .replace(/\bappearance-none\b/g, '')
+                    .trim();
+                btn.className = `${inheritedClasses} mj-custom-select-btn`;
+
+                const selectedOpt = selectEl.options[selectEl.selectedIndex];
+                btn.innerHTML = `
+                    <span class="mj-select-label truncate">${selectedOpt ? selectedOpt.text : ''}</span>
+                    <svg class="w-4 h-4 theme-accent-text shrink-0 opacity-80" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                `;
+
+                btn.addEventListener('click', () => openModernSelectSheet(selectEl));
+
+                selectEl.classList.add('mj-native-hidden');
+                selectEl.parentNode.insertBefore(btn, selectEl.nextSibling);
+                selectEl._mjCustomBtn = btn;
+
+                // Pantau jika isi <option> atau .value diubah lewat JavaScript
+                const observer = new MutationObserver(() => syncCustomButtonLabel(selectEl));
+                observer.observe(selectEl, { childList: true, subtree: true, attributes: true });
+                selectEl.addEventListener('change', () => syncCustomButtonLabel(selectEl));
+            }
+
+            function upgradeAllSelects() {
+                document.querySelectorAll('select').forEach(upgradeSelectElement);
+            }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                upgradeAllSelects();
+                // Jalankan ulang sebentar setelah inisialisasi kategori selesai
+                setTimeout(upgradeAllSelects, 250);
+            });
+            // Ekspos global agar bisa dipanggil kapan saja jika ada select baru
+            window.refreshModernDropdowns = upgradeAllSelects;
+        })();
 
 </script>
     
