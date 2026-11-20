@@ -5683,21 +5683,44 @@ function showQuizResult() {
             renderList();
         }
 
+        function handleVocabListClick(e) {
+            const speakBtn = e.target.closest('[data-speak]');
+            if (speakBtn) {
+                e.stopPropagation();
+                speakText(speakBtn.getAttribute('data-speak'));
+                return;
+            }
+            const memBtn = e.target.closest('[data-mem]');
+            if (memBtn) {
+                e.stopPropagation();
+                toggleMemFromList(memBtn.getAttribute('data-mem'));
+                return;
+            }
+            const cardEl = e.target.closest('[data-kanji-card]');
+            if (cardEl && cardEl.getAttribute('data-has-kanji') === '1') {
+                toggleKanjiDetail(cardEl.getAttribute('data-uid'), cardEl.getAttribute('data-kanji-card'));
+            }
+        }
+
         function renderList() {
             const listContainer = document.getElementById('vocabList');
             const catFilter = document.getElementById('listCategoryFilter').value;
             const statusFilter = document.getElementById('listStatusFilter').value;
             const countBadge = document.getElementById('vocabGroupCountBadge');
-            listContainer.innerHTML = '';
 
-            let filtered = masterData.filter(item => {
+            if (!listContainer.dataset.delegated) {
+                listContainer.addEventListener('click', handleVocabListClick);
+                listContainer.dataset.delegated = '1';
+            }
+
+            const memSet = new Set(memorizedKanji);
+            const filtered = masterData.filter(item => {
                 if (!isItemInVocabGroup(item, activeVocabBabGroup)) return false;
-                let matchCat = (!catFilter || catFilter === 'ALL' || catFilter.startsWith('Semua')) || item.category === catFilter;
-                let isMem = memorizedKanji.includes(item.kanji);
-                let matchStat = true;
-                if (statusFilter === 'hafal') matchStat = isMem;
-                if (statusFilter === 'belum') matchStat = !isMem;
-                return matchCat && matchStat;
+                const matchCat = (catFilter === 'ALL' || catFilter.startsWith('Semua') || item.category === catFilter);
+                if (!matchCat) return false;
+                if (statusFilter === 'hafal') return memSet.has(item.kanji);
+                if (statusFilter === 'belum') return !memSet.has(item.kanji);
+                return true;
             });
 
             if (countBadge) {
@@ -5707,55 +5730,48 @@ function showQuizResult() {
             if (filtered.length === 0) {
                 listContainer.innerHTML = `
                     <div class="col-span-2 theme-card rounded-2xl p-8 text-center theme-text-muted text-xs sm:text-sm border theme-border">
-                        ${activeVocabBabGroup === '26-50' 
-                            ? 'Belum ada kosakata di daftar Bab 26–50 (N4) untuk filter ini.' 
+                        ${activeVocabBabGroup === '26-50'
+                            ? 'Belum ada kosakata di daftar Bab 26-50 (N4) untuk filter ini.'
                             : 'Tidak ada kosakata ditemukan untuk filter ini.'}
                     </div>`;
                 return;
             }
 
-            filtered.forEach((item, index) => {
-                const isMem = memorizedKanji.includes(item.kanji);
-                const kanjiChars = extractKanjiChars(item.kanji);
-                const hasKanji = kanjiChars.length > 0;
+            const htmlChunks = new Array(filtered.length);
+            for (let index = 0; index < filtered.length; index++) {
+                const item = filtered[index];
+                const isMem = memSet.has(item.kanji);
+                const hasKanji = /[\u4e00-\u9faf]/.test(item.kanji);
                 const uniqueId = `item-${index}-${item.id}`;
                 const babBadge = item.bab || item.lesson ? `Bab ${item.bab || item.lesson}` : item.category;
+                const safeKanji = item.kanji.replace(/"/g, '&quot;');
 
-                const card = document.createElement('div');
-                card.className = `theme-card rounded-2xl p-3 border theme-border flex flex-col justify-between gap-2 transition ${hasKanji ? 'cursor-pointer hover:border-sky-400/50' : ''}`;
-                if (hasKanji) {
-                    card.setAttribute('onclick', `toggleKanjiDetail('${uniqueId}', '${item.kanji}')`);
-                }
-
-                let detailSection = hasKanji ? `
-                    <div id="detail-${uniqueId}" class="hidden mt-1 pt-2 border-t theme-border">
-                        <div class="theme-subcard rounded-xl p-2 text-center text-[11px] theme-accent-text font-medium animate-pulse">
-                            ⏳ Memuat Kanji...
+                htmlChunks[index] = `
+                    <div data-kanji-card="${safeKanji}" data-uid="${uniqueId}" data-has-kanji="${hasKanji ? '1' : '0'}"
+                         style="content-visibility: auto; contain-intrinsic-size: 168px;"
+                         class="theme-card rounded-2xl p-3 border theme-border flex flex-col justify-between gap-2 transition ${hasKanji ? 'cursor-pointer hover:border-sky-400/50' : ''}">
+                        <div>
+                            <div class="flex items-center justify-between gap-1 mb-1">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full theme-accent-soft truncate max-w-[75%]">${babBadge}</span>
+                                ${hasKanji ? '<span class="text-[10px] font-bold theme-accent-text">漢</span>' : ''}
+                            </div>
+                            <div class="text-lg sm:text-xl font-bold jp-text leading-snug break-words">${formatItemWithKana(item)}</div>
+                            <div class="text-xs font-medium theme-accent-text">${item.romaji}</div>
+                            <div class="text-xs theme-text-muted mt-0.5 leading-snug">${item.meaning}</div>
                         </div>
-                    </div>` : '';
-
-                card.innerHTML = `
-                    <div>
-                        <div class="flex items-center justify-between gap-1 mb-1">
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full theme-accent-soft truncate max-w-[70%]">${babBadge}</span>
-                            ${hasKanji ? '<span class="text-[10px] font-bold theme-accent-text">漢</span>' : ''}
+                        <div class="flex items-center justify-between gap-1.5 pt-1.5 border-t theme-border">
+                            <button type="button" data-speak="${safeKanji}" class="flex-1 py-1.5 px-2 rounded-xl theme-subcard hover:opacity-80 text-xs font-semibold flex items-center justify-center gap-1 transition">
+                                🔊 <span>Dengar</span>
+                            </button>
+                            <button type="button" data-mem="${safeKanji}" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition ${isMem ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'theme-subcard hover:opacity-80'}">
+                                ${isMem ? '✅ Hafal' : 'Belum'}
+                            </button>
                         </div>
-                        <div class="text-lg sm:text-xl font-bold jp-text leading-snug break-words">${item.kanji}</div>
-                        <div class="text-xs font-medium theme-accent-text">${item.romaji}</div>
-                        <div class="text-xs theme-text-muted mt-0.5 leading-snug">${item.meaning}</div>
-                    </div>
-                    <div class="flex items-center justify-between gap-1.5 pt-1.5 border-t theme-border">
-                        <button onclick="event.stopPropagation(); speakText('${item.kanji.replace(/'/g, "\\'")}')" class="p-1.5 theme-subcard rounded-lg hover:opacity-80 text-xs" title="Dengarkan">
-                            🔊
-                        </button>
-                        <button onclick="event.stopPropagation(); toggleMemFromList('${item.kanji.replace(/'/g, "\\'")}')" class="flex-1 py-1 px-2 rounded-lg text-[11px] font-bold transition ${isMem ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'theme-subcard theme-text-muted'}">
-                            ${isMem ? '✅ Hafal' : 'Belum'}
-                        </button>
-                    </div>
-                    ${detailSection}
-                `;
-                listContainer.appendChild(card);
-            });
+                        ${hasKanji ? `<div id="detail-${uniqueId}" class="hidden mt-1 pt-2 border-t theme-border"></div>` : ''}
+                    </div>`;
+            }
+
+            listContainer.innerHTML = htmlChunks.join('');
         }
 
 function toggleMemFromList(kanji) {
