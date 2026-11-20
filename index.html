@@ -7153,8 +7153,11 @@ renderBunpouTables();
     ]
   };
 
-        function switchLatihanFeature(tabId) {
+                function switchLatihanFeature(tabId) {
             stopSpeech();
+            localStorage.setItem('mj_last_hub', 'latihan');
+            localStorage.setItem('mj_last_tab', tabId);
+
             document.querySelectorAll('.latihan-sub-btn').forEach(btn => {
                 btn.classList.remove('theme-accent-bg', 'shadow');
                 btn.classList.add('theme-text-muted', 'hover:opacity-80');
@@ -7176,6 +7179,9 @@ renderBunpouTables();
 
             if (hubName === 'beranda') {
                 stopSpeech();
+                localStorage.setItem('mj_last_hub', 'beranda');
+                localStorage.removeItem('mj_last_tab');
+
                 document.querySelectorAll('.tab-content').forEach(el => {
                     el.classList.remove('active');
                     el.classList.add('hidden');
@@ -7186,12 +7192,15 @@ renderBunpouTables();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
-
+            
             if (homeView) homeView.classList.add('hidden');
             if (backBar) backBar.classList.remove('hidden');
 
             const items = HUB_GROUPS[hubName] || [];
             const targetTab = specificTabId || (items[0] && items[0].id);
+
+            localStorage.setItem('mj_last_hub', hubName);
+            if (targetTab) localStorage.setItem('mj_last_tab', targetTab);
 
             if (hubName === 'latihan') {
                 if (latihanBar) latihanBar.classList.remove('hidden');
@@ -7229,10 +7238,15 @@ renderBunpouTables();
     openModernHub(hubName, tabId);
   }
 
-  // Otomatis buka Beranda saat halaman selesai dimuat
-  window.addEventListener('DOMContentLoaded', () => {
-    openModernHub('beranda');
-  });
+        // Pulihkan posisi layar terakhir saat halaman di-refresh
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedHub = localStorage.getItem('mj_last_hub');
+            const savedTab = localStorage.getItem('mj_last_tab');
+            if (savedHub && savedHub !== 'beranda') {
+                openModernHub(savedHub, savedTab || null);
+            }
+        });
+
 </script>    
 
 <style>
@@ -7550,81 +7564,188 @@ renderBunpouTables();
         return out;
     }
 
-    // Pasang furigana rapi (hanya di atas huruf Kanji, okurigana tetap bersih)
-    function makeRubyHTML(word, kana) {
-        if (!word || !kana || !/[\u4e00-\u9faf]/.test(word)) return word;
-        let prefix = '';
-        let suffix = '';
-        let w = word;
-        let k = kana;
+            // Pasang furigana rapi (hanya di atas huruf Kanji, okurigana & tanda kurung tetap bersih)
+        function makeRubyHTML(word, kana) {
+            if (!word || !kana || !/[\u4e00-\u9faf]/.test(word)) return word;
+            let prefix = '';
+            let suffix = '';
+            let w = word;
+            let k = kana;
 
-        while (w.length > 1 && k.length > 1 && w[0] === k[0] && !/[\u4e00-\u9faf]/.test(w[0])) {
-            prefix += w[0];
-            w = w.slice(1);
-            k = k.slice(1);
+            while (w.length > 1 && k.length > 1 && w[0] === k[0] && !/[\u4e00-\u9faf]/.test(w[0])) {
+                prefix += w[0];
+                w = w.slice(1);
+                k = k.slice(1);
+            }
+            while (w.length > 1 && k.length > 1 && w[w.length - 1] === k[k.length - 1] && !/[\u4e00-\u9faf]/.test(w[w.length - 1])) {
+                suffix = w[w.length - 1] + suffix;
+                w = w.slice(0, -1);
+                k = k.slice(0, -1);
+            }
+            return `${prefix}<ruby>${w}<rt>${k}</rt></ruby>${suffix}`;
         }
-        while (w.length > 1 && k.length > 1 && w[w.length - 1] === k[k.length - 1] && !/[\u4e00-\u9faf]/.test(w[w.length - 1])) {
-            suffix = w[w.length - 1] + suffix;
-            w = w.slice(0, -1);
-            k = k.slice(0, -1);
+
+        // Bersihkan catatan kurung & pisahkan alternatif "/" sebelum pasang furigana
+        function formatSinglePartWithKana(wordPart, kanaPart) {
+            const wClean = (wordPart || '').trim();
+            const kClean = (kanaPart || '').trim();
+            if (!wClean) return '';
+            if (!kClean || !/[\u4e00-\u9faf]/.test(wClean)) return wClean;
+
+            const parenMatch = wClean.match(/^(.+?)([（(][^）)]+[）)])$/);
+            if (parenMatch) {
+                const baseWord = parenMatch[1].trim();
+                const trailingNote = parenMatch[2];
+                const baseKana = kClean.replace(/[（(][^）)]+[）)]/g, '').trim();
+                return makeRubyHTML(baseWord, baseKana) + trailingNote;
+            }
+            return makeRubyHTML(wClean, kClean);
         }
-        return `${prefix}<ruby>${w}<rt>${k}</rt></ruby>${suffix}`;
-    }
 
-    // Untuk soal yang punya object item { kanji, romaji }
-    function formatItemWithKana(item) {
-        if (!item || !item.kanji) return '';
-        const kana = item.kana || item.hiragana || romajiToHiragana(item.romaji || '');
-        return makeRubyHTML(item.kanji, kana);
-    }
+        // Untuk soal yang punya object item { kanji, romaji }
+        function formatItemWithKana(item) {
+            if (!item || !item.kanji) return '';
+            const rawKanji = item.kanji;
+            const rawKana = item.kana || item.hiragana || romajiToHiragana(item.romaji || '');
+            if (!rawKana || !/[\u4e00-\u9faf]/.test(rawKanji)) return rawKanji;
 
-    // Kamus Kanji dari masterData untuk memberi Kana pada kalimat penuh (Partikel, Dokkai, Choukai, JLPT)
-    let _kanjiDictCache = null;
-    function getKanjiDictionary() {
-        if (_kanjiDictCache) return _kanjiDictCache;
-        const entries = [];
-        if (typeof masterData !== 'undefined') {
-            for (const item of masterData) {
-                if (item.kanji && /[\u4e00-\u9faf]/.test(item.kanji)) {
-                    const kana = item.kana || item.hiragana || romajiToHiragana(item.romaji || '');
-                    if (kana) entries.push({ word: item.kanji, kana });
+            if (rawKanji.includes('/')) {
+                const wParts = rawKanji.split('/');
+                const kParts = rawKana.includes('/') ? rawKana.split('/') : [];
+                return wParts.map((wp, idx) => {
+                    const kp = kParts[idx] !== undefined ? kParts[idx] : (kParts[0] || rawKana);
+                    return formatSinglePartWithKana(wp, kp);
+                }).join(' / ');
+            }
+            return formatSinglePartWithKana(rawKanji, rawKana);
+        }
+
+        // Kamus Kanji gabungan (masterData + bentuk konjugasi/kalimat umum N5-N4)
+        let _kanjiDictCache = null;
+        function getKanjiDictionary() {
+            if (_kanjiDictCache) return _kanjiDictCache;
+            const map = new Map();
+
+            const extraEntries = [
+                { word: '今日', kana: 'きょう' }, { word: '明日', kana: 'あした' }, { word: '昨日', kana: 'きのう' },
+                { word: '今年', kana: 'ことし' }, { word: '去年', kana: 'きょねん' }, { word: '来年', kana: 'らいねん' },
+                { word: '今朝', kana: 'けさ' }, { word: '今晩', kana: 'こんばん' }, { word: '今週', kana: 'こんしゅう' },
+                { word: '先週', kana: 'せんしゅう' }, { word: '来週', kana: 'らいしゅう' }, { word: '今月', kana: 'こんげつ' },
+                { word: '先月', kana: 'せんげつ' }, { word: '来月', kana: 'らいげつ' }, { word: '毎日', kana: 'まいにち' },
+                { word: '毎朝', kana: 'まいあさ' }, { word: '毎晩', kana: 'まいばん' }, { word: '毎週', kana: 'まいしゅう' },
+                { word: '毎月', kana: 'まいつき' }, { word: '毎年', kana: 'まいとし' }, { word: '会社員', kana: 'かいしゃいん' },
+                { word: '日本語', kana: 'にほんご' }, { word: '日本人', kana: 'にほんじん' }, { word: '外国人', kana: 'がいこくじん' },
+                { word: '部屋', kana: 'へや' }, { word: '猫', kana: 'ねこ' }, { word: '犬', kana: 'いぬ' },
+                { word: '暑い', kana: 'あつい' }, { word: '寒い', kana: 'さむい' }, { word: '熱い', kana: 'あつい' },
+                { word: '冷たい', kana: 'つめたい' }, { word: '少し', kana: 'すこし' }, { word: 'お金', kana: 'おかね' },
+                { word: '開けて', kana: 'あけて' }, { word: '開ける', kana: 'あける' }, { word: '閉めて', kana: 'しめて' },
+                { word: '閉める', kana: 'しめる' }, { word: '買い', kana: 'かい' }, { word: '買って', kana: 'かって' },
+                { word: '買う', kana: 'かう' }, { word: '返して', kana: 'かえして' }, { word: '返す', kana: 'かえす' },
+                { word: '行って', kana: 'いって' }, { word: '行く', kana: 'いく' }, { word: '来て', kana: 'きて' },
+                { word: '来る', kana: 'くる' }, { word: '帰って', kana: 'かえって' }, { word: '帰る', kana: 'かえる' },
+                { word: '食べて', kana: 'たべて' }, { word: '食べる', kana: 'たべる' }, { word: '飲んで', kana: 'のんで' },
+                { word: '飲む', kana: 'のむ' }, { word: '見て', kana: 'みて' }, { word: '見る', kana: 'みる' },
+                { word: '聞いて', kana: 'きいて' }, { word: '聞く', kana: 'きく' }, { word: '読んで', kana: 'よんで' },
+                { word: '読む', kana: 'よむ' }, { word: '書いて', kana: 'かいて' }, { word: '書く', kana: 'かく' },
+                { word: '話して', kana: 'はなして' }, { word: '話す', kana: 'はなす' }, { word: '作って', kana: 'つくって' },
+                { word: '作る', kana: 'つくる' }, { word: '使って', kana: 'つかって' }, { word: '使う', kana: 'つかう' },
+                { word: '持って', kana: 'もって' }, { word: '持つ', kana: 'もつ' }, { word: '待って', kana: 'まって' },
+                { word: '待つ', kana: 'まつ' }, { word: '乗って', kana: 'のって' }, { word: '乗る', kana: 'のる' },
+                { word: '降りて', kana: 'おりて' }, { word: '降りる', kana: 'おりる' }, { word: '入って', kana: 'はいって' },
+                { word: '入る', kana: 'いる' }, { word: '出て', kana: 'でて' }, { word: '出る', kana: 'でる' },
+                { word: '寝て', kana: 'ねて' }, { word: '寝る', kana: 'ねる' }, { word: '起きて', kana: 'おきて' },
+                { word: '起きる', kana: 'おきる' }, { word: '働いて', kana: 'はたらいて' }, { word: '働く', kana: 'はたらく' },
+                { word: '休んで', kana: 'やすんで' }, { word: '休む', kana: 'やすむ' }, { word: '勉強して', kana: 'べんきょうして' },
+                { word: '勉強する', kana: 'べんきょうする' }, { word: '土曜日', kana: 'どようび' }, { word: '日曜日', kana: 'にちようび' },
+                { word: '月曜日', kana: 'げつようび' }, { word: '火曜日', kana: 'かようび' }, { word: '水曜日', kana: '水ようび' },
+                { word: '木曜日', kana: 'もくようび' }, { word: '金曜日', kana: 'きんようび' }, { word: '水曜日', kana: 'すいようび' },
+                { word: '先生', kana: 'せんせい' }, { word: '学生', kana: 'がくせい' }, { word: '学校', kana: 'がっこう' },
+                { word: '病院', kana: 'びょういん' }, { word: '銀行', kana: 'ぎんこう' }, { word: '郵便局', kana: 'ゆうびんきょく' },
+                { word: '図書館', kana: 'としょかん' }, { word: '美術館', kana: 'びじゅつかん' }, { word: '映画館', kana: 'えいがかん' },
+                { word: '駅', kana: 'えき' }, { word: '空港', kana: 'くうこう' }, { word: '電車', kana: 'でんしゃ' },
+                { word: '地下鉄', kana: 'ちかてつ' }, { word: '自転車', kana: 'じてんしゃ' }, { word: '飛行機', kana: 'ひこうき' },
+                { word: '新幹線', kana: 'しんかんせん' }, { word: '家族', kana: 'かぞく' }, { word: '両親', kana: 'りょうしん' },
+                { word: '友達', kana: 'ともだち' }, { word: '子供', kana: 'こども' }, { word: '時間', kana: 'じかん' },
+                { word: '電話', kana: 'でんわ' }, { word: '手紙', kana: 'てがみ' }, { word: '写真', kana: 'しゃしん' },
+                { word: '音楽', kana: 'おんがく' }, { word: '料理', kana: 'りょうり' }, { word: '天気', kana: 'てんき' },
+                { word: '病気', kana: 'びょうき' }, { word: '元気', kana: 'げんき' }, { word: '有名', kana: 'ゆうめい' },
+                { word: '親切', kana: 'しんせつ' }, { word: '便利', kana: 'べんり' }, { word: '大切', kana: 'たいせつ' },
+                { word: '大丈夫', kana: 'だいじょうぶ' }, { word: '問題', kana: 'もんだい' }, { word: '質問', kana: 'しつもん' },
+                { word: '答え', kana: 'こたえ' }, { word: '意味', kana: 'いみ' }, { word: '言葉', kana: 'ことば' },
+                { word: '漢字', kana: 'かんじ' }, { word: '練習', kana: 'れんしゅう' }, { word: '試験', kana: 'しけん' },
+                { word: '宿題', kana: 'しゅくだい' }, { word: '授業', kana: 'じゅぎょう' }, { word: '教室', kana: 'きょうしつ' },
+                { word: '食堂', kana: 'しょくどう' }, { word: '事務所', kana: 'じむしょ' }, { word: '会議室', kana: 'かいぎしつ' },
+                { word: '受付', kana: 'うけつけ' }, { word: '階段', kana: 'かいだん' }, { word: '入口', kana: 'いりぐち' },
+                { word: '出口', kana: 'でぐち' }, { word: '窓', kana: 'まど' }, { word: '机', kana: 'つくえ' },
+                { word: '本', kana: 'ほん' }, { word: '水', kana: 'みず' }, { word: 'お茶', kana: 'おちゃ' },
+                { word: 'ご飯', kana: 'ごはん' }, { word: '朝ご飯', kana: 'あさごはん' }, { word: '昼ご飯', kana: 'ひるごはん' },
+                { word: '晩ご飯', kana: 'ばんごはん' }, { word: '魚', kana: 'さかな' }, { word: '肉', kana: 'にく' },
+                { word: '野菜', kana: 'やさい' }, { word: '果物', kana: 'くだもの' }, { word: '牛乳', kana: 'ぎゅうにゅう' }
+            ];
+
+            extraEntries.forEach(e => map.set(e.word, e.kana));
+
+            if (typeof masterData !== 'undefined') {
+                for (const item of masterData) {
+                    if (!item.kanji || !/[\u4e00-\u9faf]/.test(item.kanji)) continue;
+                    const rawKana = item.kana || item.hiragana || romajiToHiragana(item.romaji || '');
+                    if (!rawKana) continue;
+
+                    const wParts = item.kanji.split('/');
+                    const kParts = rawKana.includes('/') ? rawKana.split('/') : [];
+
+                    wParts.forEach((wp, idx) => {
+                        const cleanW = wp.replace(/[（(][^）)]+[）)]/g, '').trim();
+                        const kp = (kParts[idx] !== undefined ? kParts[idx] : (kParts[0] || rawKana)).replace(/[（(][^）)]+[）)]/g, '').trim();
+                        if (cleanW && kp && /[\u4e00-\u9faf]/.test(cleanW)) {
+                            if (!map.has(cleanW)) map.set(cleanW, kp);
+                            // Otomatis turunkan akar kata kerja dari bentuk ～ます (misal 探します -> 探し)
+                            if (cleanW.endsWith('ます') && kp.endsWith('ます') && cleanW.length > 2) {
+                                const stemW = cleanW.slice(0, -2);
+                                const stemK = kp.slice(0, -2);
+                                if (/[\u4e00-\u9faf]/.test(stemW) && !map.has(stemW)) {
+                                    map.set(stemW, stemK);
+                                }
+                            }
+                        }
+                    });
                 }
             }
+
+            const entries = Array.from(map.entries()).map(([word, kana]) => ({ word, kana }));
+            entries.sort((a, b) => b.word.length - a.word.length);
+            _kanjiDictCache = entries;
+            return entries;
         }
-        // Urutkan dari kata terpanjang agar kata majemuk (misal: 卒業式) cocok lebih dulu
-        entries.sort((a, b) => b.word.length - a.word.length);
-        _kanjiDictCache = entries;
-        return entries;
-    }
 
-    function formatSentenceWithKana(text) {
-        if (!text || !/[\u4e00-\u9faf]/.test(text)) return text;
-        const dict = getKanjiDictionary();
-        let result = '';
-        let i = 0;
+        function formatSentenceWithKana(text) {
+            if (!text || !/[\u4e00-\u9faf]/.test(text)) return text;
+            const dict = getKanjiDictionary();
+            let result = '';
+            let i = 0;
 
-        while (i < text.length) {
-            if (!/[\u4e00-\u9faf]/.test(text[i])) {
-                result += text[i];
-                i++;
-                continue;
-            }
-            let matched = false;
-            for (const entry of dict) {
-                if (text.startsWith(entry.word, i)) {
-                    result += makeRubyHTML(entry.word, entry.kana);
-                    i += entry.word.length;
-                    matched = true;
-                    break;
+            while (i < text.length) {
+                if (!/[\u4e00-\u9faf]/.test(text[i])) {
+                    result += text[i];
+                    i++;
+                    continue;
+                }
+                let matched = false;
+                for (const entry of dict) {
+                    if (text.startsWith(entry.word, i)) {
+                        result += makeRubyHTML(entry.word, entry.kana);
+                        i += entry.word.length;
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    result += text[i];
+                    i++;
                 }
             }
-            if (!matched) {
-                result += text[i];
-                i++;
-            }
+            return result;
         }
-        return result;
-    }
 
     applyKanaState();
 </script>
