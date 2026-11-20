@@ -1498,87 +1498,70 @@
         
 <script>
 
-// ==========================================
-// 0. KONFIGURASI GOOGLE SHEETS WEB APP URL & PELACAK DURASI
-// ==========================================
-const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyrzgDv2EwX2tQ60brKN1p_Dtzg5NdHK7QDgq9CDk0R10xHfWcclQABvd_NE6QGnKECIQ/exec";
-const mjSessionId = "MJ-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7);
-let sessionStartTime = Date.now();
-let totalActiveSeconds = 0;
 
-function detectDeviceLabel() {
-  const ua = navigator.userAgent;
-  if (/android/i.test(ua)) return "Android";
-  if (/iPad|iPhone|iPod/.test(ua)) return "iOS";
-  if (/Windows/i.test(ua)) return "Windows";
-  if (/Mac/i.test(ua)) return "Mac";
-  return "Lainnya";
-}
+        // ============================================================
+        // 0. KONFIGURASI GOOGLE SHEETS WEB APP URL & PELACAK STATUS
+        // ============================================================
+        const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxPt3HXNFlkpr_IRT_rQo-Emq1RL1rMq9NqGWi8pC6ymepY-SMzUgN1IqZOiEv7WaZYsg/exec";
 
-function formatStudyDuration(seconds) {
-  if (seconds < 60) return seconds + " detik";
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  if (mins < 60) return mins + " menit " + secs + " detik";
-  const hrs = Math.floor(mins / 60);
-  const remMins = mins % 60;
-  return hrs + " jam " + remMins + " menit";
-}
+        let currentTrackedNama = "";
+        let currentTrackedAsal = "";
 
-function logNewSessionToSheet(nama, asal) {
-  if (!GOOGLE_SHEET_WEBHOOK_URL) return;
-  fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-    method: "POST",
-    mode: "no-cors",
-    body: JSON.stringify({
-      type: "start",
-      sessionId: mjSessionId,
-      nama: nama,
-      asal: asal,
-      perangkat: detectDeviceLabel()
-    })
-  }).catch(err => console.warn("Gagal mengirim log ke Google Sheets:", err));
-}
+        function detectDeviceLabel() {
+            const ua = navigator.userAgent;
+            if (/android/i.test(ua)) return "Android";
+            if (/iPad|iPhone|iPod/.test(ua)) return "iOS";
+            if (/Windows/i.test(ua)) return "Windows";
+            if (/Mac/i.test(ua)) return "Mac";
+            return "Lainnya";
+        }
 
-function sendSessionDuration() {
-  if (!GOOGLE_SHEET_WEBHOOK_URL) return;
-  const now = Date.now();
-  const elapsed = Math.floor((now - sessionStartTime) / 1000);
-  if (elapsed > 0) {
-    totalActiveSeconds += elapsed;
-    sessionStartTime = now;
-  }
+        function logNewSessionToSheet(nama, asal) {
+            if (!GOOGLE_SHEET_WEBHOOK_URL) return;
+            currentTrackedNama = nama;
+            currentTrackedAsal = asal;
 
-  if (totalActiveSeconds < 2) return;
+            fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({
+                    type: "start",
+                    nama: nama,
+                    asal: asal,
+                    perangkat: detectDeviceLabel()
+                })
+            }).catch(err => console.warn("Gagal mengirim log start:", err));
+        }
 
-  const payload = JSON.stringify({
-    type: "duration",
-    sessionId: mjSessionId,
-    durationSeconds: totalActiveSeconds,
-    durationText: formatStudyDuration(totalActiveSeconds)
-  });
+        function sendLogoutStatusToSheet() {
+            if (!GOOGLE_SHEET_WEBHOOK_URL || !currentTrackedNama) return;
+            const payload = JSON.stringify({
+                type: "end",
+                nama: currentTrackedNama,
+                asal: currentTrackedAsal
+            });
+            if (navigator.sendBeacon) {
+                const blob = new Blob([payload], { type: "text/plain;charset=utf-8" });
+                navigator.sendBeacon(GOOGLE_SHEET_WEBHOOK_URL, blob);
+            } else {
+                fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    body: payload,
+                    keepalive: true
+                });
+            }
+        }
 
-  if (navigator.sendBeacon) {
-    const blob = new Blob([payload], { type: "text/plain;charset=utf-8" });
-    navigator.sendBeacon(GOOGLE_SHEET_WEBHOOK_URL, blob);
-  } else {
-    fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-      method: "POST",
-      mode: "no-cors",
-      body: payload
-    });
-  }
-}
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "hidden") {
+                sendLogoutStatusToSheet();
+            } else if (document.visibilityState === "visible" && currentTrackedNama) {
+                logNewSessionToSheet(currentTrackedNama, currentTrackedAsal);
+            }
+        });
 
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") {
-    sendSessionDuration();
-  } else if (document.visibilityState === "visible") {
-    sessionStartTime = Date.now();
-  }
-});
-
-window.addEventListener("pagehide", sendSessionDuration);
+        window.addEventListener("pagehide", sendLogoutStatusToSheet);
 
 function initVisitorTracking() {
   const savedVisitor = JSON.parse(localStorage.getItem('mjVisitorProfile') || 'null');
