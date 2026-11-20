@@ -273,12 +273,12 @@
 
     <!-- Tulisan kecil deskripsi -->
     <p style="font-size:13px; color:#cbd5e1; margin:0 0 12px; line-height:1.5;">
-      Metode Pembelajaran Bahasa jepang dengan fitur lengkap
+      Metode Pembelajaran Bahasa Jepang Dengan Fitur Lengkap
     </p>
 
     <!-- Tulisan di bawahnya lagi -->
     <p style="font-size:14px; font-weight:600; color:#38bdf8; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); padding:8px 14px; border-radius:12px; margin:0 0 22px;">
-      Sesuaikan Belajar Dengan Level mu
+      Sesuaikan Belajar Dengan Level Mu!
     </p>
 
     <button onclick="enterMasterJapanWithSound()"()" style="width:100%; padding:12px; border:none; border-radius:14px; font-size:15px; font-weight:700; color:#fff; background:linear-gradient(90deg, #0284c7, #ea580c); cursor:pointer; box-shadow:0 6px 20px rgba(2,132,199,0.35);">
@@ -653,7 +653,7 @@
                 🧩 Partikel
             </button>
             <button onclick="switchLatihanFeature('tab-membaca')" id="latihan-btn-tab-membaca" class="latihan-sub-btn py-2 px-2.5 rounded-xl text-xs font-bold transition text-center">
-                📖 Membaca
+                📖 Dokkai
             </button>
             <button onclick="switchLatihanFeature('tab-choukai')" id="latihan-btn-tab-choukai" class="latihan-sub-btn py-2 px-2.5 rounded-xl text-xs font-bold transition text-center">
                 🎧 Choukai
@@ -1333,8 +1333,8 @@
             <div id="vocabList" class="grid grid-cols-2 gap-2.5 max-h-[65vh] overflow-y-auto pr-0.5"></div>
         </section>
 
-        <!-- ============ TAB: BANK KONJUGASI KATA KERJA ============ -->
-<section id="tab-konjugasi" class="tab-content hidden space-y-4">
+     <!-- ============ TAB: BANK KONJUGASI KATA KERJA ============ -->
+     <section id="tab-konjugasi" class="tab-content hidden space-y-4">
 
     <!-- HALAMAN 1: DAFTAR KATA KERJA (BENTUK KAMUS - 2 KOLOM) -->
     <div id="verbListView" class="theme-card p-5 rounded-2xl shadow-sm space-y-4">
@@ -1406,6 +1406,96 @@
         
     </main>
 
+    <!-- TOMBOL MELAYANG RAMPING: TANYA SENSEI AI (MODE HYBRID) -->
+    <button type="button" id="senseiAiFab" onclick="toggleSenseiAiModal()" title="Tanya Sensei AI"
+        class="fixed bottom-4 right-4 z-40 w-11 h-11 rounded-full theme-accent-bg shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-all opacity-90 hover:opacity-100 border border-white/20">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+        </svg>
+    </button>
+
+    <!-- MODAL CHAT SENSEI AI (MODE HYBRID: OFFLINE + GEMINI API) -->
+    <div id="senseiAiModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="w-full max-w-md h-[82vh] sm:h-[560px] theme-card border theme-border rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+            <!-- Header Modal -->
+            <div class="px-4 py-3 border-b theme-border flex items-center justify-between gap-2 theme-header">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-full theme-accent-soft theme-accent-text flex items-center justify-center font-extrabold text-xs jp-text">
+                        先生
+                    </div>
+                    <div>
+                        <div class="text-xs font-extrabold flex items-center gap-1.5">
+                            <span>Sensei AI</span>
+                            <span id="senseiModeBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">Offline DB</span>
+                        </div>
+                        <p class="text-[10px] theme-text-muted">Tanya kosakata, konjugasi, atau tata bahasa</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="toggleSenseiApiPanel()" title="Pengaturan Gemini API Key"
+                        class="w-8 h-8 rounded-xl theme-subcard flex items-center justify-center text-xs hover:opacity-80 transition">
+                        ⚙️
+                    </button>
+                    <button type="button" onclick="toggleSenseiAiModal()"
+                        class="w-8 h-8 rounded-xl theme-subcard flex items-center justify-center text-xs font-bold hover:opacity-80 transition">
+                        ✕
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel Pengaturan API Key (Tersembunyi Default) -->
+            <div id="senseiApiPanel" class="hidden p-3.5 border-b theme-border theme-subcard space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold theme-accent-text">🔑 Gemini API Key (Opsional - Gratis)</span>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-[10px] underline theme-accent-text">Ambil Key Gratis →</a>
+                </div>
+                <p class="text-[11px] theme-text-muted leading-snug">
+                    Kosongkan untuk memakai database offline. Isi API Key dari Google AI Studio untuk koreksi kalimat & tanya jawab bebas.
+                </p>
+                <div class="flex gap-1.5">
+                    <input type="password" id="senseiApiKeyInput" placeholder="Tempel AIzaSy... di sini"
+                        class="flex-1 theme-input px-3 py-2 rounded-xl text-xs outline-none">
+                    <button type="button" onclick="saveSenseiApiKey()" class="px-3 py-2 rounded-xl theme-accent-bg text-xs font-bold">
+                        Simpan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Area Pesan Chat -->
+            <div id="senseiChatMessages" class="flex-1 overflow-y-auto p-3.5 space-y-3 text-xs">
+                <div class="theme-subcard border theme-border rounded-2xl p-3 leading-relaxed">
+                    <span class="font-bold theme-accent-text">Konnichiwa, Juan! 👋</span><br>
+                    Aku siap bantu belajar bahasa Jepang. Coba ketik:<br>
+                    • Arti kata (misal: <b>"tabemasu"</b> atau <b>"makan"</b>)<br>
+                    • Perubahan kata kerja (misal: <b>"bentuk te ikimasu"</b>)<br>
+                    • Atau aktifkan <b>⚙️ Gemini API Key</b> untuk koreksi kalimat & tanya bebas!
+                </div>
+            </div>
+
+            <!-- Chip Pertanyaan Cepat -->
+            <div class="px-3 py-2 border-t theme-border flex gap-1.5 overflow-x-auto no-scrollbar">
+                <button type="button" onclick="quickAskSensei('Beda partikel は (wa) dan が (ga)?')" class="shrink-0 px-2.5 py-1 rounded-full theme-subcard border theme-border text-[10px] font-semibold hover:border-sky-400/50">
+                    Beda は & が
+                </button>
+                <button type="button" onclick="quickAskSensei('Bentuk te dari tabemasu')" class="shrink-0 px-2.5 py-1 rounded-full theme-subcard border theme-border text-[10px] font-semibold hover:border-sky-400/50">
+                    Bentuk -te
+                </button>
+                <button type="button" onclick="quickAskSensei('Buatkan 3 contoh kalimat N4')" class="shrink-0 px-2.5 py-1 rounded-full theme-subcard border theme-border text-[10px] font-semibold hover:border-sky-400/50">
+                    Contoh N4
+                </button>
+            </div>
+
+            <!-- Input Pertanyaan -->
+            <form onsubmit="handleSenseiSubmit(event)" class="p-3 border-t theme-border flex items-center gap-2">
+                <input type="text" id="senseiChatInput" placeholder="Ketik pertanyaan bahasa Jepang..."
+                    class="flex-1 theme-input px-3.5 py-2.5 rounded-xl text-xs outline-none">
+                <button type="submit" id="senseiSendBtn" class="px-4 py-2.5 rounded-xl theme-accent-bg font-bold text-xs shadow hover:opacity-90 transition">
+                    Kirim
+                </button>
+            </form>
+        </div>
+    </div>
+        
 <script>
 
 // ==========================================
@@ -8925,6 +9015,193 @@ renderBunpouTables();
             window.refreshModernDropdowns = upgradeAllSelects;
         })();
 
+        // ============================================================
+        // SENSEI AI (MODE HYBRID: OFFLINE DATABASE + GEMINI FREE API)
+        // ============================================================
+        function updateSenseiModeBadge() {
+            const key = (localStorage.getItem('mj_gemini_api_key') || '').trim();
+            const badge = document.getElementById('senseiModeBadge');
+            const input = document.getElementById('senseiApiKeyInput');
+            if (input && key) input.value = key;
+            if (!badge) return;
+            if (key) {
+                badge.textContent = 'Gemini Online';
+                badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 font-bold';
+            } else {
+                badge.textContent = 'Offline DB';
+                badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold';
+            }
+        }
+
+        function toggleSenseiAiModal() {
+            const modal = document.getElementById('senseiAiModal');
+            if (!modal) return;
+            const willOpen = modal.classList.contains('hidden');
+            modal.classList.toggle('hidden');
+            if (willOpen) {
+                updateSenseiModeBadge();
+                setTimeout(() => {
+                    const inp = document.getElementById('senseiChatInput');
+                    if (inp) inp.focus();
+                }, 100);
+            }
+        }
+
+        function toggleSenseiApiPanel() {
+            const panel = document.getElementById('senseiApiPanel');
+            if (panel) panel.classList.toggle('hidden');
+        }
+
+        function saveSenseiApiKey() {
+            const input = document.getElementById('senseiApiKeyInput');
+            const val = (input ? input.value : '').trim();
+            if (val) {
+                localStorage.setItem('mj_gemini_api_key', val);
+            } else {
+                localStorage.removeItem('mj_gemini_api_key');
+            }
+            updateSenseiModeBadge();
+            toggleSenseiApiPanel();
+            appendSenseiMessage('ai', val
+                ? '✅ API Key tersimpan! Sekarang aku terhubung ke <b>Gemini AI</b> untuk koreksi kalimat & tanya jawab bebas.'
+                : 'ℹ️ API Key dikosongkan. Aku kembali menggunakan <b>Database Offline Minna no Nihongo</b>.');
+        }
+
+        function quickAskSensei(text) {
+            const input = document.getElementById('senseiChatInput');
+            if (input) input.value = text;
+            handleSenseiSubmit(new Event('submit'));
+        }
+
+        function appendSenseiMessage(sender, htmlContent) {
+            const box = document.getElementById('senseiChatMessages');
+            if (!box) return;
+            const wrap = document.createElement('div');
+            wrap.className = sender === 'user'
+                ? 'flex justify-end'
+                : 'flex justify-start';
+
+            const bubble = document.createElement('div');
+            bubble.className = sender === 'user'
+                ? 'max-w-[82%] theme-accent-bg rounded-2xl rounded-br-sm px-3.5 py-2.5 leading-relaxed shadow-sm'
+                : 'max-w-[90%] theme-subcard border theme-border rounded-2xl rounded-bl-sm px-3.5 py-2.5 leading-relaxed';
+            bubble.innerHTML = htmlContent;
+
+            wrap.appendChild(bubble);
+            box.appendChild(wrap);
+            box.scrollTop = box.scrollHeight;
+            return bubble;
+        }
+
+        // Mesin Pencari & Konjugasi Offline (Berjalan 100% Tanpa Internet/API Key)
+        function generateOfflineSenseiReply(query) {
+            const q = query.toLowerCase().trim();
+            const cleanTerm = q
+                .replace(/^(apa arti|arti kata|arti|bahasa jepangnya|bentuk te dari|bentuk te|bentuk nai dari|bentuk nai|bentuk kamus dari|bentuk kamus|jelaskan|beda|partikel)\s+/i, '')
+                .replace(/[?!.]/g, '')
+                .trim();
+
+            // 1. Cek penjelasan partikel umum
+            const particleTips = {
+                'は': '<b>Partikel は (wa)</b> menandai <b>topik utama</b> kalimat (informasi lama/umum). Contoh: 私は学生です (Saya adalah pelajar).',
+                'が': '<b>Partikel が (ga)</b> menandai <b>subjek spesifik</b>, keberadaan (あります/います), atau kesukaan/kemampuan (好き・上手・わかります).',
+                'を': '<b>Partikel を (o/wo)</b> menandai <b>objek langsung</b> dari kata kerja transitif. Contoh: パンを食べます (Makan roti).',
+                'に': '<b>Partikel に (ni)</b> dipakai untuk <b>waktu spesifik</b> (7時に), <b>tujuan/arah</b>, atau <b>lokasi keberadaan</b>.',
+                'で': '<b>Partikel で (de)</b> dipakai untuk <b>tempat berlangsungnya aksi</b> (食堂で食べます) atau <b>alat/transportasi</b> (バスで行きます).'
+            };
+            for (const [pKey, pDesc] of Object.entries(particleTips)) {
+                if (q.includes(`partikel ${pKey}`) || (q.includes('は') && q.includes('が') && pKey === 'は')) {
+                    if (q.includes('は') && q.includes('が')) {
+                        return `${particleTips['は']}<br><br>${particleTips['が']}`;
+                    }
+                    return pDesc;
+                }
+            }
+
+            // 2. Cari di masterData (Kosakata Minna no Nihongo)
+            if (typeof masterData !== 'undefined' && cleanTerm.length >= 2) {
+                const matches = masterData.filter(item =>
+                    (item.kanji && item.kanji.toLowerCase().includes(cleanTerm)) ||
+                    (item.romaji && item.romaji.toLowerCase().includes(cleanTerm)) ||
+                    (item.meaning && item.meaning.toLowerCase().includes(cleanTerm))
+                ).slice(0, 4);
+
+                if (matches.length > 0) {
+                    const cards = matches.map(m => {
+                        const safeJp = m.kanji.replace(/'/g, "\\'");
+                        return `
+                            <div class="p-2.5 rounded-xl bg-black/15 border theme-border mt-1.5 flex items-center justify-between gap-2">
+                                <div>
+                                    <div class="font-extrabold text-sm jp-text">${m.kanji}</div>
+                                    <div class="text-[11px] theme-accent-text font-semibold">${m.romaji}</div>
+                                    <div class="text-[11px] theme-text-muted">${m.meaning} <span class="opacity-70">(Bab ${m.bab || '-'})</span></div>
+                                </div>
+                                <button type="button" onclick="speakText('${safeJp}')" class="px-2.5 py-1.5 rounded-lg theme-accent-soft theme-accent-text font-bold text-xs shrink-0">🔊</button>
+                            </div>
+                        `;
+                    }).join('');
+                    return `Ditemukan di kamus <b>Minna no Nihongo</b>:${cards}`;
+                }
+            }
+
+            return `Maaf, kata <b>"${query}"</b> belum ketemu di pencarian offline.<br><br>💡 <b>Tips:</b> Ketik 1 kata kunci saja (misal: <i>tabemasu</i>, <i>minum</i>, atau <i>partikel で</i>), atau masukkan <b>⚙️ Gemini API Key gratis</b> di pojok kanan atas agar aku bisa menjawab pertanyaan bebas & mengoreksi kalimatmu!`;
+        }
+
+        async function handleSenseiSubmit(e) {
+            if (e) e.preventDefault();
+            const input = document.getElementById('senseiChatInput');
+            const sendBtn = document.getElementById('senseiSendBtn');
+            const text = (input ? input.value : '').trim();
+            if (!text) return;
+
+            input.value = '';
+            const safeUserText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            appendSenseiMessage('user', safeUserText);
+
+            const apiKey = (localStorage.getItem('mj_gemini_api_key') || '').trim();
+            if (!apiKey) {
+                const offlineReply = generateOfflineSenseiReply(text);
+                appendSenseiMessage('ai', offlineReply);
+                return;
+            }
+
+            // Mode Online: Panggil Gemini API (Free Tier)
+            sendBtn.disabled = true;
+            const loadingBubble = appendSenseiMessage('ai', '<span class="opacity-70">⏳ Sensei sedang mengetik...</span>');
+
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        systemInstruction: {
+                            parts: [{
+                                text: 'Kamu adalah Sensei bahasa Jepang yang ramah untuk pelajar Indonesia (level JLPT N5-N4, kurikulum Minna no Nihongo). Jawab ringkas, jelas, sertakan tulisan Jepang + cara baca hiragana/romaji + arti bahasa Indonesia.'
+                            }]
+                        },
+                        contents: [{ role: 'user', parts: [{ text }] }]
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    const errMsg = data?.error?.message || 'Gagal terhubung ke Gemini API.';
+                    loadingBubble.innerHTML = `⚠️ <b>Error API:</b> ${errMsg}<br><br>${generateOfflineSenseiReply(text)}`;
+                } else {
+                    const replyText = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Tidak ada respons.';
+                    const formatted = replyText
+                        .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                        .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+                        .replace(/\n/g, '<br>');
+                    loadingBubble.innerHTML = formatted;
+                }
+            } catch (err) {
+                loadingBubble.innerHTML = `⚠️ Koneksi terputus. Menampilkan hasil offline:<br><br>${generateOfflineSenseiReply(text)}`;
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+    
 </script>
     
 </body>
