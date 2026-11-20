@@ -574,6 +574,27 @@
         </button>
     </div>
 
+    <!-- BAR PILIHAN FITUR TERPADU: LATIHAN & KUIS (OTOMATIS MUNCUL SAAT MASUK LATIHAN & KUIS) -->
+    <div id="latihanHubBar" class="hidden max-w-3xl mx-auto px-3 sm:px-4 pt-3">
+        <div class="theme-card p-2 rounded-2xl border theme-border grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+            <button onclick="switchLatihanFeature('tab-kuis')" id="latihan-btn-tab-kuis" class="latihan-sub-btn py-2 px-2.5 rounded-xl text-xs font-bold transition text-center">
+                ✅ Kuis Kosakata
+            </button>
+            <button onclick="switchLatihanFeature('tab-partikel')" id="latihan-btn-tab-partikel" class="latihan-sub-btn py-2 px-2.5 rounded-xl text-xs font-bold transition text-center">
+                🧩 Partikel
+            </button>
+            <button onclick="switchLatihanFeature('tab-membaca')" id="latihan-btn-tab-membaca" class="latihan-sub-btn py-2 px-2.5 rounded-xl text-xs font-bold transition text-center">
+                📖 Membaca
+            </button>
+            <button onclick="switchLatihanFeature('tab-choukai')" id="latihan-btn-tab-choukai" class="latihan-sub-btn py-2 px-2.5 rounded-xl text-xs font-bold transition text-center">
+                🎧 Choukai
+            </button>
+            <button onclick="switchLatihanFeature('tab-menulis')" id="latihan-btn-tab-menulis" class="latihan-sub-btn col-span-2 sm:col-span-1 py-2 px-2.5 rounded-xl text-xs font-bold transition text-center">
+                ✍️ Menulis
+            </button>
+        </div>
+    </div>
+
     <main class="max-w-3xl mx-auto px-3 sm:px-4">
         
         <!-- BERANDA UTAMA (HOME DASHBOARD - SEMUA FITUR DALAM GRID 2 KOLOM) -->
@@ -594,22 +615,22 @@
                 </div>
             </div>
 
-            <!-- Grid 2 Kolom Semua Fitur (Kanan-Kiri & Ke Bawah) -->
+          <!-- Grid 2 Kolom 6 Kartu Utama -->
             <div class="grid grid-cols-2 gap-3">
-                
+          
                 <!-- 1. Bank Kosakata (Bab 1-25 & 26-50) -->
-                <button onclick="jumpToFeature('kosakata', 'tab-daftar')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-purple-400/60 transition group shadow-sm">
+                <button onclick="jumpToFeature('kosakata', 'tab-daftar')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-sky-400/50 transition group shadow-sm">
                     <div class="w-10 h-10 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                         </svg>
                     </div>
                     <div class="font-bold text-sm">Bank Kosakata</div>
-                    <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Daftar kotoba Minna no Nihongo Bab 1–25 & Bab 26–50.</p>
+                    <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Daftar kotoba Minna no Nihongo Bab 1–25 & 26–50.</p>
                 </button>
 
                 <!-- 2. Tata Bahasa (Bunpou) -->
-                <button onclick="jumpToFeature('pustaka', 'tab-bunpou')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-indigo-400/60 transition group shadow-sm">
+                <button onclick="jumpToFeature('pustaka', 'tab-bunpou')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-sky-400/50 transition group shadow-sm">
                     <div class="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -620,62 +641,29 @@
                 </button>
 
                 <!-- 3. Kartu Flashcard -->
-                <button onclick="jumpToFeature('belajar', 'tab-flashcard')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-amber-400/60 transition group shadow-sm">
+                <button onclick="jumpToFeature('belajar', 'tab-flashcard')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-sky-400/50 transition group shadow-sm">
                     <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                         </svg>
                     </div>
                     <div class="font-bold text-sm">Kartu Flashcard</div>
-                    <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Hafalan kartu bolak-balik lengkap dengan audio.</p>
+                    <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Hafalan kartu bolak-balik N5 & N4 dengan audio.</p>
                 </button>
 
-                <!-- 4. Kuis Kosakata & Kanji -->
-                <button onclick="jumpToFeature('kuis', 'tab-kuis')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-sky-400/60 transition group shadow-sm">
+                <!-- 4. Latihan & Kuis (Wadah Terpadu: Kuis, Partikel, Dokkai, Choukai, Menulis) -->
+                <button onclick="jumpToFeature('latihan', 'tab-kuis')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-sky-400/50 transition group shadow-sm">
                     <div class="w-10 h-10 rounded-xl bg-sky-500/15 text-sky-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <div class="font-bold text-sm">Kuis Kosakata</div>
-                    <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Uji hafalan arti kosakata dan kanji pilihan ganda.</p>
+                    <div class="font-bold text-sm">Latihan & Kuis</div>
+                    <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Kuis kosakata, partikel, membaca, choukai, & menulis.</p>
                 </button>
 
-                <!-- 5. Partikel & Susun Kalimat -->
-                <button onclick="jumpToFeature('kuis', 'tab-partikel')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-pink-400/60 transition group shadow-sm">
-                    <div class="w-10 h-10 rounded-xl bg-pink-500/15 text-pink-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/>
-                        </svg>
-                    </div>
-                    <div class="font-bold text-sm">Partikel & Kalimat</div>
-                    <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Materi partikel, kuis isi partikel, & susun kalimat.</p>
-                </button>
-
-                <!-- 6. Membaca (Dokkai) -->
-                <button onclick="jumpToFeature('belajar', 'tab-membaca')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-emerald-400/60 transition group shadow-sm">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                        </svg>
-                    </div>
-                    <div class="font-bold text-sm">Membaca (Dokkai)</div>
-                    <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Latihan pemahaman bacaan kalimat pendek & paragraf.</p>
-                </button>
-
-                <!-- 7. Mendengar (Choukai) -->
-                <button onclick="jumpToFeature('belajar', 'tab-choukai')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-teal-400/60 transition group shadow-sm">
-                    <div class="w-10 h-10 rounded-xl bg-teal-500/15 text-teal-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
-                        </svg>
-                    </div>
-                    <div class="font-bold text-sm">Mendengar (Choukai)</div>
-                    <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Simulasi audio percakapan, berita, & pengumuman.</p>
-                </button>
-
-                <!-- 8. Bank Konjugasi Kata Kerja -->
-                <button onclick="jumpToFeature('pustaka', 'tab-konjugasi')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-cyan-400/60 transition group shadow-sm">
+                <!-- 5. Konjugasi Kata Kerja -->
+                <button onclick="jumpToFeature('pustaka', 'tab-konjugasi')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-sky-400/50 transition group shadow-sm">
                     <div class="w-10 h-10 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
@@ -685,19 +673,8 @@
                     <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">13 bentuk perubahan kata kerja Golongan 1, 2, & 3.</p>
                 </button>
 
-                <!-- 9. Latihan Menulis Kanji -->
-                <button onclick="jumpToFeature('kuis', 'tab-menulis')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-orange-400/60 transition group shadow-sm">
-                    <div class="w-10 h-10 rounded-xl bg-orange-500/15 text-orange-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                        </svg>
-                    </div>
-                    <div class="font-bold text-sm">Latihan Menulis</div>
-                    <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Kanvas coretan huruf Kanji & Kana dengan perapi garis.</p>
-                </button>
-
-                <!-- 10. Simulasi Ujian JLPT / JFT -->
-                <button onclick="jumpToFeature('kuis', 'tab-jlpt')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-rose-400/60 transition group shadow-sm">
+                <!-- 6. Simulasi Ujian JLPT / JFT -->
+                <button onclick="jumpToFeature('ujian', 'tab-jlpt')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-sky-400/50 transition group shadow-sm">
                     <div class="w-10 h-10 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -706,26 +683,33 @@
                     <div class="font-bold text-sm">Simulasi JLPT / JFT</div>
                     <p class="text-[11px] theme-text-muted mt-1 leading-relaxed">Ujian lengkap 4 sesi dengan timer & penilaian skor.</p>
                 </button>
-
             </div>
+                
         </section>
 
         <!-- TAB 1: FLASHCARD (HAPUS 'active' AGAR TIDAK IKUT MUNCUL DI BERANDA) -->
         <section id="tab-flashcard" class="tab-content hidden">
             <div class="theme-card p-4 rounded-2xl shadow-sm mb-4 flex flex-col gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <select id="flashcardLevelFilter" class="w-full theme-input p-2.5 rounded-xl outline-none text-sm font-semibold" onchange="onFlashcardLevelChange()">
+                    <option value="ALL">🌐 Semua Level (N5 & N4)</option>
+                    <option value="N5">📗 Level N5 (Bab 1–25)</option>
+                    <option value="N4">📘 Level N4 (Bab 26–50)</option>
+                </select>
                 <select id="flashcardCategory" class="w-full theme-input p-2.5 rounded-xl outline-none text-sm" onchange="initFlashcard()"></select>
-                <div class="flex gap-2">
-                    <select id="flashcardFilter" class="w-full theme-input p-2.5 rounded-xl outline-none text-sm" onchange="initFlashcard()">
-                        <option value="ALL">Semua Status</option>
-                        <option value="belum">Belum Hafal</option>
-                        <option value="hafal">Sudah Hafal</option>
-                    </select>
-                    <select id="flashcardOrder" class="w-full theme-input p-2.5 rounded-xl outline-none text-sm" onchange="initFlashcard()">
-                        <option value="SHUFFLE">🔀 Acak</option>
-                        <option value="SEQUENTIAL">🔢 Berurutan</option>
-                    </select>
-                </div>
             </div>
+            <div class="flex gap-2">
+                <select id="flashcardFilter" class="w-full theme-input p-2.5 rounded-xl outline-none text-sm" onchange="initFlashcard()">
+                    <option value="ALL">Semua Status</option>
+                    <option value="belum">Belum Hafal</option>
+                    <option value="hafal">Sudah Hafal</option>
+                </select>
+                <select id="flashcardOrder" class="w-full theme-input p-2.5 rounded-xl outline-none text-sm" onchange="initFlashcard()">
+                    <option value="SHUFFLE">🔀 Acak</option>
+                    <option value="SEQUENTIAL">➡️ Berurutan</option>
+                </select>
+            </div>
+        </div>
 
             <div class="flashcard w-full h-80 perspective-1000 cursor-pointer" onclick="toggleFlashcard()">
                 <div class="flashcard-inner relative w-full h-full text-center">
@@ -1121,7 +1105,13 @@
         <section id="tab-kuis" class="tab-content">
             <div id="quizSetup" class="theme-card p-6 rounded-2xl shadow-sm text-center">
                 <h2 class="text-xl font-bold mb-4">Pengaturan Kuis Kosakata</h2>
-                
+
+                <label class="block text-left text-sm font-medium theme-text-muted mb-2">Level Kosakata:</label>
+                <select id="quizLevelFilter" class="w-full theme-input p-3 rounded-xl outline-none mb-4 font-semibold" onchange="updateQuizCategoryDropdown()">
+                <option value="ALL">🌐 Semua Level (N5 & N4)</option>
+                <option value="N5">📗 Level N5 (Bab 1–25)</option>
+                <option value="N4">📘 Level N4 (Bab 26–50)</option>
+                </select>
                 <label class="block text-left text-sm font-medium theme-text-muted mb-2">Kategori Kosakata:</label>
                 <select id="quizCategory" class="w-full theme-input p-3 rounded-xl outline-none mb-4"></select>
 
@@ -5035,29 +5025,70 @@ function resetChoukaiUI() {
 // --- FLASHCARD LOGIC ---
 let fcData = [], fcIndex = 0;
 
-function initFlashcard() {
-    const category = document.getElementById('flashcardCategory').value;
-    const filter = document.getElementById('flashcardFilter').value;
-    const order = document.getElementById('flashcardOrder').value;
-    
-    let filtered = masterData.filter(item => {
-        let matchCat = (category === 'ALL' || item.category === category);
-        let matchStat = true;
-        if (filter === 'hafal') matchStat = memorizedKanji.includes(item.kanji);
-        if (filter === 'belum') matchStat = !memorizedKanji.includes(item.kanji);
-        return matchCat && matchStat;
-    });
+        function updateFlashcardCategoryDropdown() {
+            const levelEl = document.getElementById('flashcardLevelFilter');
+            const catEl = document.getElementById('flashcardCategory');
+            if (!catEl) return;
 
-    if (filtered.length === 0) {
-        alert("Tidak ada data untuk filter ini! Kembali ke 'Semua'.");
-        document.getElementById('flashcardFilter').value = 'ALL';
-        return initFlashcard();
-    }
-    
-    fcData = (order === 'SHUFFLE') ? shuffle(filtered) : filtered;
-    fcIndex = 0;
-    renderFlashcard();
-}
+            const selectedLevel = levelEl ? levelEl.value : 'ALL';
+            const currentCat = catEl.value || 'ALL';
+
+            const levelItems = masterData.filter(item => {
+                if (selectedLevel === 'ALL') return true;
+                return (item.level || 'N5').toUpperCase() === selectedLevel;
+            });
+
+            const categories = [...new Set(levelItems.map(item => item.category))];
+            let html = `<option value="ALL">Semua Kategori (${levelItems.length} Kosakata)</option>`;
+            categories.forEach(cat => {
+                const count = levelItems.filter(item => item.category === cat).length;
+                html += `<option value="${cat}">${cat} (${count} Kosakata)</option>`;
+            });
+
+            catEl.innerHTML = html;
+            if ([...catEl.options].some(opt => opt.value === currentCat)) {
+                catEl.value = currentCat;
+            } else {
+                catEl.value = 'ALL';
+            }
+        }
+
+        function onFlashcardLevelChange() {
+            updateFlashcardCategoryDropdown();
+            initFlashcard();
+        }
+
+        function initFlashcard() {
+            const levelEl = document.getElementById('flashcardLevelFilter');
+            const catEl = document.getElementById('flashcardCategory');
+            if (catEl && catEl.options.length === 0) {
+                updateFlashcardCategoryDropdown();
+            }
+
+            const levelVal = levelEl ? levelEl.value : 'ALL';
+            const category = catEl ? catEl.value : 'ALL';
+            const filter = document.getElementById('flashcardFilter').value;
+            const order = document.getElementById('flashcardOrder').value;
+
+            let filtered = masterData.filter(item => {
+                let matchLevel = (levelVal === 'ALL' || (item.level || 'N5').toUpperCase() === levelVal);
+                let matchCat = (category === 'ALL' || item.category === category);
+                let matchStat = true;
+                if (filter === 'hafal') matchStat = memorizedKanji.includes(item.kanji);
+                if (filter === 'belum') matchStat = !memorizedKanji.includes(item.kanji);
+                return matchLevel && matchCat && matchStat;
+            });
+
+            if (filtered.length === 0) {
+                alert("Tidak ada data untuk filter ini! Kembali ke 'Semua'.");
+                document.getElementById('flashcardFilter').value = 'ALL';
+                return initFlashcard();
+            }
+
+            fcData = (order === 'SHUFFLE') ? shuffle(filtered) : filtered;
+            fcIndex = 0;
+            renderFlashcard();
+        }
 
 function renderFlashcard() {
     document.querySelector('.flashcard').classList.remove('flipped');
@@ -5285,26 +5316,66 @@ canvas.addEventListener('touchcancel', finishedPosition, { passive: false });
 // --- QUIZ LOGIC ---
 let quizData = [], quizHistory = [], currentQuizIdx = 0, correctAnswers = 0, wrongAnswers = 0, isAnswering = false;
 
-function startQuiz() {
-    const category = document.getElementById('quizCategory').value;
-    const order = document.getElementById('quizOrder').value;
-    const lengthOpt = document.getElementById('quizLength').value;
+        function updateQuizCategoryDropdown() {
+            const levelEl = document.getElementById('quizLevelFilter');
+            const catEl = document.getElementById('quizCategory');
+            if (!catEl) return;
 
-    let pool = masterData.filter(item => category === 'ALL' || item.category === category);
-    if (order === 'SHUFFLE') pool = shuffle(pool);
-    if (lengthOpt !== 'ALL') pool = pool.slice(0, parseInt(lengthOpt));
+            const selectedLevel = levelEl ? levelEl.value : 'ALL';
+            const currentCat = catEl.value || 'ALL';
 
-    quizData = pool;
-    quizHistory = [];
-    currentQuizIdx = 0;
-    correctAnswers = 0;
-    wrongAnswers = 0;
+            const levelItems = masterData.filter(item => {
+                if (selectedLevel === 'ALL') return true;
+                return (item.level || 'N5').toUpperCase() === selectedLevel;
+            });
 
-    document.getElementById('quizSetup').classList.add('hidden');
-    document.getElementById('quizResult').classList.add('hidden');
-    document.getElementById('quizPlay').classList.remove('hidden');
-    renderQuizQuestion();
-}
+            const categories = [...new Set(levelItems.map(item => item.category))];
+            let html = `<option value="ALL">Semua Kategori (${levelItems.length} Kosakata)</option>`;
+            categories.forEach(cat => {
+                const count = levelItems.filter(item => item.category === cat).length;
+                html += `<option value="${cat}">${cat} (${count} Kosakata)</option>`;
+            });
+
+            catEl.innerHTML = html;
+            if ([...catEl.options].some(opt => opt.value === currentCat)) {
+                catEl.value = currentCat;
+            } else {
+                catEl.value = 'ALL';
+            }
+        }
+
+        function startQuiz() {
+            const levelEl = document.getElementById('quizLevelFilter');
+            const levelVal = levelEl ? levelEl.value : 'ALL';
+            const category = document.getElementById('quizCategory').value;
+            const order = document.getElementById('quizOrder').value;
+            const lengthOpt = document.getElementById('quizLength').value;
+
+            let pool = masterData.filter(item => {
+                const matchLevel = (levelVal === 'ALL' || (item.level || 'N5').toUpperCase() === levelVal);
+                const matchCat = (category === 'ALL' || item.category === category);
+                return matchLevel && matchCat;
+            });
+
+            if (pool.length === 0) {
+                alert("Tidak ada kosakata untuk kombinasi Level & Kategori ini.");
+                return;
+            }
+
+            if (order === 'SHUFFLE') pool = shuffle(pool);
+            if (lengthOpt !== 'ALL') pool = pool.slice(0, parseInt(lengthOpt));
+
+            quizData = pool;
+            quizHistory = [];
+            currentQuizIdx = 0;
+            correctAnswers = 0;
+            wrongAnswers = 0;
+
+            document.getElementById('quizSetup').classList.add('hidden');
+            document.getElementById('quizResult').classList.add('hidden');
+            document.getElementById('quizPlay').classList.remove('hidden');
+            renderQuizQuestion();
+        }
 
 // Mesin pencari pengecoh mirip (dipakai ulang untuk semua kuis & ujian)
 function getSmartDistractors(item, count = 3) {
@@ -5494,58 +5565,105 @@ function showQuizResult() {
     document.getElementById('quizDetailScore').innerText = `Benar: ${correctAnswers} | Salah: ${wrongAnswers}`;
 }
 
-// --- DAFTAR KOSAKATA & TABEL KUN'YOMI / ON'YOMI ---
-async function toggleKanjiDetail(uniqueId, kanjiWord) {
-    const detailRow = document.getElementById('detail-' + uniqueId);
-    if (!detailRow) return;
-    const isOpening = detailRow.classList.contains('hidden');
-    detailRow.classList.toggle('hidden');
-
-    if (isOpening && !detailRow.dataset.loaded) {
-        const chars = extractKanjiChars(kanjiWord);
-        if (chars.length === 0) return;
-
-        let rowsHtml = '';
-        for (const ch of chars) {
-            const info = await fetchKanjiReadingAuto(ch);
-            rowsHtml += `
-                <tr class="border-b theme-border last:border-0">
-                    <td class="py-1.5 px-2 font-bold jp-text text-xl theme-accent-text text-center w-12">${ch}</td>
-                    <td class="py-1.5 px-2 text-xs font-medium">${info.kun}</td>
-                    <td class="py-1.5 px-2 text-xs font-medium">${info.on}</td>
-                </tr>
-            `;
+        // --- DAFTAR KOSAKATA & MODAL KUN'YOMI / ON'YOMI ---
+        function closeKanjiModal() {
+            const modal = document.getElementById('kanjiDetailModal');
+            if (modal) modal.remove();
         }
 
-        detailRow.innerHTML = `
-            <div class="theme-subcard rounded-xl p-2.5">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="text-[11px] uppercase tracking-wider theme-accent-text border-b theme-border">
-                            <th class="py-1 px-2 text-center">Kanji</th>
-                            <th class="py-1 px-2">Kun'yomi</th>
-                            <th class="py-1 px-2">On'yomi</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rowsHtml}</tbody>
-                </table>
-            </div>
-        `;
-        detailRow.dataset.loaded = 'true';
-    }
-}
+        async function toggleKanjiDetail(uniqueId, kanjiWord) {
+            closeKanjiModal();
+
+            const chars = extractKanjiChars(kanjiWord);
+            if (chars.length === 0) return;
+
+            const modal = document.createElement('div');
+            modal.id = 'kanjiDetailModal';
+            modal.className = 'fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in';
+            modal.onclick = (e) => { if (e.target === modal) closeKanjiModal(); };
+
+            modal.innerHTML = `
+                <div class="theme-card w-full max-w-md rounded-3xl p-4 sm:p-5 border theme-border shadow-2xl space-y-3">
+                    <div class="flex items-center justify-between border-b theme-border pb-2.5">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider theme-accent-text">Detail Cara Baca Kanji</span>
+                            <h3 class="text-xl font-extrabold jp-text">${kanjiWord}</h3>
+                        </div>
+                        <button onclick="closeKanjiModal()" class="w-8 h-8 rounded-full theme-subcard flex items-center justify-center text-sm font-bold hover:opacity-80">✕</button>
+                    </div>
+                    <div id="kanjiModalBody" class="max-h-[60vh] overflow-y-auto">
+                        <div class="theme-subcard rounded-2xl p-6 text-center text-xs theme-accent-text font-medium animate-pulse">
+                            ⏳ Mengambil data Kun'yomi & On'yomi...
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            let rowsHtml = '';
+            for (const ch of chars) {
+                const info = await fetchKanjiReadingAuto(ch);
+                rowsHtml += `
+                    <tr class="border-b theme-border last:border-0">
+                        <td class="py-2.5 px-2 font-bold jp-text text-xl theme-accent-text text-center w-14">${ch}</td>
+                        <td class="py-2.5 px-2 text-xs font-medium leading-relaxed">${info.kun}</td>
+                        <td class="py-2.5 px-2 text-xs font-medium leading-relaxed">${info.on}</td>
+                    </tr>
+                `;
+            }
+
+            const bodyEl = document.getElementById('kanjiModalBody');
+            if (bodyEl) {
+                bodyEl.innerHTML = `
+                    <div class="theme-subcard rounded-2xl overflow-hidden border theme-border">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-[11px] uppercase tracking-wider theme-accent-text border-b theme-border bg-black/10">
+                                    <th class="py-2 px-2 text-center">Kanji</th>
+                                    <th class="py-2 px-2">Kun'yomi</th>
+                                    <th class="py-2 px-2">On'yomi</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    </div>
+                `;
+            }
+        }
 
         let activeVocabBabGroup = '1-25';
+
+        const START_ID_BAB_26_50 = 676;
 
         function isItemInVocabGroup(item, group) {
             const babNum = Number(item.bab || item.lesson || 0);
             const lvl = (item.level || '').toUpperCase();
+            const itemIdNum = Number(item.id || 0);
+
+            const isN4 = (babNum >= 26 && babNum <= 50) || lvl === 'N4' || (itemIdNum >= START_ID_BAB_26_50);
+
             if (group === '26-50') {
-                return (babNum >= 26 && babNum <= 50) || lvl === 'N4';
+                return isN4;
             }
-            // Default: Bab 1-25 (N5) — termasuk item yang belum diberi label bab/level
-            if (babNum >= 26 || lvl === 'N4') return false;
-            return true;
+            return !isN4;
+        }
+
+        function updateBankKosakataCategoryDropdown() {
+            const listSelect = document.getElementById('listCategoryFilter');
+            if (!listSelect) return;
+            const currentVal = listSelect.value;
+            const groupItems = masterData.filter(item => isItemInVocabGroup(item, activeVocabBabGroup));
+            const categories = [...new Set(groupItems.map(item => item.category))];
+
+            let html = `<option value="ALL">Semua Kategori (${groupItems.length} Kosakata)</option>`;
+            categories.forEach(cat => {
+                const count = groupItems.filter(item => item.category === cat).length;
+                html += `<option value="${cat}">${cat} (${count} Kosakata)</option>`;
+            });
+            listSelect.innerHTML = html;
+            if ([...listSelect.options].some(opt => opt.value === currentVal)) {
+                listSelect.value = currentVal;
+            }
         }
 
         function switchVocabBabGroup(group) {
@@ -5561,6 +5679,7 @@ async function toggleKanjiDetail(uniqueId, kanjiWord) {
                     btn1.className = 'py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold theme-text-muted hover:opacity-80 transition';
                 }
             }
+            updateBankKosakataCategoryDropdown();
             renderList();
         }
 
@@ -6041,6 +6160,11 @@ function renderPartikelQuiz() {
         }
     }
     const shuffledOpts = shuffle(finalOpts);
+    optBox.innerHTML = shuffledOpts.map(opt => `
+        <button onclick="answerPartikelQuiz('${opt}', this)" class="pk-opt-btn theme-subcard hover:opacity-90 border theme-border rounded-2xl py-3.5 px-4 text-lg font-bold jp-text transition shadow-sm">
+            ${opt}
+        </button>
+    `).join('');
 }
 
 function answerPartikelQuiz(chosen, btnEl) {
@@ -7029,9 +7153,26 @@ renderBunpouTables();
     ]
   };
 
-          function openModernHub(hubName, specificTabId = null) {
+        function switchLatihanFeature(tabId) {
+            stopSpeech();
+            document.querySelectorAll('.latihan-sub-btn').forEach(btn => {
+                btn.classList.remove('theme-accent-bg', 'shadow');
+                btn.classList.add('theme-text-muted', 'hover:opacity-80');
+            });
+            const activeBtn = document.getElementById('latihan-btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('theme-text-muted', 'hover:opacity-80');
+                activeBtn.classList.add('theme-accent-bg', 'shadow');
+            }
+            if (typeof switchTab === 'function') {
+                switchTab(tabId);
+            }
+        }
+
+        function openModernHub(hubName, specificTabId = null) {
             const homeView = document.getElementById('hub-beranda-view');
             const backBar = document.getElementById('backToHomeBar');
+            const latihanBar = document.getElementById('latihanHubBar');
 
             if (hubName === 'beranda') {
                 stopSpeech();
@@ -7040,6 +7181,7 @@ renderBunpouTables();
                     el.classList.add('hidden');
                 });
                 if (backBar) backBar.classList.add('hidden');
+                if (latihanBar) latihanBar.classList.add('hidden');
                 if (homeView) homeView.classList.remove('hidden');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
@@ -7051,11 +7193,21 @@ renderBunpouTables();
             const items = HUB_GROUPS[hubName] || [];
             const targetTab = specificTabId || (items[0] && items[0].id);
 
+            if (hubName === 'latihan') {
+                if (latihanBar) latihanBar.classList.remove('hidden');
+                switchLatihanFeature(targetTab || 'tab-kuis');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            } else {
+                if (latihanBar) latihanBar.classList.add('hidden');
+            }
+
             if (targetTab && typeof switchTab === 'function') {
                 switchTab(targetTab);
             }
-            if (targetTab === 'tab-daftar' && typeof renderList === 'function') {
-                renderList();
+            if (targetTab === 'tab-daftar') {
+                if (typeof updateBankKosakataCategoryDropdown === 'function') updateBankKosakataCategoryDropdown();
+                if (typeof renderList === 'function') renderList();
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
