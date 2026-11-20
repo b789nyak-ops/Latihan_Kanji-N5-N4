@@ -618,6 +618,20 @@
           <!-- Grid 2 Kolom 6 Kartu Utama -->
             <div class="grid grid-cols-2 gap-3">
           
+          <!-- 0. Hiragana & Katakana (Kartu Penuh di Atas Bank Kosakata) -->
+                <button onclick="jumpToFeature('kana', 'tab-kana')" class="col-span-2 theme-card rounded-2xl p-4 text-left border theme-border hover:border-sky-400/50 transition group shadow-sm flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0 font-extrabold text-lg jp-text group-hover:scale-110 transition-transform">
+                            あア
+                        </div>
+                        <div>
+                            <div class="font-bold text-sm">Hiragana & Katakana (Kana)</div>
+                            <p class="text-[11px] theme-text-muted mt-0.5 leading-relaxed">Tabel lengkap (dasar, teng-teng, maru, ya-yu-yo), kuis tebak huruf, & latihan menulis.</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold theme-accent-text shrink-0">Buka →</span>
+                </button>
+
                 <!-- 1. Bank Kosakata (Bab 1-25 & 26-50) -->
                 <button onclick="jumpToFeature('kosakata', 'tab-daftar')" class="theme-card rounded-2xl p-4 text-left border theme-border hover:border-sky-400/50 transition group shadow-sm">
                     <div class="w-10 h-10 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
@@ -7149,8 +7163,192 @@ renderBunpouTables();
   .animate-fade-in { animation: fadeInSlide 0.3s ease-out; }
 </style>
 
+        <!-- TAB BARU: HIRAGANA & KATAKANA (4 GRID SUB-FITUR) -->
+    <section id="tab-kana" class="tab-content hidden max-w-3xl mx-auto px-3 sm:px-4 pt-3 pb-10">
+        <!-- Header & 4 Grid Navigasi Sub-Fitur -->
+        <div class="theme-card p-4 rounded-2xl border theme-border mb-4">
+            <div class="flex items-center justify-between gap-2 mb-3">
+                <div>
+                    <h2 class="text-base sm:text-lg font-extrabold">あア Hiragana & Katakana</h2>
+                    <p class="text-xs theme-text-muted">Kuasai huruf dasar Jepang secara menyeluruh</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button type="button" onclick="switchKanaSubTab('hiragana')" id="kana-sub-btn-hiragana" class="kana-sub-btn py-2.5 px-3 rounded-xl text-xs font-bold transition text-center theme-accent-bg shadow">
+                    あ Hiragana
+                </button>
+                <button type="button" onclick="switchKanaSubTab('katakana')" id="kana-sub-btn-katakana" class="kana-sub-btn py-2.5 px-3 rounded-xl text-xs font-bold transition text-center theme-subcard theme-text-muted">
+                    ア Katakana
+                </button>
+                <button type="button" onclick="switchKanaSubTab('kuis')" id="kana-sub-btn-kuis" class="kana-sub-btn py-2.5 px-3 rounded-xl text-xs font-bold transition text-center theme-subcard theme-text-muted">
+                    🎯 Tebak Huruf
+                </button>
+                <button type="button" onclick="switchKanaSubTab('menulis')" id="kana-sub-btn-menulis" class="kana-sub-btn py-2.5 px-3 rounded-xl text-xs font-bold transition text-center theme-subcard theme-text-muted">
+                    ✍️ Menulis Kana
+                </button>
+            </div>
+        </div>
+
+        <!-- SUB-VIEW 1 & 2: TABEL HIRAGANA / KATAKANA -->
+        <div id="kana-view-chart" class="space-y-4">
+            <div class="theme-card p-3 rounded-2xl border theme-border flex flex-wrap items-center justify-between gap-2">
+                <span id="kanaChartTitle" class="text-xs sm:text-sm font-bold theme-accent-text">Tabel Hiragana Lengkap (Ketuk huruf untuk mendengar suara)</span>
+                <div class="flex flex-wrap gap-1.5">
+                    <button type="button" onclick="filterKanaSection('ALL')" id="kana-sec-ALL" class="kana-sec-btn px-2.5 py-1 rounded-lg text-[11px] font-bold theme-accent-bg">Semua</button>
+                    <button type="button" onclick="filterKanaSection('seion')" id="kana-sec-seion" class="kana-sec-btn px-2.5 py-1 rounded-lg text-[11px] font-bold theme-subcard theme-text-muted">Dasar (46)</button>
+                    <button type="button" onclick="filterKanaSection('dakuon')" id="kana-sec-dakuon" class="kana-sec-btn px-2.5 py-1 rounded-lg text-[11px] font-bold theme-subcard theme-text-muted">Teng2 & Maru</button>
+                    <button type="button" onclick="filterKanaSection('youon')" id="kana-sec-youon" class="kana-sec-btn px-2.5 py-1 rounded-lg text-[11px] font-bold theme-subcard theme-text-muted">Ya-Yu-Yo</button>
+                </div>
+            </div>
+            <div id="kanaChartContainer" class="space-y-4"></div>
+        </div>
+
+        <!-- SUB-VIEW 3: KUIS TEBAK HURUF KANA -->
+        <div id="kana-view-kuis" class="hidden">
+            <div id="kanaQuizSetup" class="theme-card p-5 rounded-2xl border theme-border space-y-4">
+                <h3 class="text-base font-extrabold text-center">🎯 Pengaturan Kuis Tebak Kana</h3>
+
+                <div>
+                    <label class="block text-xs font-semibold theme-text-muted mb-1.5">Jenis Huruf:</label>
+                    <select id="kanaQuizScript" class="w-full theme-input p-3 rounded-xl outline-none text-sm font-semibold">
+                        <option value="hiragana">あ Hiragana Saja</option>
+                        <option value="katakana">ア Katakana Saja</option>
+                        <option value="both">あア Campuran (Hiragana + Katakana)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold theme-text-muted mb-1.5">Cakupan Huruf:</label>
+                    <select id="kanaQuizScope" class="w-full theme-input p-3 rounded-xl outline-none text-sm">
+                        <option value="ALL">Lengkap (Dasar + Teng2 + Maru + Ya-Yu-Yo)</option>
+                        <option value="seion">Huruf Dasar Saja (46 Huruf)</option>
+                        <option value="dakuon">Teng-teng & Maru Saja (が・ぱ・dll)</option>
+                        <option value="youon">Ya-Yu-Yo Saja (きゃ・しゃ・dll)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold theme-text-muted mb-1.5">Mode Tebakan:</label>
+                    <select id="kanaQuizMode" class="w-full theme-input p-3 rounded-xl outline-none text-sm">
+                        <option value="jp_to_romaji">Jepang → Romaji (Muncul あ, tebak "a")</option>
+                        <option value="romaji_to_jp">Romaji → Jepang (Muncul "a", tebak あ)</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold theme-text-muted mb-1.5">Urutan Soal:</label>
+                        <select id="kanaQuizOrder" class="w-full theme-input p-3 rounded-xl outline-none text-sm">
+                            <option value="SHUFFLE">🔀 Acak</option>
+                            <option value="SEQUENTIAL">➡️ Berurutan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold theme-text-muted mb-1.5">Jumlah Soal:</label>
+                        <select id="kanaQuizLength" class="w-full theme-input p-3 rounded-xl outline-none text-sm">
+                            <option value="10">10 Soal</option>
+                            <option value="20">20 Soal</option>
+                            <option value="30">30 Soal</option>
+                            <option value="ALL">Semua Huruf</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="button" onclick="startKanaQuiz()" class="w-full theme-accent-bg font-bold py-3.5 rounded-xl shadow-md transition hover:opacity-90">
+                    Mulai Kuis Kana 🚀
+                </button>
+            </div>
+
+            <div id="kanaQuizPlay" class="hidden space-y-4">
+                <div class="theme-card p-5 rounded-2xl border theme-border text-center">
+                    <div class="flex items-center justify-between text-xs font-bold theme-text-muted mb-3">
+                        <span id="kanaQuizProgress">Soal 1 / 10</span>
+                        <span id="kanaQuizScoreLive" class="theme-accent-text">Benar: 0</span>
+                    </div>
+                    <div id="kanaQuizPrompt" class="text-5xl sm:text-6xl font-extrabold jp-text my-4 select-none">あ</div>
+                    <button type="button" onclick="playKanaQuizAudio()" class="px-3.5 py-1.5 rounded-full theme-subcard text-xs font-semibold hover:opacity-80 transition">
+                        🔊 Dengarkan Suara
+                    </button>
+                    <p id="kanaQuizFeedback" class="text-sm font-bold min-h-[24px] mt-3"></p>
+                </div>
+                <div id="kanaQuizOptions" class="grid grid-cols-2 gap-2.5"></div>
+                <button type="button" id="kanaQuizNextBtn" onclick="nextKanaQuizQuestion()" class="hidden w-full theme-accent-bg font-bold py-3.5 rounded-xl shadow">
+                    Soal Berikutnya →
+                </button>
+            </div>
+
+            <div id="kanaQuizResult" class="hidden theme-card p-6 rounded-2xl border theme-border text-center space-y-3">
+                <h3 class="text-xl font-extrabold">🎉 Kuis Kana Selesai!</h3>
+                <p id="kanaQuizFinalPercent" class="text-4xl font-extrabold theme-accent-text">100%</p>
+                <p id="kanaQuizFinalDetail" class="text-sm theme-text-muted">Benar: 10 | Salah: 0</p>
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="resetKanaQuizUI()" class="flex-1 theme-subcard font-bold py-3 rounded-xl text-sm">⚙️ Pengaturan</button>
+                    <button type="button" onclick="startKanaQuiz()" class="flex-1 theme-accent-bg font-bold py-3 rounded-xl text-sm">🔄 Ulangi Kuis</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUB-VIEW 4: LATIHAN MENULIS KANA -->
+        <div id="kana-view-menulis" class="hidden">
+            <div class="theme-card p-4 sm:p-5 rounded-2xl border theme-border space-y-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <select id="kanaWriteScript" onchange="initKanaWrite()" class="theme-input p-2.5 rounded-xl text-xs font-bold outline-none">
+                        <option value="hiragana">あ Hiragana</option>
+                        <option value="katakana">ア Katakana</option>
+                    </select>
+                    <select id="kanaWriteScope" onchange="initKanaWrite()" class="theme-input p-2.5 rounded-xl text-xs font-bold outline-none">
+                        <option value="seion">Dasar (46)</option>
+                        <option value="dakuon">Teng2 & Maru</option>
+                        <option value="youon">Ya-Yu-Yo</option>
+                        <option value="ALL">Semua Huruf</option>
+                    </select>
+                    <select id="kanaWriteOrder" onchange="initKanaWrite()" class="col-span-2 sm:col-span-1 theme-input p-2.5 rounded-xl text-xs font-bold outline-none">
+                        <option value="SEQUENTIAL">➡️ Berurutan</option>
+                        <option value="SHUFFLE">🔀 Acak</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center justify-between bg-black/15 px-4 py-3 rounded-2xl border theme-border">
+                    <div>
+                        <span id="kanaWriteCounter" class="text-[11px] font-bold theme-text-muted">1 / 46</span>
+                        <div class="flex items-baseline gap-2.5 mt-0.5">
+                            <span id="kanaWriteRomaji" class="text-2xl font-extrabold theme-accent-text">a</span>
+                            <span id="kanaWriteCharLabel" class="text-xl font-bold jp-text">あ</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="toggleKanaWriteGuide()" id="kanaWriteGuideBtn" class="px-3 py-2 rounded-xl theme-subcard text-xs font-bold">
+                            👁️ Panduan: ON
+                        </button>
+                        <button type="button" onclick="speakText(document.getElementById('kanaWriteCharLabel').innerText)" class="p-2.5 rounded-xl theme-accent-soft theme-accent-text font-bold">
+                            🔊
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Kotak Kanvas Tulis Kana + Panduan Bayangan Tipis -->
+                <div class="relative w-full aspect-square max-w-[340px] mx-auto rounded-2xl border-2 border-dashed theme-border overflow-hidden bg-white">
+                    <div id="kanaWriteGuideOverlay" class="absolute inset-0 flex items-center justify-center pointer-events-none select-none text-slate-300/80 font-bold jp-text" style="font-size: 195px; line-height: 1;">
+                        あ
+                    </div>
+                    <canvas id="kanaWritingCanvas" class="relative z-10 w-full h-full touch-none block cursor-crosshair"></canvas>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="button" onclick="prevKanaWrite()" class="py-3 px-3.5 rounded-xl theme-subcard font-bold text-xs">←</button>
+                    <button type="button" onclick="undoKanaCanvas()" class="flex-1 py-3 rounded-xl theme-subcard font-bold text-xs">↩️ Undo</button>
+                    <button type="button" onclick="clearKanaCanvas()" class="flex-1 py-3 rounded-xl bg-red-500/15 text-red-400 border border-red-500/30 font-bold text-xs">🗑️ Hapus</button>
+                    <button type="button" onclick="nextKanaWrite()" class="flex-1 py-3 rounded-xl theme-accent-bg font-bold text-xs shadow">Lanjut →</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
 <script>
   const HUB_GROUPS = {
+    kana: [
+      { id: 'tab-kana', label: 'Hiragana & Katakana' }
+    ],
     kuis: [
       { id: 'tab-kuis', label: 'Kuis Kosakata & Kanji' },
       { id: 'tab-partikel', label: 'Kuis Partikel' },
@@ -7234,6 +7432,10 @@ renderBunpouTables();
                 if (typeof updateBankKosakataCategoryDropdown === 'function') updateBankKosakataCategoryDropdown();
                 if (typeof renderList === 'function') renderList();
             }
+            if (targetTab === 'tab-kana') {
+                if (typeof initKanaModule === 'function') initKanaModule();
+            }
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -8126,6 +8328,397 @@ renderBunpouTables();
             preloadPustakaOnce();
         }
     });
+
+        // ============================================================
+        // MODUL LENGKAP HIRAGANA & KATAKANA (4 GRID SUB-FITUR)
+        // ============================================================
+        const KANA_DATA = [
+            // SEION (DASAR 46)
+            { h: 'あ', k: 'ア', r: 'a', g: 'seion', row: 'Vokal' }, { h: 'い', k: 'イ', r: 'i', g: 'seion', row: 'Vokal' }, { h: 'う', k: 'ウ', r: 'u', g: 'seion', row: 'Vokal' }, { h: 'え', k: 'エ', r: 'e', g: 'seion', row: 'Vokal' }, { h: 'お', k: 'オ', r: 'o', g: 'seion', row: 'Vokal' },
+            { h: 'か', k: 'カ', r: 'ka', g: 'seion', row: 'K-' }, { h: 'き', k: 'キ', r: 'ki', g: 'seion', row: 'K-' }, { h: 'く', k: 'ク', r: 'ku', g: 'seion', row: 'K-' }, { h: 'け', k: 'ケ', r: 'ke', g: 'seion', row: 'K-' }, { h: 'こ', k: 'コ', r: 'ko', g: 'seion', row: 'K-' },
+            { h: 'さ', k: 'サ', r: 'sa', g: 'seion', row: 'S-' }, { h: 'し', k: 'シ', r: 'shi', g: 'seion', row: 'S-' }, { h: 'す', k: 'ス', r: 'su', g: 'seion', row: 'S-' }, { h: 'せ', k: 'セ', r: 'se', g: 'seion', row: 'S-' }, { h: 'そ', k: 'ソ', r: 'so', g: 'seion', row: 'S-' },
+            { h: 'た', k: 'タ', r: 'ta', g: 'seion', row: 'T-' }, { h: 'ち', k: 'チ', r: 'chi', g: 'seion', row: 'T-' }, { h: 'つ', k: 'ツ', r: 'tsu', g: 'seion', row: 'T-' }, { h: 'て', k: 'テ', r: 'te', g: 'seion', row: 'T-' }, { h: 'と', k: 'ト', r: 'to', g: 'seion', row: 'T-' },
+            { h: 'な', k: 'ナ', r: 'na', g: 'seion', row: 'N-' }, { h: 'に', k: 'ニ', r: 'ni', g: 'seion', row: 'N-' }, { h: 'ぬ', k: 'ヌ', r: 'nu', g: 'seion', row: 'N-' }, { h: 'ね', k: 'ネ', r: 'ne', g: 'seion', row: 'N-' }, { h: 'の', k: 'ノ', r: 'no', g: 'seion', row: 'N-' },
+            { h: 'は', k: 'ハ', r: 'ha', g: 'seion', row: 'H-' }, { h: 'ひ', k: 'ヒ', r: 'hi', g: 'seion', row: 'H-' }, { h: 'ふ', k: 'フ', r: 'fu', g: 'seion', row: 'H-' }, { h: 'へ', k: 'ヘ', r: 'he', g: 'seion', row: 'H-' }, { h: 'ほ', k: 'ホ', r: 'ho', g: 'seion', row: 'H-' },
+            { h: 'ま', k: 'マ', r: 'ma', g: 'seion', row: 'M-' }, { h: 'み', k: 'ミ', r: 'mi', g: 'seion', row: 'M-' }, { h: 'む', k: 'ム', r: 'mu', g: 'seion', row: 'M-' }, { h: 'め', k: 'メ', r: 'me', g: 'seion', row: 'M-' }, { h: 'も', k: 'モ', r: 'mo', g: 'seion', row: 'M-' },
+            { h: 'や', k: 'ヤ', r: 'ya', g: 'seion', row: 'Y-' }, { h: '', k: '', r: '', g: 'seion', row: 'Y-' }, { h: 'ゆ', k: 'ユ', r: 'yu', g: 'seion', row: 'Y-' }, { h: '', k: '', r: '', g: 'seion', row: 'Y-' }, { h: 'よ', k: 'ヨ', r: 'yo', g: 'seion', row: 'Y-' },
+            { h: 'ら', k: 'ラ', r: 'ra', g: 'seion', row: 'R-' }, { h: 'り', k: 'リ', r: 'ri', g: 'seion', row: 'R-' }, { h: 'る', k: 'ル', r: 'ru', g: 'seion', row: 'R-' }, { h: 'れ', k: 'レ', r: 're', g: 'seion', row: 'R-' }, { h: 'ろ', k: 'ロ', r: 'ro', g: 'seion', row: 'R-' },
+            { h: 'わ', k: 'ワ', r: 'wa', g: 'seion', row: 'W- / N' }, { h: '', k: '', r: '', g: 'seion', row: 'W- / N' }, { h: 'を', k: 'ヲ', r: 'wo', g: 'seion', row: 'W- / N' }, { h: '', k: '', r: '', g: 'seion', row: 'W- / N' }, { h: 'ん', k: 'ン', r: 'n', g: 'seion', row: 'W- / N' },
+
+            // DAKUON & HANDAKUON (TENG-TENG & MARU)
+            { h: 'が', k: 'ガ', r: 'ga', g: 'dakuon', row: 'G- (Teng2)' }, { h: 'ぎ', k: 'ギ', r: 'gi', g: 'dakuon', row: 'G- (Teng2)' }, { h: 'ぐ', k: 'グ', r: 'gu', g: 'dakuon', row: 'G- (Teng2)' }, { h: 'げ', k: 'ゲ', r: 'ge', g: 'dakuon', row: 'G- (Teng2)' }, { h: 'ご', k: 'ゴ', r: 'go', g: 'dakuon', row: 'G- (Teng2)' },
+            { h: 'ざ', k: 'ザ', r: 'za', g: 'dakuon', row: 'Z- (Teng2)' }, { h: 'じ', k: 'ジ', r: 'ji', g: 'dakuon', row: 'Z- (Teng2)' }, { h: 'ず', k: 'ズ', r: 'zu', g: 'dakuon', row: 'Z- (Teng2)' }, { h: 'ぜ', k: 'ゼ', r: 'ze', g: 'dakuon', row: 'Z- (Teng2)' }, { h: 'ぞ', k: 'ゾ', r: 'zo', g: 'dakuon', row: 'Z- (Teng2)' },
+            { h: 'だ', k: 'ダ', r: 'da', g: 'dakuon', row: 'D- (Teng2)' }, { h: 'ぢ', k: 'ヂ', r: 'ji(di)', g: 'dakuon', row: 'D- (Teng2)' }, { h: 'づ', k: 'ヅ', r: 'zu(du)', g: 'dakuon', row: 'D- (Teng2)' }, { h: 'で', k: 'デ', r: 'de', g: 'dakuon', row: 'D- (Teng2)' }, { h: 'ど', k: 'ド', r: 'do', g: 'dakuon', row: 'D- (Teng2)' },
+            { h: 'ば', k: 'バ', r: 'ba', g: 'dakuon', row: 'B- (Teng2)' }, { h: 'び', k: 'ビ', r: 'bi', g: 'dakuon', row: 'B- (Teng2)' }, { h: 'ぶ', k: 'ブ', r: 'bu', g: 'dakuon', row: 'B- (Teng2)' }, { h: 'べ', k: 'ベ', r: 'be', g: 'dakuon', row: 'B- (Teng2)' }, { h: 'ぼ', k: 'ボ', r: 'bo', g: 'dakuon', row: 'B- (Teng2)' },
+            { h: 'ぱ', k: 'パ', r: 'pa', g: 'dakuon', row: 'P- (Maru)' }, { h: 'ぴ', k: 'ピ', r: 'pi', g: 'dakuon', row: 'P- (Maru)' }, { h: 'ぷ', k: 'プ', r: 'pu', g: 'dakuon', row: 'P- (Maru)' }, { h: 'ぺ', k: 'ペ', r: 'pe', g: 'dakuon', row: 'P- (Maru)' }, { h: 'ぽ', k: 'ポ', r: 'po', g: 'dakuon', row: 'P- (Maru)' },
+
+            // YOUON (YA - YU - YO)
+            { h: 'きゃ', k: 'キャ', r: 'kya', g: 'youon', row: 'KY-' }, { h: 'きゅ', k: 'キュ', r: 'kyu', g: 'youon', row: 'KY-' }, { h: 'きょ', k: 'キョ', r: 'kyo', g: 'youon', row: 'KY-' },
+            { h: 'しゃ', k: 'シャ', r: 'sha', g: 'youon', row: 'SH-' }, { h: 'しゅ', k: 'シュ', r: 'shu', g: 'youon', row: 'SH-' }, { h: 'しょ', k: 'ショ', r: 'sho', g: 'youon', row: 'SH-' },
+            { h: 'ちゃ', k: 'チャ', r: 'cha', g: 'youon', row: 'CH-' }, { h: 'ちゅ', k: 'チュ', r: 'chu', g: 'youon', row: 'CH-' }, { h: 'ちょ', k: 'チョ', r: 'cho', g: 'youon', row: 'CH-' },
+            { h: 'にゃ', k: 'ニャ', r: 'nya', g: 'youon', row: 'NY-' }, { h: 'にゅ', k: 'ニュ', r: 'nyu', g: 'youon', row: 'NY-' }, { h: 'にょ', k: 'ニョ', r: 'nyo', g: 'youon', row: 'NY-' },
+            { h: 'ひゃ', k: 'ヒャ', r: 'hya', g: 'youon', row: 'HY-' }, { h: 'ひゅ', k: 'ヒュ', r: 'hyu', g: 'youon', row: 'HY-' }, { h: 'ひょ', k: 'ヒョ', r: 'hyo', g: 'youon', row: 'HY-' },
+            { h: 'みゃ', k: 'ミャ', r: 'mya', g: 'youon', row: 'MY-' }, { h: 'みゅ', k: 'ミュ', r: 'myu', g: 'youon', row: 'MY-' }, { h: 'みょ', k: 'ミョ', r: 'myo', g: 'youon', row: 'MY-' },
+            { h: 'りゃ', k: 'リャ', r: 'rya', g: 'youon', row: 'RY-' }, { h: 'りゅ', k: 'リュ', r: 'ryu', g: 'youon', row: 'RY-' }, { h: 'りょ', k: 'リョ', r: 'ryo', g: 'youon', row: 'RY-' },
+            { h: 'ぎゃ', k: 'ギャ', r: 'gya', g: 'youon', row: 'GY-' }, { h: 'ぎゅ', k: 'ギュ', r: 'gyu', g: 'youon', row: 'GY-' }, { h: 'ぎょ', k: 'ギョ', r: 'gyo', g: 'youon', row: 'GY-' },
+            { h: 'じゃ', k: 'ジャ', r: 'ja', g: 'youon', row: 'J-' }, { h: 'じゅ', k: 'ジュ', r: 'ju', g: 'youon', row: 'J-' }, { h: 'じょ', k: 'ジョ', r: 'jo', g: 'youon', row: 'J-' },
+            { h: 'びゃ', k: 'ビャ', r: 'bya', g: 'youon', row: 'BY-' }, { h: 'びゅ', k: 'ビュ', r: 'byu', g: 'youon', row: 'BY-' }, { h: 'びょ', k: 'ビョ', r: 'byo', g: 'youon', row: 'BY-' },
+            { h: 'ぴゃ', k: 'ピャ', r: 'pya', g: 'youon', row: 'PY-' }, { h: 'ぴゅ', k: 'ピュ', r: 'pyu', g: 'youon', row: 'PY-' }, { h: 'ぴょ', k: 'ピョ', r: 'pyo', g: 'youon', row: 'PY-' }
+        ];
+
+        let activeKanaScript = 'hiragana';
+        let activeKanaSection = 'ALL';
+
+        function initKanaModule() {
+            switchKanaSubTab('hiragana');
+        }
+
+        function switchKanaSubTab(mode) {
+            stopSpeech();
+            document.querySelectorAll('.kana-sub-btn').forEach(btn => {
+                btn.classList.remove('theme-accent-bg', 'shadow');
+                btn.classList.add('theme-subcard', 'theme-text-muted');
+            });
+            const activeBtn = document.getElementById('kana-sub-btn-' + mode);
+            if (activeBtn) {
+                activeBtn.classList.remove('theme-subcard', 'theme-text-muted');
+                activeBtn.classList.add('theme-accent-bg', 'shadow');
+            }
+
+            const chartView = document.getElementById('kana-view-chart');
+            const kuisView = document.getElementById('kana-view-kuis');
+            const menulisView = document.getElementById('kana-view-menulis');
+
+            chartView.classList.add('hidden');
+            kuisView.classList.add('hidden');
+            menulisView.classList.add('hidden');
+
+            if (mode === 'hiragana' || mode === 'katakana') {
+                activeKanaScript = mode;
+                chartView.classList.remove('hidden');
+                document.getElementById('kanaChartTitle').innerText =
+                    mode === 'hiragana'
+                        ? 'Tabel Hiragana Lengkap (Ketuk huruf untuk mendengar suara)'
+                        : 'Tabel Katakana Lengkap (Ketuk huruf untuk mendengar suara)';
+                renderKanaChart();
+            } else if (mode === 'kuis') {
+                kuisView.classList.remove('hidden');
+                resetKanaQuizUI();
+            } else if (mode === 'menulis') {
+                menulisView.classList.remove('hidden');
+                setupKanaCanvasEvents();
+                initKanaWrite();
+            }
+        }
+
+        function filterKanaSection(sec) {
+            activeKanaSection = sec;
+            document.querySelectorAll('.kana-sec-btn').forEach(b => {
+                b.classList.remove('theme-accent-bg');
+                b.classList.add('theme-subcard', 'theme-text-muted');
+            });
+            const btn = document.getElementById('kana-sec-' + sec);
+            if (btn) {
+                btn.classList.remove('theme-subcard', 'theme-text-muted');
+                btn.classList.add('theme-accent-bg');
+            }
+            renderKanaChart();
+        }
+
+        function renderKanaChart() {
+            const container = document.getElementById('kanaChartContainer');
+            if (!container) return;
+
+            const sections = [
+                { key: 'seion', title: '1. Huruf Dasar (Seion - 46 Huruf)', cols: 'grid-cols-5' },
+                { key: 'dakuon', title: '2. Teng-teng (゛) & Maru (゜)', cols: 'grid-cols-5' },
+                { key: 'youon', title: '3. Gabungan Ya - Yu - Yo (Youon)', cols: 'grid-cols-3' }
+            ];
+
+            let html = '';
+            sections.forEach(sec => {
+                if (activeKanaSection !== 'ALL' && activeKanaSection !== sec.key) return;
+                const items = KANA_DATA.filter(x => x.g === sec.key);
+                html += `
+                    <div class="theme-card p-3.5 sm:p-4 rounded-2xl border theme-border">
+                        <h4 class="text-xs font-extrabold theme-accent-text mb-3">${sec.title}</h4>
+                        <div class="grid ${sec.cols} gap-2">
+                            ${items.map(it => {
+                                const ch = activeKanaScript === 'hiragana' ? it.h : it.k;
+                                if (!ch) return `<div class="rounded-xl p-2 bg-black/10 opacity-20"></div>`;
+                                return `
+                                    <button type="button" onclick="speakText('${ch}')" class="theme-subcard hover:border-sky-400/60 border theme-border rounded-xl py-2.5 px-1 flex flex-col items-center justify-center transition active:scale-95">
+                                        <span class="text-xl sm:text-2xl font-extrabold jp-text">${ch}</span>
+                                        <span class="text-[11px] font-bold theme-accent-text mt-0.5">${it.r}</span>
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- LOGIKA KUIS TEBAK KANA ---
+        let kanaQuizPool = [];
+        let kanaQuizIdx = 0;
+        let kanaQuizCorrect = 0;
+        let kanaQuizWrong = 0;
+        let kanaQuizAnswered = false;
+
+        function resetKanaQuizUI() {
+            document.getElementById('kanaQuizSetup').classList.remove('hidden');
+            document.getElementById('kanaQuizPlay').classList.add('hidden');
+            document.getElementById('kanaQuizResult').classList.add('hidden');
+        }
+
+        function startKanaQuiz() {
+            const script = document.getElementById('kanaQuizScript').value;
+            const scope = document.getElementById('kanaQuizScope').value;
+            const order = document.getElementById('kanaQuizOrder').value;
+            const lenVal = document.getElementById('kanaQuizLength').value;
+
+            const baseList = KANA_DATA.filter(x => x.h && (scope === 'ALL' || x.g === scope));
+            let expanded = [];
+            baseList.forEach(item => {
+                if (script === 'hiragana' || script === 'both') {
+                    expanded.push({ char: item.h, romaji: item.r, type: 'Hiragana' });
+                }
+                if (script === 'katakana' || script === 'both') {
+                    expanded.push({ char: item.k, romaji: item.r, type: 'Katakana' });
+                }
+            });
+
+            if (order === 'SHUFFLE') expanded = shuffle(expanded);
+            if (lenVal !== 'ALL') expanded = expanded.slice(0, parseInt(lenVal));
+
+            kanaQuizPool = expanded;
+            kanaQuizIdx = 0;
+            kanaQuizCorrect = 0;
+            kanaQuizWrong = 0;
+
+            document.getElementById('kanaQuizSetup').classList.add('hidden');
+            document.getElementById('kanaQuizResult').classList.add('hidden');
+            document.getElementById('kanaQuizPlay').classList.remove('hidden');
+            renderKanaQuizQuestion();
+        }
+
+        function renderKanaQuizQuestion() {
+            kanaQuizAnswered = false;
+            const q = kanaQuizPool[kanaQuizIdx];
+            const mode = document.getElementById('kanaQuizMode').value;
+
+            document.getElementById('kanaQuizProgress').innerText = `Soal ${kanaQuizIdx + 1} / ${kanaQuizPool.length} (${q.type})`;
+            document.getElementById('kanaQuizScoreLive').innerText = `Benar: ${kanaQuizCorrect}`;
+            document.getElementById('kanaQuizFeedback').innerText = '';
+            document.getElementById('kanaQuizNextBtn').classList.add('hidden');
+
+            const promptEl = document.getElementById('kanaQuizPrompt');
+            promptEl.innerText = mode === 'jp_to_romaji' ? q.char : q.romaji;
+
+            // Buat 4 pilihan jawaban unik
+            const allChars = KANA_DATA.filter(x => x.h).map(x => ({
+                char: q.type === 'Hiragana' ? x.h : x.k,
+                romaji: x.r
+            }));
+            const distractors = shuffle(allChars.filter(x => x.romaji !== q.romaji)).slice(0, 3);
+            const options = shuffle([q, ...distractors]);
+
+            const optBox = document.getElementById('kanaQuizOptions');
+            optBox.innerHTML = options.map(opt => {
+                const label = mode === 'jp_to_romaji' ? opt.romaji : opt.char;
+                const val = mode === 'jp_to_romaji' ? opt.romaji : opt.char;
+                return `
+                    <button type="button" onclick="answerKanaQuiz('${val}', this)" class="kana-q-opt theme-subcard hover:opacity-90 border theme-border rounded-2xl py-4 px-3 text-xl font-extrabold ${mode === 'romaji_to_jp' ? 'jp-text' : ''} transition">
+                        ${label}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function playKanaQuizAudio() {
+            const q = kanaQuizPool[kanaQuizIdx];
+            if (q) speakText(q.char);
+        }
+
+        function answerKanaQuiz(chosen, btnEl) {
+            if (kanaQuizAnswered) return;
+            kanaQuizAnswered = true;
+            const q = kanaQuizPool[kanaQuizIdx];
+            const mode = document.getElementById('kanaQuizMode').value;
+            const correctVal = mode === 'jp_to_romaji' ? q.romaji : q.char;
+
+            document.querySelectorAll('.kana-q-opt').forEach(b => {
+                b.disabled = true;
+                if (b.innerText.trim() === correctVal) {
+                    b.classList.add('border-emerald-500', 'bg-emerald-500/20', 'text-emerald-400');
+                }
+            });
+
+            const fb = document.getElementById('kanaQuizFeedback');
+            if (chosen === correctVal) {
+                kanaQuizCorrect++;
+                fb.innerHTML = `<span class="text-emerald-400">✅ Tepat! (${q.char} = ${q.romaji})</span>`;
+            } else {
+                kanaQuizWrong++;
+                btnEl.classList.add('border-red-500', 'bg-red-500/20', 'text-red-400');
+                fb.innerHTML = `<span class="text-red-400">❌ Kurang tepat! Jawaban: ${correctVal} (${q.char} = ${q.romaji})</span>`;
+            }
+
+            document.getElementById('kanaQuizScoreLive').innerText = `Benar: ${kanaQuizCorrect}`;
+            document.getElementById('kanaQuizNextBtn').classList.remove('hidden');
+            speakText(q.char);
+        }
+
+        function nextKanaQuizQuestion() {
+            kanaQuizIdx++;
+            if (kanaQuizIdx >= kanaQuizPool.length) {
+                document.getElementById('kanaQuizPlay').classList.add('hidden');
+                document.getElementById('kanaQuizResult').classList.remove('hidden');
+                const pct = Math.round((kanaQuizCorrect / kanaQuizPool.length) * 100);
+                document.getElementById('kanaQuizFinalPercent').innerText = `${pct}%`;
+                document.getElementById('kanaQuizFinalDetail').innerText = `Benar: ${kanaQuizCorrect} | Salah: ${kanaQuizWrong} dari ${kanaQuizPool.length} soal`;
+                return;
+            }
+            renderKanaQuizQuestion();
+        }
+
+        // --- LOGIKA LATIHAN MENULIS KANA (KANVAS + PANDUAN) ---
+        let kanaWriteList = [];
+        let kanaWriteIdx = 0;
+        let kanaGuideVisible = true;
+        let kanaStrokes = [];
+        let kanaCurrentStroke = [];
+        let kanaIsDrawing = false;
+        let kanaCanvasReady = false;
+
+        function initKanaWrite() {
+            const script = document.getElementById('kanaWriteScript').value;
+            const scope = document.getElementById('kanaWriteScope').value;
+            const order = document.getElementById('kanaWriteOrder').value;
+
+            let list = KANA_DATA
+                .filter(x => x.h && (scope === 'ALL' || x.g === scope))
+                .map(x => ({ char: script === 'hiragana' ? x.h : x.k, romaji: x.r }));
+
+            if (order === 'SHUFFLE') list = shuffle(list);
+            kanaWriteList = list;
+            kanaWriteIdx = 0;
+            renderKanaWriteCard();
+        }
+
+        function renderKanaWriteCard() {
+            const item = kanaWriteList[kanaWriteIdx];
+            if (!item) return;
+            document.getElementById('kanaWriteCounter').innerText = `${kanaWriteIdx + 1} / ${kanaWriteList.length}`;
+            document.getElementById('kanaWriteRomaji').innerText = item.romaji;
+            document.getElementById('kanaWriteCharLabel').innerText = item.char;
+            document.getElementById('kanaWriteGuideOverlay').innerText = item.char;
+            clearKanaCanvas();
+        }
+
+        function toggleKanaWriteGuide() {
+            kanaGuideVisible = !kanaGuideVisible;
+            const overlay = document.getElementById('kanaWriteGuideOverlay');
+            const btn = document.getElementById('kanaWriteGuideBtn');
+            overlay.classList.toggle('hidden', !kanaGuideVisible);
+            btn.innerText = kanaGuideVisible ? '👁️ Panduan: ON' : '🙈 Panduan: OFF';
+        }
+
+        function nextKanaWrite() {
+            kanaWriteIdx = (kanaWriteIdx + 1) % kanaWriteList.length;
+            renderKanaWriteCard();
+        }
+
+        function prevKanaWrite() {
+            kanaWriteIdx = (kanaWriteIdx - 1 + kanaWriteList.length) % kanaWriteList.length;
+            renderKanaWriteCard();
+        }
+
+        function setupKanaCanvasEvents() {
+            if (kanaCanvasReady) return;
+            const c = document.getElementById('kanaWritingCanvas');
+            if (!c) return;
+            kanaCanvasReady = true;
+
+            const getPos = (e) => {
+                const rect = c.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: (clientX - rect.left) * (c.width / rect.width),
+                    y: (clientY - rect.top) * (c.height / rect.height)
+                };
+            };
+
+            const start = (e) => {
+                e.preventDefault();
+                if (c.width !== c.offsetWidth) {
+                    c.width = c.offsetWidth || 320;
+                    c.height = c.offsetHeight || 320;
+                }
+                kanaIsDrawing = true;
+                kanaCurrentStroke = [getPos(e)];
+            };
+
+            const move = (e) => {
+                if (!kanaIsDrawing) return;
+                e.preventDefault();
+                kanaCurrentStroke.push(getPos(e));
+                redrawKanaCanvas();
+            };
+
+            const end = () => {
+                if (!kanaIsDrawing) return;
+                kanaIsDrawing = false;
+                if (kanaCurrentStroke.length > 0) {
+                    kanaStrokes.push(kanaCurrentStroke);
+                    kanaCurrentStroke = [];
+                }
+            };
+
+            c.addEventListener('mousedown', start);
+            c.addEventListener('mousemove', move);
+            window.addEventListener('mouseup', end);
+            c.addEventListener('touchstart', start, { passive: false });
+            c.addEventListener('touchmove', move, { passive: false });
+            c.addEventListener('touchend', end);
+        }
+
+        function redrawKanaCanvas() {
+            const c = document.getElementById('kanaWritingCanvas');
+            if (!c) return;
+            const ctx = c.getContext('2d');
+            ctx.clearRect(0, 0, c.width, c.height);
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            const drawStroke = (pts) => {
+                if (pts.length === 0) return;
+                ctx.beginPath();
+                ctx.moveTo(pts[0].x, pts[0].y);
+                for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+                ctx.stroke();
+            };
+
+            kanaStrokes.forEach(drawStroke);
+            drawStroke(kanaCurrentStroke);
+        }
+
+        function undoKanaCanvas() {
+            kanaStrokes.pop();
+            redrawKanaCanvas();
+        }
+
+        function clearKanaCanvas() {
+            kanaStrokes = [];
+            kanaCurrentStroke = [];
+            redrawKanaCanvas();
+        }
+
 </script>
     
 </body>
