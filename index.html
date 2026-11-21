@@ -9365,11 +9365,32 @@ renderBunpouTables();
             sendBtn.disabled = true;
             const loadingBubble = appendSenseiMessage('ai', '<span class="opacity-70">⏳ Sensei sedang mengetik...</span>');
 
-            const candidateModels = [
-                'gemini-3.8-flash',
-                'gemini-3.8-flash-lite',
-                'gemini-3.0-flash'
-            ];
+           // Otomatis ambil daftar model Gemini aktif yang didukung oleh API Key pengguna
+            let candidateModels = ['gemini-3.8-flash', 'gemini-3.8-flash-lite'];
+            try {
+                const listRes = await fetchWithTimeout(
+                    `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`,
+                    { method: 'GET' },
+                    5000
+                );
+                const listData = await listRes.json();
+                if (listRes.ok && Array.isArray(listData.models)) {
+                    const dynamicFlash = listData.models
+                        .filter(m =>
+                            Array.isArray(m.supportedGenerationMethods) &&
+                            m.supportedGenerationMethods.includes('generateContent') &&
+                            /gemini.*flash/i.test(m.name) &&
+                            !/image|tts|audio|live|thinking|exp/i.test(m.name)
+                        )
+                        .map(m => m.name.replace(/^models\//, ''))
+                        .reverse();
+                    if (dynamicFlash.length > 0) {
+                        candidateModels = [...new Set([...dynamicFlash, ...candidateModels])];
+                    }
+                }
+            } catch (e) {
+            // Tetap pakai daftar default jika gagal mengambil daftar model
+            }
 
             let replyText = '';
             let lastApiError = '';
@@ -9390,19 +9411,20 @@ renderBunpouTables();
                                 contents: [{ role: 'user', parts: [{ text }] }]
                             })
                         },
-                        12000
+                        10000
                     );
 
                     const data = await res.json();
                     if (res.ok && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
                         replyText = data.candidates[0].content.parts[0].text;
                         break;
-                    } else {
+                    } else if (!lastApiError) {
                         lastApiError = data?.error?.message || `HTTP ${res.status}`;
                     }
                 } catch (err) {
-                    lastApiError = err.name === 'AbortError' ? 'Koneksi lambat (timeout)' : 'Gangguan jaringan';
-                }
+                    if (!lastApiError) {
+                        lastApiError = err.name === 'AbortError' ? 'Koneksi lambat' : 'Gangguan jaringan';
+                                    }
             }
 
             if (replyText) {
@@ -9414,10 +9436,11 @@ renderBunpouTables();
             } else {
                 loadingBubble.innerHTML = `<div class="text-[11px] text-amber-400/90 mb-1.5">⚡ Mode Offline (${lastApiError}):</div>${generateOfflineSenseiReply(text)}`;
             }
+
             sendBtn.disabled = false;
         }
-    
-</script>
+
+    </script>
     
 </body>
 </html>
