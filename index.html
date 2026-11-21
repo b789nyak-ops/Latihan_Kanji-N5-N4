@@ -9140,54 +9140,187 @@ renderBunpouTables();
             if (/be?ntuk\s*-?te/.test(q)) { reqForm = 'te'; formLabel = 'Bentuk -te (て形)'; }
             else if (/be?ntuk\s*-?nai/.test(q)) { reqForm = 'nai'; formLabel = 'Bentuk -nai (ない形)'; }
             else if (/be?ntuk\s*-?ta/.test(q)) { reqForm = 'ta'; formLabel = 'Bentuk -ta (た形)'; }
-            else if (/be?ntuk\s*kamus/.test(q)) { reqForm = 'kamus'; formLabel = 'Bentuk Kamus (辞書形)'; }
 
-            // Bersihkan kata-kata percakapan di awal maupun di akhir kalimat
-            const cleanTerm = q
-                .replace(/^(kalo|kalau|coba|tolong|kasih tahu|apa arti|arti kata|arti|bahasa jepangnya|apa)\s+/gi, '')
-                .replace(/be?ntuk\s*-?(te|nai|ta|kamus)\s*(dari|nya)?\s*/gi, '')
-                .replace(/\s*(itu\s*)?(apa|gimana|bagaimana|ya|dong|sih|kah)[?!.\s]*$/gi, '')
-                .replace(/[?!.]/g, '')
-                .trim();
+                        // ============================================================
+        // MESIN KONJUGASI & PENCARIAN UNIVERSAL (N5 - N4)
+        // ============================================================
 
-            if (reqForm && typeof masterData !== 'undefined' && cleanTerm.length >= 2) {
-                const verbMatch = masterData.find(item =>
-                    (item.romaji && item.romaji.toLowerCase() === cleanTerm) ||
-                    (item.kanji && item.kanji.toLowerCase() === cleanTerm) ||
-                    (item.meaning && item.meaning.toLowerCase() === cleanTerm)
-                );
-                if (verbMatch) {
-                    const hasilKonjugasi = conjugateMasuVerb(verbMatch.kanji, verbMatch.romaji, reqForm);
-                    if (hasilKonjugasi) {
-                        return `🔄 <b>${formLabel}</b> dari <b>${verbMatch.kanji}</b> (<i>${verbMatch.romaji}</i> — ${verbMatch.meaning}):<br><br>👉 <span class="text-cyan-400 font-bold text-base">${hasilKonjugasi}</span>`;
-                    }
-                }
+        // 1. Konverter Universal: Ubah Bentuk Kamus (romaji/kana) -> Bentuk -masu
+        function dictToMasuUniversal(word) {
+            const w = (word || '').toLowerCase().trim();
+            if (!w) return [];
+            if (w.endsWith('masu')) return [w];
+
+            // Pengecualian Grup 3 & Grup 1 berakhiran -eru/-iru (Minna no Nihongo)
+            const specialDict = {
+                'suru': ['shimasu'], 'kuru': ['kimasu'], 'iku': ['ikimasu'],
+                'kaeru': ['kaerimasu'], 'kiru': ['kirimasu', 'kimasu'], 'shiru': ['shirimasu'],
+                'hairu': ['hairimasu'], 'hashiru': ['hashirimasu'], 'shaberu': ['shaberimasu'],
+                'iru': ['irimasu', 'imasu'], 'suberu': ['suberimasu'], 'keru': ['kerimasu'],
+                'neru': ['nemasu', 'nerimasu'], 'heru': ['herimasu'], 'aseru': ['aserimasu'],
+                'mazeru': ['mazemasu'], 'kagiru': ['kagirimasu'], 'nigiru': ['nigirimasu']
+            };
+            if (specialDict[w]) return specialDict[w];
+
+            const candidates = [];
+            // Grup 2 (Ichidan): berakhiran -eru atau -iru -> ganti -ru jadi -masu
+            if (w.endsWith('eru') || w.endsWith('iru')) {
+                candidates.push(w.slice(0, -2) + 'masu');
             }
 
-            // 1. Cek penjelasan partikel umum
+            // Grup 1 (Godan): ubah akhiran vokal -u menjadi -imasu
+            const godanRules = [
+                [/tsu$/, 'chimasu'], [/su$/, 'shimasu'], [/ku$/, 'kimasu'],
+                [/gu$/, 'gimasu'], [/mu$/, 'mimasu'], [/bu$/, 'bimasu'],
+                [/nu$/, 'nimasu'], [/ru$/, 'rimasu'], [/([aiueo])u$/, '$1imasu']
+            ];
+            for (const [regex, rep] of godanRules) {
+                if (regex.test(w)) {
+                    candidates.push(w.replace(regex, rep));
+                    break;
+                }
+            }
+            return [...new Set(candidates)];
+        }
+
+        // 2. Konverter Universal: Ubah Bentuk -masu -> (-te, -nai, -ta, kamus, -masu)
+        function conjugateMasuVerb(jpWord, romajiWord, targetForm) {
+            const cleanJp = (jpWord || '').split('(')[0].split('（')[0].trim();
+            const cleanRo = (romajiWord || '').toLowerCase().trim();
+            if (!cleanJp.endsWith('ます') || !cleanRo.endsWith('masu')) return null;
+
+            if (targetForm === 'masu') return `${cleanJp} (${cleanRo})`;
+
+            const specialCases = {
+                'きます': { te: 'きて (kite)', nai: 'こない (konai)', ta: 'きた (kita)', kamus: 'くる (kuru)' },
+                '来ます': { te: '来て (kite)', nai: '来ない (konai)', ta: '来た (kita)', kamus: '来る (kuru)' },
+                'します': { te: 'して (shite)', nai: 'しない (shinai)', ta: 'した (shita)', kamus: 'する (suru)' },
+                'いきます': { te: 'いって (itte)', nai: 'いかない (ikanai)', ta: 'いった (itta)', kamus: 'いく (iku)' },
+                '行きます': { te: '行って (itte)', nai: '行かない (ikanai)', ta: '行った (itta)', kamus: '行く (iku)' }
+            };
+            if (specialCases[cleanJp]) return specialCases[cleanJp][targetForm];
+
+            const ichidanExceptions = ['ikimasu', 'kaerimasu', 'kirimasu', 'shirimasu', 'hairimasu', 'hashirimasu', 'shaberimasu', 'irimasu', 'suberimasu', 'kerimasu', 'herimasu', 'aserimasu', 'kagirimasu', 'nigirimasu'];
+            const isGrup2 = (cleanRo.endsWith('emasu') || ['mimasu', 'okimasu', 'abimasu', 'karimasu', 'dekimasu', 'imasu', 'ochimasu', 'orimasu', 'tarimasu', 'shinjimasu', 'ikimasu'].includes(cleanRo)) && !ichidanExceptions.includes(cleanRo);
+
+            const stemJp = cleanJp.slice(0, -2);
+            const stemRo = cleanRo.slice(0, -4);
+
+            if (isGrup2) {
+                if (targetForm === 'te') return `${stemJp}て (${stemRo}te)`;
+                if (targetForm === 'nai') return `${stemJp}ない (${stemRo}nai)`;
+                if (targetForm === 'ta') return `${stemJp}た (${stemRo}ta)`;
+                if (targetForm === 'kamus') return `${stemJp}る (${stemRo}ru)`;
+            }
+
+            const lastKana = stemJp.slice(-1);
+            const baseJp = stemJp.slice(0, -1);
+            const godanTable = {
+                'い': { te: ['って', 'tte'], nai: ['わない', 'wanai'], ta: ['った', 'tta'], kamus: ['う', 'u'], roEnd: /imasu$/ },
+                'ち': { te: ['って', 'tte'], nai: ['たない', 'tanai'], ta: ['った', 'tta'], kamus: ['つ', 'tsu'], roEnd: /chimasu$/ },
+                'り': { te: ['って', 'tte'], nai: ['らない', 'ranai'], ta: ['った', 'tta'], kamus: ['る', 'ru'], roEnd: /rimasu$/ },
+                'み': { te: ['んで', 'nde'], nai: ['まない', 'manai'], ta: ['んだ', 'nda'], kamus: ['む', 'mu'], roEnd: /mimasu$/ },
+                'び': { te: ['んで', 'nde'], nai: ['ばない', 'banai'], ta: ['んだ', 'nda'], kamus: ['ぶ', 'bu'], roEnd: /bimasu$/ },
+                'に': { te: ['んで', 'nde'], nai: ['なない', 'nanai'], ta: ['んだ', 'nda'], kamus: ['ぬ', 'nu'], roEnd: /nimasu$/ },
+                'き': { te: ['いて', 'ite'], nai: ['かない', 'kanai'], ta: ['いた', 'ita'], kamus: ['く', 'ku'], roEnd: /kimasu$/ },
+                'ぎ': { te: ['いで', 'ide'], nai: ['がない', 'ganai'], ta: ['いだ', 'ida'], kamus: ['ぐ', 'gu'], roEnd: /gimasu$/ },
+                'し': { te: ['して', 'shite'], nai: ['さない', 'sanai'], ta: ['した', 'shita'], kamus: ['す', 'su'], roEnd: /shimasu$/ }
+            };
+
+            const rule = godanTable[lastKana];
+            if (rule && rule[targetForm]) {
+                const [jpSuffix, roSuffix] = rule[targetForm];
+                const newRo = cleanRo.replace(rule.roEnd, roSuffix);
+                return `${baseJp}${jpSuffix} (${newRo})`;
+            }
+            return null;
+        }
+
+        // 3. Mesin Pencari & Konjugasi Alami Universal
+        function generateOfflineSenseiReply(query) {
+            const q = query.toLowerCase().trim();
+
+            // Deteksi bentuk yang diminta dari gaya bahasa bebas
+            let reqForm = null;
+            let formLabel = '';
+            if (/\b(be?ntuk\s*-?te|-te|bentuk\s*te)\b/.test(q)) { reqForm = 'te'; formLabel = 'Bentuk -te (て形)'; }
+            else if (/\b(be?ntuk\s*-?nai|-nai|bentuk\s*nai|negatif)\b/.test(q)) { reqForm = 'nai'; formLabel = 'Bentuk -nai (ない形)'; }
+            else if (/\b(be?ntuk\s*-?ta|-ta|bentuk\s*ta|lampau)\b/.test(q)) { reqForm = 'ta'; formLabel = 'Bentuk -ta (た形)'; }
+            else if (/\b(be?ntuk\s*kamus|kamus|jisho)\b/.test(q)) { reqForm = 'kamus'; formLabel = 'Bentuk Kamus (辞書形)'; }
+            else if (/\b(be?ntuk\s*-?masu|-masu|sopan)\b/.test(q)) { reqForm = 'masu'; formLabel = 'Bentuk -masu (ます形)'; }
+
+            // Saring kata-kata basa-basi & kata sambung agar tersisa kata inti universal
+            const stopWords = new Set([
+                'kalo', 'kalau', 'coba', 'tolong', 'kasih', 'tahu', 'tau', 'apa', 'arti', 'kata',
+                'bahasa', 'jepangnya', 'jepang', 'dari', 'nya', 'itu', 'gimana', 'bagaimana',
+                'ya', 'dong', 'sih', 'kah', 'ubah', 'ke', 'menjadi', 'jadi', 'yang', 'untuk',
+                'bentuk', 'betuk', 'te', 'nai', 'ta', 'kamus', 'masu', 'partikel', 'beda', 'dan', 'sama'
+            ]);
+
+            const tokens = q
+                .replace(/[?!.,()'"“”]/g, ' ')
+                .split(/\s+/)
+                .filter(t => t && !stopWords.has(t) && !/^-(te|nai|ta|masu)$/.test(t));
+
+            const coreKeyword = tokens.join(' ').trim() || q;
+
+            // Cek penjelasan partikel umum
             const particleTips = {
                 'は': '<b>Partikel は (wa)</b> menandai <b>topik utama</b> kalimat (informasi lama/umum). Contoh: 私は学生です (Saya adalah pelajar).',
                 'が': '<b>Partikel が (ga)</b> menandai <b>subjek spesifik</b>, keberadaan (あります/います), atau kesukaan/kemampuan (好き・上手・わかります).',
                 'を': '<b>Partikel を (o/wo)</b> menandai <b>objek langsung</b> dari kata kerja transitif. Contoh: パンを食べます (Makan roti).',
                 'に': '<b>Partikel に (ni)</b> dipakai untuk <b>waktu spesifik</b> (7時に), <b>tujuan/arah</b>, atau <b>lokasi keberadaan</b>.',
-                'で': '<b>Partikel で (de)</b> dipakai untuk <b>tempat berlangsungnya aksi</b> (食堂で食べます) atau <b>alat/transportasi</b> (バスで行きます).'
+                'で': '<b>Partikel で (de)</b> dipakai untuk <b>tempat berlangsungnya aksi</b> (食堂で食べます) atau <b>alat/transportasi</b>.'
             };
+            if (q.includes('は') && q.includes('が')) {
+                return `${particleTips['は']}<br><br>${particleTips['が']}`;
+            }
             for (const [pKey, pDesc] of Object.entries(particleTips)) {
-                if (q.includes(`partikel ${pKey}`) || (q.includes('は') && q.includes('が') && pKey === 'は')) {
-                    if (q.includes('は') && q.includes('が')) {
-                        return `${particleTips['は']}<br><br>${particleTips['が']}`;
-                    }
-                    return pDesc;
-                }
+                if (q.includes(`partikel ${pKey}`) || tokens.includes(pKey)) return pDesc;
             }
 
-            // 2. Cari di masterData (Kosakata Minna no Nihongo)
-            if (typeof masterData !== 'undefined' && cleanTerm.length >= 2) {
-                const matches = masterData.filter(item =>
-                    (item.kanji && item.kanji.toLowerCase().includes(cleanTerm)) ||
-                    (item.romaji && item.romaji.toLowerCase().includes(cleanTerm)) ||
-                    (item.meaning && item.meaning.toLowerCase().includes(cleanTerm))
-                ).slice(0, 4);
+            // Bangun kandidat pencarian universal (kata asli + konversi bentuk kamus <-> -masu)
+            const searchCandidates = new Set([coreKeyword]);
+            tokens.forEach(tok => {
+                searchCandidates.add(tok);
+                dictToMasuUniversal(tok).forEach(m => searchCandidates.add(m));
+            });
+
+            if (typeof masterData !== 'undefined') {
+                // Jika user meminta bentuk konjugasi (-te, -nai, -ta, kamus, -masu)
+                if (reqForm) {
+                    let verbMatch = null;
+                    for (const cand of searchCandidates) {
+                        if (cand.length < 2) continue;
+                        verbMatch = masterData.find(item =>
+                            item.kanji && item.kanji.includes('ます') && (
+                                (item.romaji && item.romaji.toLowerCase() === cand) ||
+                                (item.kanji && item.kanji.toLowerCase() === cand) ||
+                                (item.meaning && item.meaning.toLowerCase().split(/[,/]/).some(m => m.trim() === cand))
+                            )
+                        );
+                        if (verbMatch) break;
+                    }
+
+                    if (verbMatch) {
+                        const hasil = conjugateMasuVerb(verbMatch.kanji, verbMatch.romaji, reqForm);
+                        if (hasil) {
+                            return `🔄 <b>${formLabel}</b> dari <b>${verbMatch.kanji}</b> (<i>${verbMatch.romaji}</i> — ${verbMatch.meaning}):<br><br>👉 <span class="text-cyan-400 font-bold text-base">${hasil}</span>`;
+                        }
+                    }
+                }
+
+                // Pencarian kosakata universal (cocokkan bentuk kamus, -masu, kanji, maupun arti Indonesia)
+                const matches = masterData.filter(item => {
+                    const k = (item.kanji || '').toLowerCase();
+                    const r = (item.romaji || '').toLowerCase();
+                    const m = (item.meaning || '').toLowerCase();
+                    for (const cand of searchCandidates) {
+                        if (cand.length < 2) continue;
+                        if (k.includes(cand) || r.includes(cand) || m.includes(cand)) return true;
+                    }
+                    return false;
+                }).slice(0, 4);
 
                 if (matches.length > 0) {
                     const cards = matches.map(m => {
@@ -9197,9 +9330,9 @@ renderBunpouTables();
                                 <div>
                                     <div class="font-extrabold text-sm jp-text">${m.kanji}</div>
                                     <div class="text-[11px] theme-accent-text font-semibold">${m.romaji}</div>
-                                    <div class="text-[11px] theme-text-muted">${m.meaning} <span class="opacity-70">(Bab ${m.bab || '-'})</span></div>
+                                    <div class="text-[11px] theme-text-muted">${m.meaning} <span class="opacity-70">(Bab ${m.lesson || m.bab || '-'})</span></div>
                                 </div>
-                                <button type="button" onclick="speakText('${safeJp}')" class="px-2.5 py-1.5 rounded-lg theme-accent-soft theme-accent-text font-bold text-xs shrink-0">🔊</button>
+                                <button type="button" onclick="speakText('${safeJp}')" class="px-2.5 py-1.5 rounded-lg theme-accent-bg text-xs font-bold">🔊</button>
                             </div>
                         `;
                     }).join('');
@@ -9207,10 +9340,10 @@ renderBunpouTables();
                 }
             }
 
-            return `Maaf, kata <b>"${query}"</b> belum ketemu di pencarian offline.<br><br>💡 <b>Tips:</b> Ketik 1 kata kunci saja (misal: <i>tabemasu</i>, <i>minum</i>, atau <i>partikel で</i>), atau masukkan <b>⚙️ Gemini API Key gratis</b> di pojok kanan atas agar aku bisa menjawab pertanyaan bebas & mengoreksi kalimatmu!`;
+            return `Maaf, kata kunci <b>"${coreKeyword}"</b> belum ketemu di database lokal.<br><br>💡 <b>Tips:</b> Coba ketik kata dasarnya (misal: <i>kaeru</i>, <i>tabemasu</i>, atau <i>pulang</i>).`;
         }
 
-                async function fetchWithTimeout(url, options, timeoutMs = 6500) {
+            async function fetchWithTimeout(url, options, timeoutMs = 6500) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeoutMs);
             try {
