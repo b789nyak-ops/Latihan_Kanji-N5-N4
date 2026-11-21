@@ -9206,6 +9206,16 @@ renderBunpouTables();
             return `Maaf, kata <b>"${query}"</b> belum ketemu di pencarian offline.<br><br>💡 <b>Tips:</b> Ketik 1 kata kunci saja (misal: <i>tabemasu</i>, <i>minum</i>, atau <i>partikel で</i>), atau masukkan <b>⚙️ Gemini API Key gratis</b> di pojok kanan atas agar aku bisa menjawab pertanyaan bebas & mengoreksi kalimatmu!`;
         }
 
+                async function fetchWithTimeout(url, options, timeoutMs = 6500) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                return await fetch(url, { ...options, signal: controller.signal });
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
         async function handleSenseiSubmit(e) {
             if (e) e.preventDefault();
             const input = document.getElementById('senseiChatInput');
@@ -9224,41 +9234,58 @@ renderBunpouTables();
                 return;
             }
 
-            // Mode Online: Panggil Gemini API (Free Tier)
+            // Mode Online dengan Batas Waktu 6.5 Detik & Auto-Fallback Model
             sendBtn.disabled = true;
             const loadingBubble = appendSenseiMessage('ai', '<span class="opacity-70">⏳ Sensei sedang mengetik...</span>');
 
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        systemInstruction: {
-                            parts: [{
-                                text: 'Kamu adalah Sensei bahasa Jepang yang ramah untuk pelajar Indonesia (level JLPT N5-N4, kurikulum Minna no Nihongo). Jawab ringkas, jelas, sertakan tulisan Jepang + cara baca hiragana/romaji + arti bahasa Indonesia.'
-                            }]
-                        },
-                        contents: [{ role: 'user', parts: [{ text }] }]
-                    })
-                });
+            const candidateModels = [
+                'gemini-3.8-flash',
+                'gemini-2.5-flash',
+                'gemini-2.5-flash-lite'
+            ];
 
-                const data = await res.json();
-                if (!res.ok) {
-                    const errMsg = data?.error?.message || 'Gagal terhubung ke Gemini API.';
-                    loadingBubble.innerHTML = `⚠️ <b>Error API:</b> ${errMsg}<br><br>${generateOfflineSenseiReply(text)}`;
-                } else {
-                    const replyText = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Tidak ada respons.';
-                    const formatted = replyText
-                        .replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                        .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
-                        .replace(/\n/g, '<br>');
-                    loadingBubble.innerHTML = formatted;
+            let replyText = '';
+
+            for (const modelName of candidateModels) {
+                try {
+                    const res = await fetchWithTimeout(
+                        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`,
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                systemInstruction: {
+                                    parts: [{
+                                        text: 'Kamu adalah Sensei bahasa Jepang yang ramah untuk pelajar Indonesia (level JLPT N5-N4, kurikulum Minna no Nihongo). Jawab ringkas, jelas, sertakan tulisan Jepang + cara baca hiragana/romaji + arti bahasa Indonesia.'
+                                    }]
+                                },
+                                contents: [{ role: 'user', parts: [{ text }] }]
+                            })
+                        },
+                        6500
+                    );
+
+                    const data = await res.json();
+                    if (res.ok && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        replyText = data.candidates[0].content.parts[0].text;
+                        break;
+                    }
+                } catch (err) {
+                    // Timeout atau gangguan jaringan: langsung pindah ke model cadangan berikutnya
                 }
-            } catch (err) {
-                loadingBubble.innerHTML = `⚠️ Koneksi terputus. Menampilkan hasil offline:<br><br>${generateOfflineSenseiReply(text)}`;
-            } finally {
-                sendBtn.disabled = false;
             }
+
+            if (replyText) {
+                const formatted = replyText
+                    .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+                    .replace(/\n/g, '<br>');
+                loadingBubble.innerHTML = formatted;
+            } else {
+                loadingBubble.innerHTML = `<div class="text-[11px] text-amber-400/90 mb-1.5">⚡ Mode Cepat Offline:</div>${generateOfflineSenseiReply(text)}`;
+            }
+
+            sendBtn.disabled = false;
         }
     
 </script>
