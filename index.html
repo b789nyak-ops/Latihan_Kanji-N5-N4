@@ -9130,18 +9130,8 @@ renderBunpouTables();
             return null;
         }
 
-        // Mesin Pencari & Konjugasi Offline (Berjalan 100% Tanpa Internet/API Key)
-            function generateOfflineSenseiReply(query) {
-            const q = query.toLowerCase().trim();
 
-           // Deteksi permintaan konjugasi kata kerja (-te, -nai, -ta, kamus) meski memakai kalimat bebas
-            let reqForm = null;
-            let formLabel = '';
-            if (/be?ntuk\s*-?te/.test(q)) { reqForm = 'te'; formLabel = 'Bentuk -te (て形)'; }
-            else if (/be?ntuk\s*-?nai/.test(q)) { reqForm = 'nai'; formLabel = 'Bentuk -nai (ない形)'; }
-            else if (/be?ntuk\s*-?ta/.test(q)) { reqForm = 'ta'; formLabel = 'Bentuk -ta (た形)'; }
-
-                        // ============================================================
+        // ============================================================
         // MESIN KONJUGASI & PENCARIAN UNIVERSAL (N5 - N4)
         // ============================================================
 
