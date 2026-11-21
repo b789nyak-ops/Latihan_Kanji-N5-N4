@@ -9131,10 +9131,22 @@ renderBunpouTables();
         }
 
         // Mesin Pencari & Konjugasi Offline (Berjalan 100% Tanpa Internet/API Key)
-        function generateOfflineSenseiReply(query) {
+            function generateOfflineSenseiReply(query) {
             const q = query.toLowerCase().trim();
+
+            // Deteksi permintaan konjugasi kata kerja (-te, -nai, -ta, kamus) meski memakai kalimat bebas
+            let reqForm = null;
+            let formLabel = '';
+            if (/be?ntuk\s*-?te/.test(q)) { reqForm = 'te'; formLabel = 'Bentuk -te (て形)'; }
+            else if (/be?ntuk\s*-?nai/.test(q)) { reqForm = 'nai'; formLabel = 'Bentuk -nai (ない形)'; }
+            else if (/be?ntuk\s*-?ta/.test(q)) { reqForm = 'ta'; formLabel = 'Bentuk -ta (た形)'; }
+            else if (/be?ntuk\s*kamus/.test(q)) { reqForm = 'kamus'; formLabel = 'Bentuk Kamus (辞書形)'; }
+
+            // Bersihkan kata-kata percakapan di awal maupun di akhir kalimat
             const cleanTerm = q
-                .replace(/^(apa arti|arti kata|arti|bahasa jepangnya|bentuk te dari|bentuk -te dari|bentuk te|bentuk -te|bentuk nai dari|bentuk nai|bentuk ta dari|bentuk ta|bentuk kamus dari|bentuk kamus)\s*/i, '')
+                .replace(/^(kalo|kalau|coba|tolong|kasih tahu|apa arti|arti kata|arti|bahasa jepangnya|apa)\s+/gi, '')
+                .replace(/be?ntuk\s*-?(te|nai|ta|kamus)\s*(dari|nya)?\s*/gi, '')
+                .replace(/\s*(itu\s*)?(apa|gimana|bagaimana|ya|dong|sih|kah)[?!.\s]*$/gi, '')
                 .replace(/[?!.]/g, '')
                 .trim();
 
@@ -9240,11 +9252,12 @@ renderBunpouTables();
 
             const candidateModels = [
                 'gemini-3.8-flash',
-                'gemini-2.5-flash',
-                'gemini-2.5-flash-lite'
+                'gemini-3.8-flash-lite',
+                'gemini-3.0-flash'
             ];
 
             let replyText = '';
+            let lastApiError = '';
 
             for (const modelName of candidateModels) {
                 try {
@@ -9262,16 +9275,18 @@ renderBunpouTables();
                                 contents: [{ role: 'user', parts: [{ text }] }]
                             })
                         },
-                        6500
+                        12000
                     );
 
                     const data = await res.json();
                     if (res.ok && data?.candidates?.[0]?.content?.parts?.[0]?.text) {
                         replyText = data.candidates[0].content.parts[0].text;
                         break;
+                    } else {
+                        lastApiError = data?.error?.message || `HTTP ${res.status}`;
                     }
                 } catch (err) {
-                    // Timeout atau gangguan jaringan: langsung pindah ke model cadangan berikutnya
+                    lastApiError = err.name === 'AbortError' ? 'Koneksi lambat (timeout)' : 'Gangguan jaringan';
                 }
             }
 
@@ -9282,11 +9297,9 @@ renderBunpouTables();
                     .replace(/\n/g, '<br>');
                 loadingBubble.innerHTML = formatted;
             } else {
-                loadingBubble.innerHTML = `<div class="text-[11px] text-amber-400/90 mb-1.5">⚡ Mode Cepat Offline:</div>${generateOfflineSenseiReply(text)}`;
+                loadingBubble.innerHTML = `<div class="text-[11px] text-amber-400/90 mb-1.5">⚡ Mode Offline (${lastApiError}):</div>${generateOfflineSenseiReply(text)}`;
             }
 
-            sendBtn.disabled = false;
-        }
     
 </script>
     
