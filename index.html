@@ -9134,7 +9134,7 @@ renderBunpouTables();
             function generateOfflineSenseiReply(query) {
             const q = query.toLowerCase().trim();
 
-            // Deteksi permintaan konjugasi kata kerja (-te, -nai, -ta, kamus) meski memakai kalimat bebas
+           // Deteksi permintaan konjugasi kata kerja (-te, -nai, -ta, kamus) meski memakai kalimat bebas
             let reqForm = null;
             let formLabel = '';
             if (/be?ntuk\s*-?te/.test(q)) { reqForm = 'te'; formLabel = 'Bentuk -te (て形)'; }
@@ -9149,14 +9149,6 @@ renderBunpouTables();
                 .replace(/\s*(itu\s*)?(apa|gimana|bagaimana|ya|dong|sih|kah)[?!.\s]*$/gi, '')
                 .replace(/[?!.]/g, '')
                 .trim();
-
-            // 0. Deteksi permintaan konjugasi kata kerja (-te, -nai, -ta, kamus)
-            let reqForm = null;
-            let formLabel = '';
-            if (/bentuk\s*-?te/.test(q)) { reqForm = 'te'; formLabel = 'Bentuk -te (て形)'; }
-            else if (/bentuk\s*-?nai/.test(q)) { reqForm = 'nai'; formLabel = 'Bentuk -nai (ない形)'; }
-            else if (/bentuk\s*-?ta/.test(q)) { reqForm = 'ta'; formLabel = 'Bentuk -ta (た形)'; }
-            else if (/bentuk\s*kamus/.test(q)) { reqForm = 'kamus'; formLabel = 'Bentuk Kamus (辞書形)'; }
 
             if (reqForm && typeof masterData !== 'undefined' && cleanTerm.length >= 2) {
                 const verbMatch = masterData.find(item =>
@@ -9299,7 +9291,8 @@ renderBunpouTables();
             } else {
                 loadingBubble.innerHTML = `<div class="text-[11px] text-amber-400/90 mb-1.5">⚡ Mode Offline (${lastApiError}):</div>${generateOfflineSenseiReply(text)}`;
             }
-
+            sendBtn.disabled = false;
+        }
     
 </script>
     
