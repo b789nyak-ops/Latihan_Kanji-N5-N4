@@ -572,7 +572,7 @@ window.onerror = function(msg, url, line, col) {
     </div>
 
     <!-- HEADER DENGAN LOGO MJ KECIL & SILUET IKON TEMA -->
-    <header class="theme-header text-white p-3.5 sm:p-4 rounded-b-3xl shadow-xl relative z-50 overflow-hidden">
+<header class="theme-header text-white p-3.5 sm:p-4 rounded-b-3xl shadow-xl fixed top-0 left-0 right-0 z-50 overflow-hidden">
 
         <!-- Siluet Ikon Latar Belakang Sesuai Tema -->
         <!-- 1. Tokyo Tower (Tokyo Night) -->
@@ -639,7 +639,7 @@ window.onerror = function(msg, url, line, col) {
     </header>
     
     <!-- TOMBOL KEMBALI KE BERANDA (OTOMATIS MUNCUL SAAT MASUK FITUR) -->
-    <div id="backToHomeBar" class="hidden max-w-3xl mx-auto px-3 sm:px-4 pt-3">
+    <div id="backToHomeBar" class="hidden max-w-3xl mx-auto px-3 sm:px-4 pt-24">
         <button onclick="openModernHub('beranda')" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl theme-card border theme-border text-xs font-bold theme-accent-text hover:opacity-80 transition shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
@@ -649,7 +649,7 @@ window.onerror = function(msg, url, line, col) {
     </div>
 
     <!-- BAR PILIHAN FITUR TERPADU: LATIHAN & KUIS (OTOMATIS MUNCUL SAAT MASUK LATIHAN & KUIS) -->
-    <div id="latihanHubBar" class="hidden max-w-3xl mx-auto px-3 sm:px-4 pt-3">
+    <div id="latihanHubBar" class="hidden max-w-3xl mx-auto px-3 sm:px-4 pt-24">
         <div class="theme-card p-2 rounded-2xl border theme-border grid grid-cols-2 sm:grid-cols-5 gap-1.5">
             <button onclick="switchLatihanFeature('tab-kuis')" id="latihan-btn-tab-kuis" class="latihan-sub-btn py-2 px-2.5 rounded-xl text-xs font-bold transition text-center">
                 ✅ Kuis Kosakata
@@ -669,7 +669,7 @@ window.onerror = function(msg, url, line, col) {
         </div>
     </div>
 
-    <main class="max-w-3xl mx-auto px-3 sm:px-4">
+    <main class="max-w-3xl mx-auto px-3 sm:px-4 pt-20">
         
         <!-- BERANDA UTAMA (HOME DASHBOARD - SEMUA FITUR DALAM GRID 2 KOLOM) -->
         <section id="hub-beranda-view" class="space-y-4 mt-4 animate-fade-in">
