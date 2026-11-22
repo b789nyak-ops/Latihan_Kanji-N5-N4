@@ -5192,19 +5192,28 @@ function resetChoukaiUI() {
 // --- FLASHCARD LOGIC ---
 let fcData = [], fcIndex = 0;
 
-        function updateFlashcardCategoryDropdown() {
-            const levelEl = document.getElementById('flashcardLevelFilter');
-            const catEl = document.getElementById('flashcardCategory');
-            if (!catEl) return;
+function isFlashcardItemMatchLevel(item, normLevel) {
+    if (normLevel === 'ALL') return true;
+    if (typeof isItemInVocabGroup === 'function') {
+        return isItemInVocabGroup(item, normLevel === 'N4' ? '26-50' : '1-25');
+    }
+    const babNum = Number(item.bab || item.lesson || 0);
+    const lvl = String(item.level || '').trim().toUpperCase();
+    const itemIdNum = Number(item.id || 0);
+    const isN4 = (babNum >= 26 && babNum <= 50) || lvl === 'N4' || (itemIdNum >= 676);
+    return normLevel === 'N4' ? isN4 : !isN4;
+}
 
-            const selectedLevel = levelEl ? levelEl.value : 'ALL';
-            const currentCat = catEl.value || 'ALL';
+function updateFlashcardCategoryDropdown() {
+    const levelEl = document.getElementById('flashcardLevelFilter');
+    const catEl = document.getElementById('flashcardCategory');
+    if (!catEl) return;
 
+    const selectedLevel = levelEl ? levelEl.value : 'ALL';
+    const currentCat = catEl.value || 'ALL';
     const normLevel = String(selectedLevel || 'ALL').trim().toUpperCase();
-    const levelItems = masterData.filter(item => {
-        if (normLevel === 'ALL') return true;
-        return String(item.level || 'N5').trim().toUpperCase() === normLevel;
-    });
+
+    const levelItems = masterData.filter(item => isFlashcardItemMatchLevel(item, normLevel));
 
     const categories = [...new Set(levelItems.map(item => item.category))];
     let html = `<option value="ALL">Semua Kategori (${levelItems.length} Kosakata)</option>`;
@@ -5241,7 +5250,7 @@ function initFlashcard() {
     const order = document.getElementById('flashcardOrder').value;
 
     let filtered = masterData.filter(item => {
-        let matchLevel = (levelVal === 'ALL' || String(item.level || 'N5').trim().toUpperCase() === levelVal);
+        let matchLevel = isFlashcardItemMatchLevel(item, levelVal);
         let matchCat = (category === 'ALL' || item.category === category);
         let matchStat = true;
         if (filter === 'hafal') matchStat = memorizedKanji.includes(item.kanji);
@@ -5250,16 +5259,21 @@ function initFlashcard() {
     });
 
     if (filtered.length === 0) {
-        // Reset filter yang kosong secara aman tanpa alert berulang
         if (filterEl && filter !== 'ALL') {
             filterEl.value = 'ALL';
-        } else {
+            filtered = masterData.filter(item => {
+                let matchLevel = isFlashcardItemMatchLevel(item, levelVal);
+                let matchCat = (category === 'ALL' || item.category === category);
+                return matchLevel && matchCat;
+            });
+        }
+        if (filtered.length === 0) {
             if (levelEl) levelEl.value = 'ALL';
             if (catEl) catEl.value = 'ALL';
             updateFlashcardCategoryDropdown();
+            filtered = [...masterData];
         }
         if (typeof window.refreshModernDropdowns === 'function') window.refreshModernDropdowns();
-        filtered = [...masterData];
     }
 
     fcData = (order === 'SHUFFLE') ? shuffle(filtered) : filtered;
