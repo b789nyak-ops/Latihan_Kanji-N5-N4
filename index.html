@@ -9453,6 +9453,65 @@ renderBunpouTables();
             }
         }
 
- </script>  
+ </script> 
+
+        <script>
+window.addEventListener('load', function() {
+    // 1. Siapkan state awal beranda
+    if (!history.state || !history.state.mjLock) {
+        history.replaceState({ mjPage: 'beranda', mjLock: true }, '');
+    }
+
+    // 2. Bungkus openModernHub agar setiap buka fitur menambah riwayat Back HP
+    if (typeof window.openModernHub === 'function') {
+        const origOpenModernHub = window.openModernHub;
+        window.openModernHub = function(hubName, specificTabId = null, fromPopState = false) {
+            origOpenModernHub(hubName, specificTabId);
+            if (!fromPopState && hubName !== 'beranda') {
+                history.pushState({ mjPage: hubName, tab: specificTabId, mjLock: true }, '');
+            }
+        };
+    }
+
+    // 3. Bungkus toggleSenseiAiModal agar tombol Back HP menutup chat AI dulu
+    if (typeof window.toggleSenseiAiModal === 'function') {
+        const origToggleSensei = window.toggleSenseiAiModal;
+        window.toggleSenseiAiModal = function(fromPopState = false) {
+            const modal = document.getElementById('senseiAiModal');
+            const willOpen = modal && modal.classList.contains('hidden');
+            origToggleSensei();
+            if (willOpen && !fromPopState) {
+                history.pushState({ mjModal: 'sensei', mjLock: true }, '');
+            }
+        };
+    }
+
+    // 4. Tangkap tombol Back / Gestur Kembali sistem HP
+    window.addEventListener('popstate', function() {
+        // Cek 1: Tutup modal Sensei AI jika sedang terbuka
+        const senseiModal = document.getElementById('senseiAiModal');
+        if (senseiModal && !senseiModal.classList.contains('hidden')) {
+            senseiModal.classList.add('hidden');
+            return;
+        }
+
+        // Cek 2: Tutup detail konjugasi kata kerja jika sedang terbuka
+        const verbDetail = document.getElementById('verbDetailView');
+        if (verbDetail && !verbDetail.classList.contains('hidden') && typeof closeVerbDetail === 'function') {
+            closeVerbDetail();
+            return;
+        }
+
+        // Cek 3: Jika sedang di dalam fitur (bukan beranda), kembalikan ke Beranda
+        const homeView = document.getElementById('hub-beranda-view');
+        if (homeView && homeView.classList.contains('hidden') && typeof openModernHub === 'function') {
+            openModernHub('beranda', null, true);
+            history.replaceState({ mjPage: 'beranda', mjLock: true }, '');
+        }
+    });
+});
+
+</script>
+
 </body>
 </html>
