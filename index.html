@@ -5200,62 +5200,72 @@ let fcData = [], fcIndex = 0;
             const selectedLevel = levelEl ? levelEl.value : 'ALL';
             const currentCat = catEl.value || 'ALL';
 
-            const levelItems = masterData.filter(item => {
-                if (selectedLevel === 'ALL') return true;
-                return (item.level || 'N5').toUpperCase() === selectedLevel;
-            });
+    const normLevel = String(selectedLevel || 'ALL').trim().toUpperCase();
+    const levelItems = masterData.filter(item => {
+        if (normLevel === 'ALL') return true;
+        return String(item.level || 'N5').trim().toUpperCase() === normLevel;
+    });
 
-            const categories = [...new Set(levelItems.map(item => item.category))];
-            let html = `<option value="ALL">Semua Kategori (${levelItems.length} Kosakata)</option>`;
-            categories.forEach(cat => {
-                const count = levelItems.filter(item => item.category === cat).length;
-                html += `<option value="${cat}">${cat} (${count} Kosakata)</option>`;
-            });
+    const categories = [...new Set(levelItems.map(item => item.category))];
+    let html = `<option value="ALL">Semua Kategori (${levelItems.length} Kosakata)</option>`;
+    categories.forEach(cat => {
+        const count = levelItems.filter(item => item.category === cat).length;
+        html += `<option value="${cat}">${cat} (${count} Kosakata)</option>`;
+    });
 
-            catEl.innerHTML = html;
-            if ([...catEl.options].some(opt => opt.value === currentCat)) {
-                catEl.value = currentCat;
-            } else {
-                catEl.value = 'ALL';
-            }
-        }
+    catEl.innerHTML = html;
+    if ([...catEl.options].some(opt => opt.value === currentCat)) {
+        catEl.value = currentCat;
+    } else {
+        catEl.value = 'ALL';
+    }
+    if (typeof window.refreshModernDropdowns === 'function') window.refreshModernDropdowns();
+}
 
-        function onFlashcardLevelChange() {
+function onFlashcardLevelChange() {
+    updateFlashcardCategoryDropdown();
+    initFlashcard();
+}
+
+function initFlashcard() {
+    const levelEl = document.getElementById('flashcardLevelFilter');
+    const catEl = document.getElementById('flashcardCategory');
+    const filterEl = document.getElementById('flashcardFilter');
+    if (catEl && catEl.options.length === 0) {
+        updateFlashcardCategoryDropdown();
+    }
+
+    const levelVal = String(levelEl ? levelEl.value : 'ALL').trim().toUpperCase();
+    const category = catEl ? catEl.value : 'ALL';
+    const filter = filterEl ? filterEl.value : 'ALL';
+    const order = document.getElementById('flashcardOrder').value;
+
+    let filtered = masterData.filter(item => {
+        let matchLevel = (levelVal === 'ALL' || String(item.level || 'N5').trim().toUpperCase() === levelVal);
+        let matchCat = (category === 'ALL' || item.category === category);
+        let matchStat = true;
+        if (filter === 'hafal') matchStat = memorizedKanji.includes(item.kanji);
+        if (filter === 'belum') matchStat = !memorizedKanji.includes(item.kanji);
+        return matchLevel && matchCat && matchStat;
+    });
+
+    if (filtered.length === 0) {
+        // Reset filter yang kosong secara aman tanpa alert berulang
+        if (filterEl && filter !== 'ALL') {
+            filterEl.value = 'ALL';
+        } else {
+            if (levelEl) levelEl.value = 'ALL';
+            if (catEl) catEl.value = 'ALL';
             updateFlashcardCategoryDropdown();
-            initFlashcard();
         }
+        if (typeof window.refreshModernDropdowns === 'function') window.refreshModernDropdowns();
+        filtered = [...masterData];
+    }
 
-        function initFlashcard() {
-            const levelEl = document.getElementById('flashcardLevelFilter');
-            const catEl = document.getElementById('flashcardCategory');
-            if (catEl && catEl.options.length === 0) {
-                updateFlashcardCategoryDropdown();
-            }
-
-            const levelVal = levelEl ? levelEl.value : 'ALL';
-            const category = catEl ? catEl.value : 'ALL';
-            const filter = document.getElementById('flashcardFilter').value;
-            const order = document.getElementById('flashcardOrder').value;
-
-            let filtered = masterData.filter(item => {
-                let matchLevel = (levelVal === 'ALL' || (item.level || 'N5').toUpperCase() === levelVal);
-                let matchCat = (category === 'ALL' || item.category === category);
-                let matchStat = true;
-                if (filter === 'hafal') matchStat = memorizedKanji.includes(item.kanji);
-                if (filter === 'belum') matchStat = !memorizedKanji.includes(item.kanji);
-                return matchLevel && matchCat && matchStat;
-            });
-
-            if (filtered.length === 0) {
-                alert("Tidak ada data untuk filter ini! Kembali ke 'Semua'.");
-                document.getElementById('flashcardFilter').value = 'ALL';
-                return initFlashcard();
-            }
-
-            fcData = (order === 'SHUFFLE') ? shuffle(filtered) : filtered;
-            fcIndex = 0;
-            renderFlashcard();
-        }
+    fcData = (order === 'SHUFFLE') ? shuffle(filtered) : filtered;
+    fcIndex = 0;
+    renderFlashcard();
+}
 
     
     // Konverter Romaji -> Hiragana otomatis untuk seluruh masterData
