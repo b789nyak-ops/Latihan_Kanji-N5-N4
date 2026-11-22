@@ -548,7 +548,7 @@
 </script>
     
     <!-- MODAL POP-UP NAMA & TEMPAT ASAL (UNTUK LOG GOOGLE SHEETS) -->
-    <div id="visitorModal" class="hidden fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="visitorModal" style="z-index: 2000;" class="hidden fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="theme-card w-full max-w-md rounded-3xl p-6 shadow-2xl relative overflow-hidden">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-xl overflow-hidden bg-slate-900 border border-cyan-400/50 logo-glow flex items-center justify-center shrink-0">
@@ -561,16 +561,16 @@
                 </div>
             </div>
 
-            <form onsubmit="submitVisitorForm(event)" class="space-y-3.5">
+                <form onsubmit="if(typeof submitVisitorForm==='function'){submitVisitorForm(event);}else{event.preventDefault();localStorage.setItem('mj_visitor_done','1');document.getElementById('visitorModal').style.display='none';}" class="space-y-3.5">
                 <div>
                     <label class="block text-xs font-semibold theme-text-muted mb-1">Nama *</label>
-                    <input type="text" id="visitorNameInput" required pattern="[A-Za-z\s]+" title="Hanya huruf alfabet dan spasi" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')" placeholder="Contoh: Raka" class="w-full theme-input ...
+                    <input type="text" id="visitorNameInput" required pattern="[A-Za-z\s]+" title="Hanya huruf alfabet dan spasi" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" placeholder="Contoh: Raka" class="w-full theme-input rounded-xl px-3.5 py-2.5 text-sm outline-none" style="width:100%; padding:10px 12px; border-radius:10px; background:var(--bg-input, #1e293b); color:var(--text-main, #f1f5f9); border:1px solid var(--border-color, #334155); box-sizing:border-box;">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold theme-text-muted mb-1">Kota / Daerah *</label>
-                    <input type="text" id="visitorOriginInput" required pattern="[A-Za-z\s]+" title="Hanya huruf alfabet dan spasi" oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')" placeholder="Contoh: Tangerang / Bandung" class="w-full ...
+                    <input type="text" id="visitorOriginInput" required pattern="[A-Za-z\s]+" title="Hanya huruf alfabet dan spasi" oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')" placeholder="Contoh: Tangerang" class="w-full theme-input rounded-xl px-3.5 py-2.5 text-sm outline-none" style="width:100%; padding:10px 12px; border-radius:10px; background:var(--bg-input, #1e293b); color:var(--text-main, #f1f5f9); border:1px solid var(--border-color, #334155); box-sizing:border-box;">
                 </div>
-                <button type="submit" id="visitorSubmitBtn" class="w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md transition mt-2">
+                <button type="submit" id="visitorSubmitBtn" class="w-full theme-accent-bg font-bold py-3 rounded-xl shadow-md" style="width:100%; margin-top:14px; padding:12px 16px; border-radius:12px; background:var(--accent, #38bdf8); color:#ffffff; font-weight:700; display:block; text-align:center; cursor:pointer; border:none;">
                     🚀 Mulai Belajar
                 </button>
             </form>
