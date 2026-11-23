@@ -805,24 +805,40 @@
             </div>
         </div>
 
-            <div class="flashcard w-full h-80 perspective-1000 cursor-pointer" onclick="toggleFlashcard()">
-                <div class="flashcard-inner relative w-full h-full text-center">
-                    <div class="flashcard-front absolute w-full h-full theme-card rounded-3xl shadow-md flex flex-col justify-center items-center p-6">
-                        <p class="text-sm theme-text-muted mb-4" id="fcCounter">1 / 150</p>
-                        <h2 class="text-5xl sm:text-7xl font-bold jp-text" id="fcKanji">私</h2>
-                        <button onclick="event.stopPropagation(); playAudioFc()" class="mt-8 theme-accent-soft w-12 h-12 rounded-full flex items-center justify-center text-xl hover:opacity-80 transition">🔊</button>
-                    </div>
-                    <div class="flashcard-back absolute w-full h-full theme-subcard rounded-3xl shadow-md flex flex-col justify-center items-center p-6">
-                        <p class="text-2xl font-bold theme-accent-text mb-2" id="fcRomaji">watashi</p>
-                        <p class="text-lg font-medium text-center" id="fcArti">Saya</p>
-                        
-                        <div class="mt-8 flex gap-4">
-                            <button onclick="event.stopPropagation(); markMemorized(false)" class="px-6 py-2 bg-red-500/15 text-red-500 border border-red-500/30 rounded-full font-semibold hover:bg-red-500/25">❌ Belum</button>
-                            <button onclick="event.stopPropagation(); markMemorized(true)" class="px-6 py-2 bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 rounded-full font-semibold hover:bg-emerald-500/25">✅ Hafal</button>
-                        </div>
-                    </div>
-                </div>
+    <div class="flashcard w-full h-80 perspective-1000 cursor-pointer" onclick="toggleFlashcard()">
+    <div class="flashcard-inner relative w-full h-full text-center">
+        <!-- SISI DEPAN (HURUF JEPANG + TANDA HAFAL + TOMBOL BELUM/HAFAL) -->
+        <div class="flashcard-front absolute w-full h-full theme-card rounded-3xl shadow-md flex flex-col justify-center items-center p-4">
+            <!-- Tanda kecil di pojok kanan atas jika sudah hafal -->
+            <span id="fcMemorizedBadge" class="hidden absolute top-4 right-4 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                ✅ Sudah Hafal
+            </span>
+
+            <p class="text-sm theme-text-muted mb-2" id="fcCounter">1 / 150</p>
+            <h2 class="text-5xl sm:text-6xl font-bold jp-text" id="fcKanji">私</h2>
+            
+            <button onclick="event.stopPropagation(); playAudioFc()" class="mt-4 theme-accent-soft w-11 h-11 rounded-full flex items-center justify-center hover:scale-105 transition">
+                🔊
+            </button>
+
+            <!-- Tombol Belum & Hafal dipindah ke bawah huruf Jepang -->
+            <div class="mt-4 flex gap-3">
+                <button onclick="event.stopPropagation(); markMemorized(false)" class="px-5 py-2 rounded-xl text-xs font-bold bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25 transition">
+                    ❌ Belum
+                </button>
+                <button onclick="event.stopPropagation(); markMemorized(true)" class="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition">
+                    ✅ Hafal
+                </button>
             </div>
+        </div>
+
+        <!-- SISI BELAKANG (ROMAJI & ARTI SAJA) -->
+        <div class="flashcard-back absolute w-full h-full theme-subcard rounded-3xl shadow-md flex flex-col justify-center items-center p-4">
+            <p class="text-2xl font-bold theme-accent-text mb-2" id="fcRomaji">watashi</p>
+            <p class="text-lg font-medium text-center" id="fcArti">Saya</p>
+        </div>
+    </div>
+</div>
 
             <div class="flex justify-between mt-6 gap-4">
                 <button onclick="prevCard()" class="flex-1 theme-card shadow-sm py-3 rounded-xl font-semibold hover:opacity-90">⬅️ Sebelumnya</button>
@@ -5417,6 +5433,16 @@ function renderFlashcard() {
     document.getElementById('fcRomaji').innerText = item.romaji;
     document.getElementById('fcArti').innerText = item.meaning;
     document.getElementById('fcCounter').innerText = `${fcIndex + 1} / ${fcData.length}`;
+
+    // Tampilkan/sembunyikan tanda kecil di pojok kanan atas jika sudah hafal
+    const badge = document.getElementById('fcMemorizedBadge');
+    if (badge) {
+        if (memorizedKanji.includes(item.kanji)) {
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
 }
 
 function toggleFlashcard() { document.querySelector('.flashcard').classList.toggle('flipped'); }
@@ -5429,7 +5455,8 @@ function markMemorized(status) {
     if (status) { if (!memorizedKanji.includes(currentKanji)) memorizedKanji.push(currentKanji); }
     else { memorizedKanji = memorizedKanji.filter(k => k !== currentKanji); }
     saveProgress();
-    nextCard();
+    renderFlashcard(); // Perbarui tanda pojok dulu sebelum pindah kartu
+    setTimeout(() => { nextCard(); }, 250);
 }
 
 // =========================================================================
