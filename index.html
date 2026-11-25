@@ -5609,68 +5609,112 @@ function getPos(e) {
 }
 
 function startPosition(e) {
-    e.preventDefault();
-    painting = true;
-    const pos = getPos(e);
-    currentStrokePoints = [pos];
-    ctx.lineWidth = currentPenWidth;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#0f172a';
-    ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
+  e.preventDefault();
+  painting = true;
+  const pos = getPos(e);
+  pos.time = Date.now();
+  pos.width = currentPenWidth;
+  currentStrokePoints = [pos];
+
+  // Cetak titik instan begitu jari menyentuh kanvas
+  ctx.fillStyle = "#0f172a";
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y, currentPenWidth / 2, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function finishedPosition(e) {
-    if (!painting) return;
-    if (e) e.preventDefault();
-    painting = false;
-    ctx.beginPath();
-    if (currentStrokePoints.length > 0) {
-        const refined = refineStrokePoints(currentStrokePoints);
-        strokes.push({ points: refined, width: currentPenWidth });
-        currentStrokePoints = [];
-        redrawStrokes();
-    }
+  if (!painting) return;
+  if (e) e.preventDefault();
+  painting = false;
+  ctx.beginPath();
+  if (currentStrokePoints.length > 0) {
+    const refined = refineStrokePoints(currentStrokePoints);
+    strokes.push({ points: refined, width: currentPenWidth });
+    currentStrokePoints = [];
+    redrawStrokes();
+  }
 }
 
 function draw(e) {
-    if (!painting) return;
-    e.preventDefault();
-    const pos = getPos(e);
-    currentStrokePoints.push(pos);
+  if (!painting) return;
+  e.preventDefault();
+  const pos = getPos(e);
+  pos.time = Date.now();
+
+  const prev = currentStrokePoints[currentStrokePoints.length - 1];
+  const dist = Math.hypot(pos.x - prev.x, pos.y - prev.y);
+  if (dist < 1.2) return;
+
+  // Variasi ketebalan pena sesuai kecepatan tarikan (meruncing saat cepat)
+  const dt = Math.max(1, pos.time - prev.time);
+  const velocity = dist / dt;
+  const minW = Math.max(1.5, currentPenWidth * 0.45);
+  const maxW = currentPenWidth * 1.2;
+  const targetW = Math.max(minW, Math.min(maxW, maxW - velocity * 1.8));
+  pos.width = (prev.width || currentPenWidth) * 0.65 + targetW * 0.35;
+
+  currentStrokePoints.push(pos);
+
+  ctx.strokeStyle = "#0f172a";
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = pos.width;
+
+  if (currentStrokePoints.length >= 3) {
+    const p1 = currentStrokePoints[currentStrokePoints.length - 3];
+    const p2 = currentStrokePoints[currentStrokePoints.length - 2];
+    const p3 = currentStrokePoints[currentStrokePoints.length - 1];
+    const mid1 = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+    const mid2 = { x: (p2.x + p3.x) / 2, y: (p2.y + p3.y) / 2 };
+
+    ctx.beginPath();
+    ctx.moveTo(mid1.x, mid1.y);
+    ctx.quadraticCurveTo(p2.x, p2.y, mid2.x, mid2.y);
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(prev.x, prev.y);
     ctx.lineTo(pos.x, pos.y);
     ctx.stroke();
+  }
 }
 
 function redrawStrokes() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    strokes.forEach(strokeObj => {
-        const pts = strokeObj.points;
-        if (!pts || pts.length === 0) return;
-        ctx.lineWidth = strokeObj.width || 6;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.strokeStyle = '#0f172a';
-        ctx.beginPath();
-        ctx.moveTo(pts[0].x, pts[0].y);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  strokes.forEach(strokeObj => {
+    const pts = strokeObj.points;
+    if (!pts || pts.length === 0) return;
+    const w = strokeObj.width || 6;
 
-        if (pts.length === 2) {
-            ctx.lineTo(pts[1].x, pts[1].y);
-        } else if (pts.length > 2) {
-            for (let i = 1; i < pts.length - 1; i++) {
-                const xc = (pts[i].x + pts[i + 1].x) / 2;
-                const yc = (pts[i].y + pts[i + 1].y) / 2;
-                ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
-            }
-            ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
-        } else {
-            ctx.lineTo(pts[0].x, pts[0].y);
-        }
-        ctx.stroke();
-    });
+    // Jika hanya 1 titik (sentuhan tanpa menggaris), gambar lingkaran titik
+    if (pts.length === 1) {
+      ctx.fillStyle = "#0f172a";
+      ctx.beginPath();
+      ctx.arc(pts[0].x, pts[0].y, w / 2, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+
+    ctx.lineWidth = w;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = "#0f172a";
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+
+    if (pts.length === 2) {
+      ctx.lineTo(pts[1].x, pts[1].y);
+    } else {
+      for (let i = 1; i < pts.length - 1; i++) {
+        const xc = (pts[i].x + pts[i + 1].x) / 2;
+        const yc = (pts[i].y + pts[i + 1].y) / 2;
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
+      }
+      ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+    }
+    ctx.stroke();
+  });
 }
 
 function undoCanvas() { strokes.pop(); redrawStrokes(); }
