@@ -7278,56 +7278,83 @@ function buildListeningExamQuestion(level) {
     };
 }
 
+
 function startMockExam(level) {
+  try {
     const questions = [];
     const usedPrompts = new Set();
 
-    function addUniqueQuestions(builderFn, count) {
-        let attempts = 0;
-        let added = 0;
-        while (added < count && attempts < count * 8) {
-            attempts++;
-            const q = builderFn(level);
-            if (!usedPrompts.has(q.prompt)) {
-                usedPrompts.add(q.prompt);
-                questions.push(q);
-                added++;
-            }
-        }
-        while (added < count) {
-            questions.push(builderFn(level));
+    function addUniqueQuestions(builderFn, count, label) {
+      let attempts = 0;
+      let added = 0;
+      while (added < count && attempts < count * 8) {
+        attempts++;
+        try {
+          const q = builderFn(level);
+          if (q && q.prompt && !usedPrompts.has(q.prompt)) {
+            usedPrompts.add(q.prompt);
+            questions.push(q);
             added++;
+          }
+        } catch (err) {
+          console.error(`Error pada builder ${label} (${level}):`, err);
+          break;
         }
+      }
+      // Fallback jika soal unik N4 kurang dari target
+      let fallbackAttempts = 0;
+      while (added < count && fallbackAttempts < count * 3) {
+        fallbackAttempts++;
+        try {
+          const q = builderFn('N5'); // Fallback ke pool N5 jika data N4 habis/error
+          if (q) {
+            questions.push(q);
+            added++;
+          }
+        } catch (e) {
+          break;
+        }
+      }
     }
 
     if (level === 'N5') {
-        addUniqueQuestions(buildVocabExamQuestion, 10);
-        addUniqueQuestions(buildGrammarExamQuestion, 8);
-        addUniqueQuestions(buildListeningExamQuestion, 6);
-        addUniqueQuestions(buildReadingExamQuestion, 6);
+      addUniqueQuestions(buildVocabExamQuestion, 10, 'Vocab');
+      addUniqueQuestions(buildGrammarExamQuestion, 8, 'Grammar');
+      addUniqueQuestions(buildListeningExamQuestion, 6, 'Listening');
+      addUniqueQuestions(buildReadingExamQuestion, 6, 'Reading');
     } else {
-        addUniqueQuestions(buildVocabExamQuestion, 15);
-        addUniqueQuestions(buildGrammarExamQuestion, 15);
-        addUniqueQuestions(buildListeningExamQuestion, 10);
-        addUniqueQuestions(buildReadingExamQuestion, 10);
+      addUniqueQuestions(buildVocabExamQuestion, 15, 'Vocab');
+      addUniqueQuestions(buildGrammarExamQuestion, 15, 'Grammar');
+      addUniqueQuestions(buildListeningExamQuestion, 10, 'Listening');
+      addUniqueQuestions(buildReadingExamQuestion, 10, 'Reading');
+    }
+
+    if (questions.length === 0) {
+      alert('Gagal memuat bank soal untuk level ' + level);
+      return;
     }
 
     examState = {
-        level,
-        questions,
-        currentIndex: 0,
-        answers: new Array(questions.length).fill(null),
-        audioPlaysLeft: 2,
-        secondsLeft: level === 'N5' ? 35 * 60 : 60 * 60
+      level,
+      questions,
+      currentIndex: 0,
+      answers: new Array(questions.length).fill(null),
+      audioPlaysLeft: 2,
+      secondsLeft: level === 'N5' ? 35 * 60 : 60 * 60
     };
 
     document.getElementById('exam-selector').classList.add('hidden');
     document.getElementById('exam-result').classList.add('hidden');
     document.getElementById('exam-arena').classList.remove('hidden');
-    document.getElementById('exam-level-badge').textContent = level === 'N5' ? 'JLPT N5 (30 Soal)' : 'JFT-Basic A2 / N4 (50 Soal)';
+    document.getElementById('exam-level-badge').textContent =
+      level === 'N5' ? 'JLPT N5 (30 Soal)' : 'JFT-Basic A2 / N4 (50 Soal)';
 
     startExamTimer();
     renderExamQuestion();
+  } catch (fatalErr) {
+    alert('Error memulai ujian: ' + fatalErr.message);
+    console.error(fatalErr);
+  }
 }
 
 function startExamTimer() {
