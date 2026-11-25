@@ -9586,6 +9586,43 @@ window.addEventListener('load', function() {
         }
     });
 });
+    
+// === AUTO SANITIZER ===
+const AutoSanitizer = {
+// 1. Membersihkan teks dari karakter berbahaya HTML (mencegah XSS)
+escapeHTML(str) {
+    if (typeof str !== 'string') return str;
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  },
+
+  // 2. Membersihkan input teks (spasi berlebih, karakter kontrol tak terlihat)
+  cleanInput(str) {
+    if (typeof str !== 'string') return '';
+    return str
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Hapus karakter kontrol
+      .replace(/\s+/g, ' ')                         // Rapikan spasi ganda
+      .trim();
+  },
+
+  // 3. Sanitasi otomatis pada semua <input> dan <textarea> saat diketik/berubah
+  initAutoBind() {
+    document.addEventListener('change', (e) => {
+      if (e.target.matches('input[type="text"], input[type="search"], textarea')) {
+        e.target.value = this.cleanInput(e.target.value);
+      }
+    });
+  }
+};
+
+// Aktifkan pembersih input otomatis saat halaman dimuat
+document.addEventListener('DOMContentLoaded', () => {
+  AutoSanitizer.initAutoBind();
+});
 
 </script>
         
