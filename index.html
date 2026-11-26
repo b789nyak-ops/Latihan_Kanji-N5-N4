@@ -5806,67 +5806,78 @@ canvas.addEventListener('touchcancel', finishedPosition, { passive: false });
 // --- QUIZ LOGIC ---
 let quizData = [], quizHistory = [], currentQuizIdx = 0, correctAnswers = 0, wrongAnswers = 0, isAnswering = false;
 
-        function updateQuizCategoryDropdown() {
-            const levelEl = document.getElementById('quizLevelFilter');
-            const catEl = document.getElementById('quizCategory');
-            if (!catEl) return;
+function isItemMatchingLevel(item, idx, targetLevel) {
+  if (targetLevel === 'ALL') return true;
+  const lvl = (item.level || '').toUpperCase();
+  if (lvl === 'N5' || lvl === 'N4') return lvl === targetLevel;
 
-            const selectedLevel = levelEl ? levelEl.value : 'ALL';
-            const currentCat = catEl.value || 'ALL';
+  const babNum = Number(item.bab || item.chapter || 0);
+  if (babNum > 0) {
+    return targetLevel === 'N5' ? babNum <= 25 : babNum >= 26;
+  }
+  // Fallback berdasarkan posisi daftar (Bab 1-25 = 675 kata pertama)
+  return targetLevel === 'N5' ? idx < 675 : idx >= 675;
+}
 
-            const levelItems = masterData.filter(item => {
-                if (selectedLevel === 'ALL') return true;
-                return (item.level || 'N5').toUpperCase() === selectedLevel;
-            });
+function updateQuizCategoryDropdown() {
+  const levelEl = document.getElementById('quizLevelFilter');
+  const catEl = document.getElementById('quizCategory');
+  if (!catEl) return;
 
-            const categories = [...new Set(levelItems.map(item => item.category))];
-            let html = `<option value="ALL">Semua Kategori (${levelItems.length} Kosakata)</option>`;
-            categories.forEach(cat => {
-                const count = levelItems.filter(item => item.category === cat).length;
-                html += `<option value="${cat}">${cat} (${count} Kosakata)</option>`;
-            });
+  const selectedLevel = levelEl ? levelEl.value : 'ALL';
+  const currentCat = catEl.value || 'ALL';
 
-            catEl.innerHTML = html;
-            if ([...catEl.options].some(opt => opt.value === currentCat)) {
-                catEl.value = currentCat;
-            } else {
-                catEl.value = 'ALL';
-            }
-        }
+  const levelItems = masterData.filter((item, idx) => isItemMatchingLevel(item, idx, selectedLevel));
 
-        function startQuiz() {
-            const levelEl = document.getElementById('quizLevelFilter');
-            const levelVal = levelEl ? levelEl.value : 'ALL';
-            const category = document.getElementById('quizCategory').value;
-            const order = document.getElementById('quizOrder').value;
-            const lengthOpt = document.getElementById('quizLength').value;
+  const categories = [...new Set(levelItems.map(item => item.category))];
+  let html = `<option value="ALL">Semua Kategori (${levelItems.length} Kosakata)</option>`;
+  categories.forEach(cat => {
+    const count = levelItems.filter(item => item.category === cat).length;
+    html += `<option value="${cat}">${cat} (${count} Kosakata)</option>`;
+  });
 
-            let pool = masterData.filter(item => {
-                const matchLevel = (levelVal === 'ALL' || (item.level || 'N5').toUpperCase() === levelVal);
-                const matchCat = (category === 'ALL' || item.category === category);
-                return matchLevel && matchCat;
-            });
+  catEl.innerHTML = html;
+  if ([...catEl.options].some(opt => opt.value === currentCat)) {
+    catEl.value = currentCat;
+  } else {
+    catEl.value = 'ALL';
+  }
+}
 
-            if (pool.length === 0) {
-                alert("Tidak ada kosakata untuk kombinasi Level & Kategori ini.");
-                return;
-            }
+function startQuiz() {
+  const levelEl = document.getElementById('quizLevelFilter');
+  const levelVal = levelEl ? levelEl.value : 'ALL';
+  const category = document.getElementById('quizCategory').value;
+  const order = document.getElementById('quizOrder').value;
+  const lengthOpt = document.getElementById('quizLength').value;
 
-            if (order === 'SHUFFLE') pool = shuffle(pool);
-            if (lengthOpt !== 'ALL') pool = pool.slice(0, parseInt(lengthOpt));
+  let pool = masterData.filter((item, idx) => {
+    const matchLevel = isItemMatchingLevel(item, idx, levelVal);
+    const matchCat = (category === 'ALL' || item.category === category);
+    return matchLevel && matchCat;
+  });
 
-            quizData = pool;
-            quizHistory = [];
-            currentQuizIdx = 0;
-            correctAnswers = 0;
-            wrongAnswers = 0;
+  if (pool.length === 0) {
+    alert("Tidak ada kosakata untuk kombinasi Level & Kategori ini.");
+    return;
+  }
 
-            document.getElementById('quizSetup').classList.add('hidden');
-            document.getElementById('quizResult').classList.add('hidden');
-            document.getElementById('quizPlay').classList.remove('hidden');
-            renderQuizQuestion();
-        }
+  if (order === 'SHUFFLE') pool = shuffle(pool);
+  if (lengthOpt !== 'ALL') pool = pool.slice(0, parseInt(lengthOpt));
 
+  quizData = pool;
+  quizHistory = [];
+  currentQuizIdx = 0;
+  correctAnswers = 0;
+  wrongAnswers = 0;
+
+  document.getElementById('quizSetup').classList.add('hidden');
+  document.getElementById('quizResult').classList.add('hidden');
+  document.getElementById('quizPlay').classList.remove('hidden');
+  renderQuizQuestion();
+}
+
+    
 // Mesin pencari pengecoh mirip (dipakai ulang untuk semua kuis & ujian)
 function getSmartDistractors(item, count = 3) {
     const candidates = masterData.filter(x => x.kanji !== item.kanji && x.meaning !== item.meaning);
